@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>滾動式生成 vs 等待完整回覆</title>
+<title>Streaming vs Blocking</title>
 <style>
   :root{
     --bg:#657689; --card:#1a2931; --accent:#0061de;
@@ -85,17 +85,17 @@
       <i class="handle bl"></i><i class="handle br"></i>
     </div>
 
-    <div class="state" id="stateStart">同步開始</div>
-    <div class="state" id="stateReadable">逐行可讀</div>
-    <div class="state" id="stateProof">早 0.0 秒可讀</div>
+    <div class="state" id="stateStart">Same start</div>
+    <div class="state" id="stateReadable">Readable immediately</div>
+    <div class="state" id="stateProof">Readable 0.0s earlier</div>
 
     <section class="lane" id="laneA">
-      <div class="lane-title">等待完整回覆</div>
+      <div class="lane-title">Blocking</div>
       <div id="loader"><i></i><i></i><i></i></div>
       <div class="lines" id="linesA"></div>
     </section>
     <section class="lane" id="laneB">
-      <div class="lane-title">滾動式生成</div>
+      <div class="lane-title">Streaming</div>
       <div class="lines" id="linesB"></div>
     </section>
 
@@ -285,7 +285,7 @@ const label = (node, start, end) => run(node, [
 ]);
 const firstStreamReadable = T.stream + T.per;
 const firstBlockReadable = T.block + .28;
-$('#stateProof').textContent = `早 ${(firstBlockReadable-firstStreamReadable).toFixed(1)} 秒可讀`;
+$('#stateProof').textContent = `Readable ${(firstBlockReadable-firstStreamReadable).toFixed(1)}s earlier`;
 label($('#stateStart'), T.ready+.05, firstStreamReadable-.04);
 label($('#stateReadable'), firstStreamReadable, T.proof-.04);
 label($('#stateProof'), T.proof, T.collapse+.35);
