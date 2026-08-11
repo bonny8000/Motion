@@ -380,6 +380,11 @@ which is worth it: the naive single-pass path is where most ugly GIFs come from.
   claim, the claim→mechanism mapping table, representation registers, and when to
   tell the user animation is the wrong medium. **Read this first**, before any
   scene; it's the part that decides whether the animation explains anything.
+- `references/polish.md` — geometry tokens (radii, depth), the expressive easing
+  set, two-layer entrances, the four-movement choreography model, and how to avoid
+  displaying a dishonest metric. **Read it before finalising any scene** — it
+  covers the three failures that make a first draft look like a prototype:
+  default geometry, everything `linear`, and no dramatic structure.
 - `references/motion-craft.md` — easing decision table, physicality rules, stagger
   ranges, performance, reduced motion, the standard **vocabulary** for what this
   skill builds, the **review pass**, and how to debug feel. Also states plainly

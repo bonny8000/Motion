@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>滾動式生成 vs 等待完整回覆</title>
+<style>
+  :root{
+    --bg:#657689; --card:#1a2931; --accent:#0061de; --accent-soft:#2b7ff0;
+    --bar-a:#93a0a8; --bar-b:#77848c; --bar-c:#5c6a72;
+    --label:#eef3f5; --muted:#d2dbe0;
+
+    /* 幾何 token:文字佔位條一律全圓角(radius = 高度一半),
+       方角的條看起來像未完成的線框,是最快讓成品顯得廉價的細節。 */
+    --r-bar:999px; --r-panel:14px; --r-chip:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg)}
+  body{display:grid;place-items:center;
+    font-family:'Inter','PingFang TC','Microsoft JhengHei','Noto Sans TC',
+                -apple-system,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased}
+
+  #stage{position:relative;width:1600px;height:900px;background:var(--bg);overflow:hidden}
+
+  .col{position:absolute;top:172px;width:700px}
+  .col.a{left:70px}  .col.b{left:830px}
+
+  .title{font-size:30px;font-weight:500;color:var(--label);margin-bottom:16px;
+         display:flex;align-items:center;gap:12px}
+  .dotmark{width:9px;height:9px;border-radius:50%;background:var(--bar-b)}
+  .col.b .dotmark{background:var(--accent)}
+
+  /* 面板:大圓角 + 柔和陰影 + 一道極淡的上緣高光,做出「材質」而不是色塊 */
+  .panel{position:relative;height:430px;background:var(--card);
+         border-radius:var(--r-panel);overflow:hidden;
+         box-shadow:0 18px 44px rgba(12,20,26,.30), 0 2px 0 rgba(255,255,255,.07) inset;}
+
+  /* 起跑信號:一道掃過面板頂緣的細光 */
+  .gun{position:absolute;left:0;top:0;height:2px;width:100%;
+       background:linear-gradient(90deg,transparent,var(--accent-soft),transparent);
+       transform:scaleX(0);transform-origin:left center;opacity:0}
+
+  .lines{position:absolute;left:36px;top:38px;right:36px}
+  .ln{height:15px;margin-bottom:21px;opacity:0}          /* 外層:fade + rise */
+  .ln > i{display:block;height:100%;border-radius:var(--r-bar);
+          background:var(--bar-a);transform:scaleX(0);transform-origin:left center}
+  .ln.b > i{background:var(--bar-b)}
+  .ln.c > i{background:var(--bar-c)}
+  #linesA .ln > i{transform:scaleX(1)}    /* 阻塞式:整批出現,不逐行展開 */
+
+  #caret{position:absolute;left:36px;top:38px;width:3px;height:15px;
+         border-radius:2px;background:var(--accent);opacity:0;
+         box-shadow:0 0 12px rgba(0,97,222,.9)}
+
+  #loader{position:absolute;left:36px;top:38px;display:flex;gap:9px}
+  #loader i{width:11px;height:11px;border-radius:50%;background:var(--bar-b);opacity:.25}
+
+  /* 「可閱讀時間」量條 */
+  .meter{position:relative;margin-top:22px;height:9px;border-radius:var(--r-bar);
+         background:rgba(255,255,255,.09)}
+  .meter i{position:absolute;inset:0;background:var(--accent);
+           border-radius:var(--r-bar);transform:scaleX(0);transform-origin:left center}
+  .col.a .meter i{background:var(--bar-b)}
+
+  /* 揭示用的倍數標籤 */
+  /* 放在量條「下方」而不是上方 —— 上方會壓到面板下緣,那種碰撞是最容易
+     被讀成「沒做完」的細節。 */
+  #mult{position:absolute;right:0;top:22px;padding:6px 14px;border-radius:var(--r-chip);
+        background:var(--accent);color:#fff;font-size:26px;font-weight:600;
+        letter-spacing:.01em;opacity:0;transform:scale(.8);
+        box-shadow:0 8px 22px rgba(0,97,222,.45)}
+
+  .legend{position:absolute;left:70px;top:752px;width:1460px;font-size:21px;
+          color:var(--muted);display:flex;justify-content:space-between;opacity:0}
+  .legend b{color:var(--label);font-weight:500}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="col a">
+    <div class="title"><span class="dotmark"></span>等待完整回覆</div>
+    <div class="panel">
+      <div class="gun" id="gunA"></div>
+      <div id="loader"><i></i><i></i><i></i></div>
+      <div class="lines" id="linesA"></div>
+    </div>
+    <div class="meter"><i id="meterA"></i></div>
+  </div>
+
+  <div class="col b">
+    <div class="title"><span class="dotmark"></span>滾動式生成</div>
+    <div class="panel">
+      <div class="gun" id="gunB"></div>
+      <div class="lines" id="linesB"></div>
+      <div id="caret"></div>
+    </div>
+    <div class="meter"><i id="meterB"></i><span id="mult">4×</span></div>
+  </div>
+
+  <div class="legend" id="legend">
+    <span>兩邊<b>同時完成</b>,總時間相同</span>
+    <span><b>藍條 = 可開始閱讀的時間</b></span>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   零依賴,用瀏覽器原生的 Web Animations API。
+   (先前從 CDN 載 Motion,在有 CSP 的預覽或擋 jsdelivr 的網路裡會整段停掉,
+    症狀是版面畫得出來但完全不會動,而且沒有任何可見錯誤。)
+
+   每個元素拿到一個「整支 4 秒、自己覆蓋 0→1」的動畫,所以循環自動歸零。
+   ═══════════════════════════════════════════════════════════════════════════ */
+const CYCLE = 4000;
+const o = (s) => s * 1000 / CYCLE;
+
+/* Ease 組:GSAP 的 power/expo/back 換算成等效 cubic-bezier,拿到表現力但不必
+   多背一個函式庫。原則 —— 進場用 out(一開始快,有反應感);離場用 in(更快);
+   已在畫面上的東西移動用 inOut;只有「機械進度」可以用 linear。
+   我上一版幾乎全用 linear,那是這支動畫顯得單調的主因。 */
+const E = {
+  out2 : 'cubic-bezier(.215,.61,.355,1)',   // power2.out 一般進場
+  out3 : 'cubic-bezier(.165,.84,.44,1)',    // power3.out 稍強
+  out4 : 'cubic-bezier(.23,1,.32,1)',       // power4.out 有重量的落地
+  expo : 'cubic-bezier(.19,1,.22,1)',       // expo.out   最戲劇的煞停
+  back : 'cubic-bezier(.34,1.56,.64,1)',    // back.out   輕微 overshoot
+  lin  : 'linear',
+};
+
+/* ── 分鏡(秒)──────────────────────────────────────────────────────────────
+   有戲的結構 = 鋪陳 → 張力 → 標點 → 揭示。上一版四樣都沒有。
+
+   0.00–0.20  停一拍(anticipation)
+   0.20–0.55  起跑信號:一道光同時掃過兩邊頂緣 —— 建立「同時開始」
+   0.30–2.55  張力:右邊逐行生成 / 左邊只有三點在轉
+   2.55–2.80  第一個標點:左邊一次倒出,power4.out,快而有重量
+   0.65→3.35  兩條量條線性成長(代表時間,必須誠實等速)
+   3.35–3.60  揭示:「4×」用 back.out 彈出 —— 全片唯一一次 overshoot
+   3.60–4.00  停住讓人比較,然後循環
+   ──────────────────────────────────────────────────────────────────────── */
+// mB / mA 刻意等於「內容真正可讀的那一刻」:右邊第一行寫完 = stream+perLine,
+// 左邊整批落地 = done+0.30。視覺和下面算出來的秒數因此永遠一致。
+const T = { gun:.20, stream:.30, perLine:.375, done:2.55,
+            mB:.675, mA:2.85, mEnd:3.35, reveal:3.35 };
+const W = [590, 545, 610, 470, 560, 330];    // 刻意不等長:等長會像載入骨架
+const PITCH = 36, RISE = 10;
+
+const $  = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anims = [];
+const run = (el, frames, opts = {}) => {
+  const a = el.animate(frames, { duration: CYCLE, iterations: Infinity, fill: 'both', ...opts });
+  anims.push(a); return a;
+};
+// 減少動態時把位移拿掉,但保留寬度展開和量條 —— 那些就是說明本身
+const rise = (px) => reduce ? '0px' : px + 'px';
+
+const build = (host) => W.map((w, i) => {
+  const n = document.createElement('div');
+  n.className = 'ln' + (i % 3 === 1 ? ' b' : i % 3 === 2 ? ' c' : '');
+  n.style.width = w + 'px';
+  n.appendChild(document.createElement('i'));
+  host.appendChild(n); return n;
+});
+const linesA = build($('#linesA'));
+const linesB = build($('#linesB'));
+
+/* ── 起跑信號 ────────────────────────────────────────────────────────────── */
+[$('#gunA'), $('#gunB')].forEach((g) => run(g, [
+  { offset:0, transform:'scaleX(0)', opacity:0 },
+  { offset:o(T.gun), transform:'scaleX(0)', opacity:1, easing:E.expo },
+  { offset:o(T.gun+.35), transform:'scaleX(1)', opacity:0 },
+  { offset:1, transform:'scaleX(1)', opacity:0 },
+]));
+
+/* ── 右:逐行生成 ────────────────────────────────────────────────────────
+   兩層:外層 fade + rise(power3.out,精緻度),內層寬度展開(linear,機械感)。
+   分兩層是關鍵 —— 只有 wipe 會顯得乾,只有 fade 會失去「正在生成」的意思。 */
+linesB.forEach((el, i) => {
+  const s = T.stream + i * T.perLine, e = s + T.perLine;
+  run(el, [
+    { offset:0, opacity:0, transform:`translateY(${rise(RISE)})` },
+    { offset:o(s), opacity:0, transform:`translateY(${rise(RISE)})`, easing:E.out3 },
+    { offset:o(s+.22), opacity:1, transform:'translateY(0px)' },
+    { offset:1, opacity:1, transform:'translateY(0px)' },
+  ]);
+  run(el.firstChild, [
+    { offset:0, transform:'scaleX(0)' },
+    { offset:o(s), transform:'scaleX(0)', easing:E.lin },
+    { offset:o(e), transform:'scaleX(1)' },
+    { offset:1, transform:'scaleX(1)' },
+  ]);
+});
+
+/* ── 右:游標騎在生成前緣 ─────────────────────────────────────────────── */
+if (!reduce) {
+  const kf = [{ offset:0, transform:'translate(0px,0px)', easing:E.lin }];
+  linesB.forEach((_, i) => {
+    const s = T.stream + i*T.perLine, e = s + T.perLine, y = i*PITCH;
+    if (i === 0) kf.push({ offset:o(s), transform:`translate(0px,${y}px)`, easing:E.lin });
+    kf.push({ offset:o(e), transform:`translate(${W[i]}px,${y}px)` });
+    // 換行瞬間跳回左邊。offset 必須嚴格遞增,否則 WAAPI 直接丟例外、整段停掉。
+    if (i < W.length-1) kf.push({ offset:o(e)+1e-4, easing:E.lin,
+      transform:`translate(0px,${(i+1)*PITCH}px)` });
+  });
+  kf.push({ offset:1, transform:kf[kf.length-1].transform });
+  run($('#caret'), kf);
+}
+run($('#caret'), [
+  { offset:0, opacity:0 },
+  { offset:o(T.stream-.06), opacity:0 },
+  { offset:o(T.stream+.04), opacity:reduce?0:1 },
+  { offset:o(T.done), opacity:reduce?0:1, easing:E.out2 },
+  { offset:o(T.done+.12), opacity:0 },
+  { offset:1, opacity:0 },
+]);
+
+/* ── 左:三點載入。800ms 整除 4000ms,所以整體仍是 4 秒週期。 ───────────── */
+$$('#loader i').forEach((d, i) => run(d,
+  [{opacity:.22},{opacity:1},{opacity:.22}],
+  { duration:800, delay:i*130, easing:'ease-in-out' }));
+run($('#loader'), [
+  { offset:0, opacity:1 },
+  { offset:o(T.done-.10), opacity:1, easing:E.out2 },
+  { offset:o(T.done+.04), opacity:0 },
+  { offset:1, opacity:0 },
+]);
+
+/* ── 左:等待結束,一次倒出。第一個標點,所以用最有重量的 out4,
+      並加 25ms 的細微 stagger,讓它是「一疊東西落下」而不是「圖層開燈」。 ── */
+linesA.forEach((el, i) => {
+  const s = T.done + i*.025;
+  run(el, [
+    { offset:0, opacity:0, transform:`translateY(${rise(14)})` },
+    { offset:o(s), opacity:0, transform:`translateY(${rise(14)})`, easing:E.out4 },
+    { offset:o(s+.30), opacity:1, transform:'translateY(0px)' },
+    { offset:1, opacity:1, transform:'translateY(0px)' },
+  ]);
+});
+
+/* ── 兩條量條:linear。量條代表時間,時間本來就等速 —— 這裡加 ease 反而不誠實。 */
+const spanB = T.mEnd - T.mB, spanA = T.mEnd - T.mA;
+const ratio = (spanA / spanB);
+run($('#meterB'), [
+  { offset:0, transform:'scaleX(0)' },
+  { offset:o(T.mB), transform:'scaleX(0)', easing:E.lin },
+  { offset:o(T.mEnd), transform:'scaleX(1)' },
+  { offset:1, transform:'scaleX(1)' },
+]);
+run($('#meterA'), [
+  { offset:0, transform:'scaleX(0)' },
+  { offset:o(T.mA), transform:'scaleX(0)', easing:E.lin },
+  { offset:o(T.mEnd), transform:`scaleX(${ratio.toFixed(4)})` },
+  { offset:1, transform:`scaleX(${ratio.toFixed(4)})` },
+]);
+
+/* ── 揭示:全片唯一一次 overshoot,所以它會是視線的落點。
+      這裡刻意不用「快 N 倍」。倍數等於 (量條長度比),而量條長度取決於我把
+      T.mEnd 訂在哪 —— 把它改成 10 秒,倍數就會趨近 1。那個數字看起來很權威,
+      其實是我挑的測量窗口製造出來的。
+      「早幾秒」是兩個可讀時刻的差,不管量到哪都一樣,所以才站得住。 ────── */
+$('#mult').textContent = '早 ' + (T.mA - T.mB).toFixed(1) + ' 秒';
+run($('#mult'), [
+  { offset:0, opacity:0, transform:'scale(.8)' },
+  { offset:o(T.reveal), opacity:0, transform:'scale(.8)', easing:E.back },
+  { offset:o(T.reveal+.28), opacity:1, transform:'scale(1)' },
+  { offset:1, opacity:1, transform:'scale(1)' },
+]);
+
+/* ── 說明文字最後才出現(hero → supporting 的閱讀順序) ─────────────────── */
+run($('#legend'), [
+  { offset:0, opacity:0 },
+  { offset:o(T.done+.15), opacity:0, easing:E.out2 },
+  { offset:o(T.done+.55), opacity:1 },
+  { offset:1, opacity:1 },
+]);
+
+const t0 = anims[0]?.timeline?.currentTime ?? 0;
+anims.forEach((a) => { a.startTime = t0; });
+window.__anims = anims;
+</script>
+</body>
+</html>

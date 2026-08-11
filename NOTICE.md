@@ -39,6 +39,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+## Meng To — Skills (animation-systems)
+
+`skills/concept-motion/references/polish.md` adapts the choreography model
+(hero → supporting reading order, one hero moment), the duration and stagger
+defaults, and the motion-primitive set from
+<https://github.com/MengTo/Skills> (`agent-skills/web-design/animation-systems`).
+
+## GreenSock — gsap-skills
+
+The same file adapts GSAP's ease vocabulary (`power2.out`, `power3.out`,
+`expo.out`, `back.out`) and the labelled-timeline / position-parameter approach
+from <https://github.com/greensock/gsap-skills>, MIT licensed. Values are used as
+plain `cubic-bezier` equivalents; GSAP itself is not bundled or required.
+
 ## Apple — Designing Fluid Interfaces
 
 Spatial-consistency and symmetric-path guidance derives from Apple's

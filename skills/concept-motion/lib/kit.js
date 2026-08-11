@@ -34,9 +34,19 @@ import { animate } from 'https://cdn.jsdelivr.net/npm/motion@13.1.0/+esm';
    away and off — which is exactly the closing collapse, hence EASE_IN below.
    Don't reach for it anywhere else. */
 export const EASE        = [.32, .72, 0, 1];      // standard move: quick out, soft land
-export const EASE_OUT    = [.23, 1, .32, 1];      // strong ease-out for entrances
-export const EASE_IN_OUT = [.77, 0, .175, 1];     // for something already on screen moving A→B
+export const EASE_OUT    = [.23, 1, .32, 1];      // power4.out — a landing with weight
+export const EASE_IN_OUT = [.77, 0, .175, 1];     // something already on screen moving A→B
 export const EASE_IN     = [.5, 0, .75, 0];       // accelerate away — the collapse ONLY
+
+/* The expressive set, named after GSAP's eases because that's the clearest
+   vocabulary for them, expressed as plain cubic-beziers so no dependency is
+   added. See references/polish.md — a scene where most things are `linear`
+   reads as flat even when every individual `linear` is defensible. */
+export const OUT2  = [.215, .61, .355, 1];        // power2.out — safe default entrance
+export const OUT3  = [.165, .84, .44, 1];         // power3.out — stronger entrance
+export const EXPO  = [.19, 1, .22, 1];            // expo.out   — most dramatic stop
+export const BACK  = [.34, 1.56, .64, 1];         // back.out   — overshoot, ONCE per scene
+export const IN2   = [.55, .085, .68, .53];       // power2.in  — exits only
 
 export const TOKENS = {
   bg:     '#657689',
@@ -57,7 +67,10 @@ body{display:grid;place-items:center;
   -webkit-font-smoothing:antialiased}
 .cm-stage{position:relative;background:var(--bg);overflow:hidden}
 .cm-unit{position:absolute;inset:0;transform-origin:center center}
-.cm-panel{position:absolute;background:var(--card);opacity:0}
+/* Soft shadow + a barely-there top highlight turns a flat rectangle into a
+   material. 4px radii read as a 2015 dialog; 12–16px is current. */
+.cm-panel{position:absolute;background:var(--card);opacity:0;border-radius:14px;
+  box-shadow:0 18px 44px rgba(12,20,26,.30), 0 2px 0 rgba(255,255,255,.07) inset}
 /* Frame as four 1px divs, not an SVG dash animation: Motion's pathLength lives
    in its React SVG renderer and silently does nothing from vanilla animate().
    Per-edge timing is also what makes the two-pen trace possible. */
@@ -71,8 +84,11 @@ body{display:grid;place-items:center;
 .cm-frame .hd.tl{left:-3px;top:-3px}.cm-frame .hd.tr{right:-3px;top:-3px}
 .cm-frame .hd.bl{left:-3px;bottom:-3px}.cm-frame .hd.br{right:-3px;bottom:-3px}
 .cm-body{position:absolute}
-.cm-item{position:absolute;border-radius:2px;transform-origin:left center;transform:scaleX(0)}
-.cm-item>span{position:absolute;inset:0;background:var(--accent);border-radius:2px;
+/* Content bars are FULLY round. A 15px bar with a 2px radius reads as an
+   unfinished wireframe — it is the fastest way to make output look cheap.
+   999px clamps to a semicircle at any height, so it survives resizing. */
+.cm-item{position:absolute;border-radius:999px;transform-origin:left center;transform:scaleX(0)}
+.cm-item>span{position:absolute;inset:0;background:var(--accent);border-radius:999px;
   transform-origin:left center;transform:scaleX(0)}
 /* Never scale(0). Nothing in the physical world appears from literally nothing,
    and the eye reads it as a glitch rather than an entrance. Start near full size

@@ -55,10 +55,12 @@ skills/concept-motion/
 ├── assets/
 │   ├── scene-phase-spine.html        working scene: work advancing through states
 │   ├── scene-field-collapse.html     working scene: many candidates narrow to a few
+│   ├── scene-race-streaming.html     working scene: A/B comparison, zero-dependency WAAPI
 │   └── scene-template.html           standalone CSS-clock scaffold, zero deps
 ├── references/
 │   ├── intent-to-mechanism.md        interview → claim → mechanism. Read first.
 │   ├── mechanisms.md                 build recipe per mechanism
+│   ├── polish.md                     radii, depth, expressive easing, choreography
 │   ├── motion-craft.md               easing, physicality, vocabulary, review pass
 │   ├── house-style.md                palette, curves, visual vocabulary
 │   └── motion-track.md               Motion API guidance + silent failure modes
@@ -124,13 +126,32 @@ app or go to designers as an editable asset, use
 [diffusionstudio/lottie](https://github.com/diffusionstudio/lottie) and carry the
 beat sheet over.
 
+## A note on dependencies
+
+`scene-race-streaming.html` uses the browser's native Web Animations API and has
+**zero dependencies** — it runs offline, straight from disk. That was a fix, not a
+preference: an earlier version imported Motion from a CDN, which is silently
+blocked by strict-CSP preview surfaces and by corporate networks. The page still
+rendered, nothing animated, and no error was visible anywhere.
+
+If a scene must survive an unknown network, prefer WAAPI. Each element gets one
+animation covering the full cycle, so the loop resets itself and no reset block is
+needed.
+
 ## Credits
 
 Craft rules, easing curves, the motion vocabulary and the review discipline are
 adapted from [Emil Kowalski's skills](https://github.com/emilkowalski/skills)
 (MIT). His material targets interactive UI; `references/motion-craft.md` documents
 which of those rules deliberately do **not** apply to non-interactive explanatory
-motion. Full notices in [NOTICE.md](NOTICE.md).
+motion.
+
+`references/polish.md` adapts the choreography model and motion defaults from
+[Meng To's animation-systems](https://github.com/MengTo/Skills), and the ease
+vocabulary from [GreenSock's official GSAP skills](https://github.com/greensock/gsap-skills)
+(MIT) — used as `cubic-bezier` equivalents, so no library dependency is added.
+
+Full notices in [NOTICE.md](NOTICE.md).
 
 ## License
 
