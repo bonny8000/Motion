@@ -81,6 +81,7 @@ Before the beat sheet, make a short lock/adapt table:
 | One centered 81% × 66% panel | stable full-size pose | LOCK |
 | About 10s, dot → frame → work → collapse | repeated cycle | LOCK |
 | Flat 2px geometry, no shadow | full-size frames | LOCK |
+| Editor handles / selection box | editing semantics | ADAPT or DROP |
 | Status/Writing/Reviewing labels | semantic content | ADAPT |
 | Code-row structure | fits the new claim | KEEP / ADAPT |
 ```
@@ -100,6 +101,12 @@ Build two models, then combine them:
 
 The claim mechanism chooses what happens **inside** the reference fingerprint.
 It does not automatically replace the fingerprint.
+
+Meaning is the boundary on fidelity. A handle, caret, selection frame, loader or
+connector is not neutral visual grammar when it implies a specific action. Keep
+its size, rhythm or material as inspiration, but transfer the object itself only
+when its meaning survives in the new domain. Use `semantic-continuity.md` to
+classify these artifacts before marking them LOCK.
 
 For example, a speed comparison does not require two large side-by-side panels
 when the goal clip has one centered hero. Put two synchronized tracks inside the
@@ -143,7 +150,7 @@ For a seekable HTML scene:
 
 ```bash
 node scripts/export.mjs assets/scene.html --formats sheet \
-  --seconds 16.8 --samples 12 --out work/scene-review
+  --seconds 18.4 --samples 16 --out work/scene-review
 ```
 
 The output includes a PNG board and JSON timestamps. Place it beside the video
@@ -164,6 +171,7 @@ Do not deliver until all are true:
 - [ ] Opening, information-rich, payoff and 99% poses compare cleanly
 - [ ] Material has not been generically "upgraded" away from the reference
 - [ ] Accent color keeps the same semantic job throughout the cycle
+- [ ] Every reference-derived object still has a valid meaning in the new domain
 - [ ] The HTML opens from `file://` if the deliverable is one standalone file
 - [ ] `?t=N` or the scene's documented seek hook freezes deterministic frames
 - [ ] The reduced-motion still is information-rich, not the empty opening pose

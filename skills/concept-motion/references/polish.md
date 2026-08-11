@@ -44,6 +44,12 @@ more "finished" than the other:
   the reference or brand world contains elevation. A flat reference with a new
   shadow is lower fidelity, not higher craft.
 - **Standard offsets: 8 / 16 / 24px.** Pick spacing from a scale, not per element.
+- **Use concentric radii for nested surfaces.** Start with
+  `inner radius = outer radius - inset`, then adjust optically. Arbitrary radii
+  make related layers look assembled from different systems.
+- **Match handoff geometry.** A shared element must keep the same centerline or
+  edge contact at the transition boundary. Connectors meet the actual source and
+  destination surfaces; they do not stop in nearby empty space.
 - **Check for collisions at the final frame.** A badge overlapping a panel edge by
   a few pixels is invisible while building and unmistakable in a screenshot.
 

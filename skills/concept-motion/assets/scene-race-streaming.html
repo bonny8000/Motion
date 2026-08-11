@@ -6,172 +6,221 @@
 <title>Live Audio Feedback</title>
 <style>
   :root{
-    --bg:#657689; --card:#1a2931; --accent:#0061de;
-    --bar-a:#78868e; --bar-b:#5e6c74; --bar-c:#46545c;
-    --good-a:#2f7cff; --good-b:#38bdf8;
-    --good-c:#7c6cff; --good-d:#24c997;
-    --label:#e8eef0; --frame:#fff;
+    --bg:#67798b;
+    --shell:#14262e;
+    --surface:#1d313b;
+    --surface-2:#223944;
+    --line:#38505b;
+    --text:#f4f8fa;
+    --muted:#91a2aa;
+    --quiet:#60727b;
+    --live:#2f7cff;
+    --live-soft:#70cfff;
+    --interim:#f1b84b;
+    --corrected:#35c89b;
+    --r-shell:42px;
+    --r-card:28px;
+    --r-control:24px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;background:var(--bg)}
-  body{display:grid;place-items:center;
-    font-family:'Inter','PingFang TC','Microsoft JhengHei','Noto Sans TC',
-                -apple-system,system-ui,sans-serif;
-    -webkit-font-smoothing:antialiased}
+  body{display:grid;place-items:center;font-family:Inter,-apple-system,BlinkMacSystemFont,
+       "Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+  .stage{position:relative;width:1600px;height:900px;overflow:hidden;background:var(--bg)}
 
-  /* REFERENCE FINGERPRINT
-     One centered 1290×590 hero, a flat material, a fixed state label, frame
-     handles and a closing collapse. The comparison lives INSIDE that grammar;
-     it does not replace the reference with two unrelated hero cards. */
-  .stage{position:relative;width:1600px;height:900px;background:var(--bg);overflow:hidden}
-  #unit{position:absolute;inset:0;transform-origin:center center}
-  #panel{position:absolute;left:155px;top:155px;width:1290px;height:590px;
-         background:var(--card);border-radius:36px;opacity:0}
+  /* The product surface begins and ends as the microphone control. Expanding
+     this one surface creates the recorder; no editor handles or decorative
+     frame are introduced. */
+  #shell{position:absolute;left:155px;top:155px;width:1290px;height:590px;
+         overflow:hidden;background:var(--shell);border-radius:var(--r-shell);
+         clip-path:inset(257px 607px round 38px);
+         box-shadow:0 0 0 rgba(10,20,25,0)}
+  #readyCue{position:absolute;left:0;top:510px;width:1600px;text-align:center;
+            color:var(--text);font-size:24px;font-weight:560;letter-spacing:-.015em}
 
-  #frame,#roundFrame{position:absolute;left:155px;top:155px;width:1290px;height:590px}
-  #roundFrame{overflow:visible;pointer-events:none}
-  #roundFrame rect{fill:none;stroke:var(--frame);stroke-width:1;path-length:1;
-                   stroke-dasharray:1;stroke-dashoffset:1;vector-effect:non-scaling-stroke}
-  #frame .edge{position:absolute;background:var(--frame)}
-  #frame .top,#frame .bottom{left:0;width:100%;height:1px;transform:scaleX(0);transform-origin:left}
-  #frame .left,#frame .right{top:0;width:1px;height:100%;transform:scaleY(0);transform-origin:top}
-  #frame .top{top:0} #frame .bottom{bottom:0}
-  #frame .left{left:0} #frame .right{right:0}
-  #frame .handle{position:absolute;width:7px;height:7px;background:var(--frame);
-                 border-radius:50%;opacity:0}
-  #frame .tl{left:-3px;top:-3px} #frame .tr{right:-3px;top:-3px}
-  #frame .bl{left:-3px;bottom:-3px} #frame .br{right:-3px;bottom:-3px}
+  #captureBar{position:absolute;left:32px;top:32px;width:1226px;height:100px;
+              overflow:hidden;border:1px solid var(--line);border-radius:var(--r-control);
+              background:var(--surface);opacity:0;clip-path:inset(0 1110px 0 0 round 24px)}
+  #mic{position:absolute;left:54px;top:52px;width:52px;height:52px;border-radius:50%;
+       background:#183e53;border:1px solid #2f88ba;z-index:4;
+       transform:translate(565px,217px)}
+  #mic::before{content:"";position:absolute;left:19px;top:10px;width:10px;height:19px;
+               border:2px solid #82d5ff;border-radius:8px}
+  #mic::after{content:"";position:absolute;left:14px;top:25px;width:20px;height:12px;
+              border:2px solid #82d5ff;border-top:0;border-radius:0 0 12px 12px}
+  #micStem{position:absolute;left:25px;top:37px;width:2px;height:6px;
+           border-radius:2px;background:#82d5ff}
 
-  .state{position:absolute;left:155px;top:190px;width:1244px;text-align:right;
-         color:var(--label);font-size:27px;font-weight:450;letter-spacing:-.01em;
-         white-space:nowrap;opacity:0}
+  #captureCopy{position:absolute;left:98px;top:23px;height:54px;color:var(--text);opacity:0}
+  #captureCopy small{display:block;color:var(--muted);font-size:14px;font-weight:650;
+                     letter-spacing:.055em;text-transform:uppercase}
+  #captureCopy strong{position:absolute;left:0;top:22px;font-size:25px;font-weight:570;
+                      white-space:nowrap;letter-spacing:-.015em}
+  #captureCopy strong:not(:first-of-type){opacity:0}
 
-  #voice{position:absolute;left:199px;top:240px;width:1160px;height:72px;
-         display:flex;align-items:center;padding:0 22px;gap:16px;
-         color:var(--label);background:#22343e;border:1px solid rgba(255,255,255,.08);
-         border-radius:22px;opacity:0}
-  #mic{position:relative;width:42px;height:42px;flex:0 0 auto;border-radius:50%;
-       background:rgba(47,124,255,.18);border:1px solid rgba(56,189,248,.42)}
-  #mic::before{content:"";position:absolute;left:16px;top:9px;width:8px;height:15px;
-               border:2px solid #8edcff;border-radius:8px}
-  #mic::after{content:"";position:absolute;left:12px;top:20px;width:16px;height:10px;
-              border:2px solid #8edcff;border-top:0;border-radius:0 0 10px 10px}
-  .voice-copy{position:relative;width:220px;height:40px;flex:0 0 auto}
-  .voice-copy strong{display:block;font-size:14px;font-weight:520;color:#96a6ae;
-                     letter-spacing:.02em;text-transform:uppercase}
-  .voice-copy span{position:absolute;left:0;bottom:0;font-size:21px;font-weight:500;white-space:nowrap}
-  #voiceCaptured{opacity:0}
-  #wave{height:38px;display:flex;align-items:center;gap:7px;margin-left:auto;opacity:0}
-  #wave i{display:block;width:4px;height:28px;border-radius:4px;
-          background:var(--good-b);transform:scaleY(.18)}
+  #timer{position:absolute;right:196px;top:34px;width:72px;height:32px;color:var(--muted);
+         font-variant-numeric:tabular-nums;font-size:20px;font-weight:600;text-align:right;opacity:0}
+  #timer span{position:absolute;inset:0;opacity:0}
+  #wave{position:absolute;right:292px;top:32px;height:36px;display:flex;align-items:center;
+        gap:6px;opacity:0}
+  #wave i{display:block;width:4px;height:30px;border-radius:4px;
+          background:var(--live-soft);transform:scaleY(.2)}
+  #stopControl{position:absolute;right:24px;top:22px;width:56px;height:56px;
+               display:grid;place-items:center;border:1px solid #48616c;border-radius:18px;
+               background:#29404a;opacity:0}
+  #stopSquare{width:16px;height:16px;border-radius:4px;background:#ff7d74}
+  #doneCheck{position:absolute;width:19px;height:10px;border-left:3px solid var(--corrected);
+             border-bottom:3px solid var(--corrected);transform:rotate(-45deg) scale(.82);opacity:0}
 
-  .lane{position:absolute;left:199px;width:1160px;opacity:0}
-  #laneA{top:350px} #laneB{top:530px}
-  .lane-title{display:flex;align-items:center;gap:12px;color:var(--label);
-              font-size:22px;font-weight:500;letter-spacing:-.01em}
-  .lane-title::before{content:"";display:block;width:7px;height:7px;
-                      border-radius:50%;background:var(--bar-b)}
-  #laneA .lane-title{color:#aeb9be}
-  #laneB .lane-title::before{background:var(--accent)}
-  .words{position:absolute;left:0;top:46px;display:flex;align-items:center;gap:12px}
-  .word{padding:12px 17px;border-radius:15px;font-size:25px;font-weight:520;
-        line-height:1.15;white-space:nowrap;opacity:0;transform:translateY(10px) scale(.96)}
-  #wordsA .word{color:#b1bcc1;background:#35444c;border:1px solid #46545c}
-  #wordsB .word{color:#f8fbff;border:1px solid rgba(255,255,255,.16)}
-  #wordsB .word:nth-child(1),#wordsB .word:nth-child(5){background:var(--good-a)}
-  #wordsB .word:nth-child(2),#wordsB .word:nth-child(6){background:var(--good-b);color:#102a36}
-  #wordsB .word:nth-child(3){background:var(--good-c)}
-  #wordsB .word:nth-child(4){background:var(--good-d);color:#102f29}
+  /* These are data routes, not decoration: one captured utterance feeds both
+     recognition behaviours. Grey waits for stop; blue returns interim text. */
+  #routes{position:absolute;left:0;top:134px;width:1290px;height:105px;overflow:visible;opacity:0}
+  #routes path{fill:none;stroke-width:2;stroke-linecap:round;pathLength:1;
+               stroke-dasharray:1;stroke-dashoffset:1}
+  #routeWait{stroke:#60727b}
+  #routeLive{stroke:var(--live)}
+  .routeLabel{position:absolute;top:185px;font-size:14px;font-weight:620;
+              letter-spacing:.04em;text-transform:uppercase;opacity:0}
+  #waitRouteLabel{left:250px;color:#7f9199}
+  #liveRouteLabel{right:244px;color:#70a7ff}
 
-  #loader{position:absolute;left:0;top:63px;display:flex;gap:10px;opacity:0}
-  #loader i{width:10px;height:10px;border-radius:50%;background:var(--bar-b);opacity:.22}
-  #caret{position:absolute;left:199px;top:581px;width:3px;height:31px;border-radius:3px;
-         background:var(--good-b);opacity:0;box-shadow:0 0 12px rgba(56,189,248,.58)}
+  .track{position:absolute;top:238px;width:566px;height:292px;padding:26px 28px;
+         border-radius:var(--r-card);opacity:0;transform:translateY(18px) scale(.985)}
+  #waitCard{left:64px;background:#1b2c34;border:1px solid #354851}
+  #liveCard{left:660px;background:var(--surface-2);border:1px solid #315f86;
+            box-shadow:0 18px 42px rgba(2,15,22,.18)}
+  .trackHeader{display:flex;align-items:center;justify-content:space-between}
+  .trackTitle{font-size:20px;font-weight:620;letter-spacing:-.01em}
+  #waitCard .trackTitle{color:#a0adb3}
+  #liveCard .trackTitle{color:var(--text)}
+  .status{position:relative;min-width:84px;height:30px;padding:7px 11px;
+          border-radius:999px;font-size:13px;font-weight:650;
+          letter-spacing:.015em;white-space:nowrap;text-align:center}
+  .status i{position:absolute;inset:7px 8px auto;font-style:normal;opacity:0}
+  .status i:first-child{opacity:1}
+  #waitStatus{color:#9aa9b0;background:#2a3b43}
+  #liveStatus{color:#9cc5ff;background:rgba(47,124,255,.14)}
 
-  #selection{position:absolute;left:191px;top:386px;height:70px;width:0;
-             border:2px solid var(--accent);border-radius:18px;opacity:0}
-  #selection i{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--accent)}
-  #selection i:nth-child(1){left:-3px;top:-3px}
-  #selection i:nth-child(2){right:-3px;top:-3px}
-  #selection i:nth-child(3){left:-3px;bottom:-3px}
-  #selection i:nth-child(4){right:-3px;bottom:-3px}
+  .transcript{position:absolute;left:28px;right:28px;top:96px;height:72px;
+              display:flex;align-items:baseline;gap:8px;color:var(--text);
+              font-size:31px;font-weight:540;letter-spacing:-.025em;white-space:nowrap}
+  #waitTranscript{opacity:0;color:#b6c1c6}
+  #liveTranscript .word{opacity:0;transform:translateY(9px);display:inline-block}
+  #liveTranscript .choice{position:relative;display:inline-block;width:54px;height:38px}
+  #liveFour,#liveTwo{position:absolute;left:0;top:0}
+  #liveTwo{opacity:0;color:var(--corrected)}
+  #liveCaret{position:absolute;left:0;top:5px;width:3px;height:34px;border-radius:3px;
+             background:var(--live-soft);opacity:0;box-shadow:0 0 10px rgba(112,207,255,.45)}
 
-  #dot{position:absolute;left:797px;top:448px;width:6px;height:6px;
-       border-radius:50%;background:var(--label);opacity:0}
+  #waitEmpty{position:absolute;left:28px;top:102px;display:flex;align-items:center;gap:14px;
+             color:#71838b;font-size:20px;font-weight:500}
+  #clockIcon{position:relative;width:34px;height:34px;border:2px solid #60727b;border-radius:50%}
+  #clockIcon::before{content:"";position:absolute;left:15px;top:7px;width:2px;height:10px;
+                    border-radius:2px;background:#71838b;transform-origin:bottom}
+  #clockIcon::after{content:"";position:absolute;left:15px;top:15px;width:8px;height:2px;
+                   border-radius:2px;background:#71838b}
+
+  .cardNote{position:absolute;left:28px;right:28px;bottom:24px;height:42px;display:flex;
+            align-items:center;gap:10px;padding:0 14px;border-radius:14px;font-size:16px;
+            font-weight:560;opacity:0;transform:translateY(6px)}
+  #waitNote{color:#9ba9af;background:#273942}
+  #liveNote{color:#bcd5ff;background:rgba(47,124,255,.12)}
+  #liveNote i{width:8px;height:8px;border-radius:50%;background:var(--corrected);
+              box-shadow:0 0 0 5px rgba(53,200,155,.10)}
+
+  #sessionReset{position:absolute;left:0;bottom:20px;width:1290px;text-align:center;
+                color:var(--muted);font-size:16px;font-weight:550;opacity:0}
 </style>
 </head>
 <body>
 <main class="stage" id="stage">
-  <div id="dot"></div>
-  <div id="unit">
-    <div id="panel"></div>
-    <svg id="roundFrame" viewBox="0 0 1290 590" aria-hidden="true">
-      <rect x=".5" y=".5" width="1289" height="589" rx="35.5" pathLength="1"></rect>
+  <div id="readyCue">Tap to speak</div>
+  <section id="shell" aria-label="Audio transcription comparison">
+    <div id="captureBar"></div>
+    <div id="mic"><i id="micStem"></i></div>
+    <div id="captureCopy">
+      <small>Audio input</small>
+      <strong id="listeningLabel">Listening</strong>
+      <strong id="capturedLabel">Recording complete</strong>
+      <strong id="nextLabel">Ready for next message</strong>
+    </div>
+    <div id="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div id="timer">
+      <span id="time1">00:01</span><span id="time2">00:02</span>
+      <span id="time3">00:03</span><span id="time4">00:04</span>
+      <span id="time5">00:05</span><span id="timeStop">Stopped</span>
+    </div>
+    <div id="stopControl"><i id="stopSquare"></i><i id="doneCheck"></i></div>
+
+    <svg id="routes" viewBox="0 0 1290 105" aria-hidden="true">
+      <path id="routeWait" d="M645 0 C645 48 347 30 347 105" pathLength="1"></path>
+      <path id="routeLive" d="M645 0 C645 48 943 30 943 105" pathLength="1"></path>
     </svg>
-    <div id="frame">
-      <i class="handle tl"></i><i class="handle tr"></i>
-      <i class="handle bl"></i><i class="handle br"></i>
-    </div>
+    <div class="routeLabel" id="waitRouteLabel">Waits for stop</div>
+    <div class="routeLabel" id="liveRouteLabel">Returns interim text</div>
 
-    <div class="state" id="stateStart">Start speaking</div>
-    <div class="state" id="stateReadable">Words appear as you speak</div>
-    <div class="state" id="stateProof">Feedback 0.0s sooner</div>
+    <article class="track" id="waitCard">
+      <header class="trackHeader">
+        <h2 class="trackTitle">After recording</h2>
+        <span class="status" id="waitStatus"><i id="waitWaiting">Waiting</i><i id="waitAvailable">Available</i></span>
+      </header>
+      <div id="waitEmpty"><i id="clockIcon"></i><span>Transcript unavailable while speaking</span></div>
+      <div class="transcript" id="waitTranscript">Book a table for two tonight</div>
+      <div class="cardNote" id="waitNote">Visible only after recording stops</div>
+    </article>
 
-    <div id="voice">
-      <div id="mic"></div>
-      <div class="voice-copy">
-        <strong>Audio input</strong>
-        <span id="voiceListening">Listening…</span>
-        <span id="voiceCaptured">Audio captured</span>
+    <article class="track" id="liveCard">
+      <header class="trackHeader">
+        <h2 class="trackTitle">Live transcript</h2>
+        <span class="status" id="liveStatus"><i id="liveInterim">Interim</i><i id="liveCorrected">Corrected</i><i id="liveFinal">Final</i></span>
+      </header>
+      <div class="transcript" id="liveTranscript">
+        <span class="word" id="liveBook">Book</span>
+        <span class="word" id="liveA">a</span>
+        <span class="word" id="liveTable">table</span>
+        <span class="word" id="liveFor">for</span>
+        <span class="word choice" id="liveChoice"><span id="liveFour">four</span><span id="liveTwo">two</span></span>
+        <span class="word" id="liveTonight">tonight</span>
+        <i id="liveCaret"></i>
       </div>
-      <div id="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-    </div>
+      <div class="cardNote" id="liveNote"><i></i><span>Corrected before recording stopped</span></div>
+    </article>
 
-    <section class="lane" id="laneA">
-      <div class="lane-title">After recording</div>
-      <div id="loader"><i></i><i></i><i></i></div>
-      <div class="words" id="wordsA"></div>
-    </section>
-    <section class="lane" id="laneB">
-      <div class="lane-title">Live transcript</div>
-      <div class="words" id="wordsB"></div>
-    </section>
-
-    <div id="caret"></div>
-    <div id="selection"><i></i><i></i><i></i><i></i></div>
-  </div>
+    <div id="sessionReset">Session complete</div>
+  </section>
 </main>
 
 <script>
-/* Standalone, zero-network WAAPI scene. Every narrative animation spans the
-   same 16.8s cycle, so any moment can be sought deterministically with ?t=N. */
-const CYCLE = 16800;
+/* Semantic object ledger
+   mic → the user's action and the source of the session
+   waveform + timer → captured speech and elapsed recording time
+   routes → the same audio entering two recognition behaviours
+   text + caret → interim feedback the user can inspect while speaking
+   status notes → the consequence of each behaviour
+   Every object has a source, a product role and an explicit exit. */
+const CYCLE = 18400;
 const o = (seconds) => seconds * 1000 / CYCLE;
 const E = {
-  out:  'cubic-bezier(.23,1,.32,1)',
-  snap: 'cubic-bezier(.34,1.42,.64,1)',
-  wipe: 'cubic-bezier(.18,.78,.24,1)',
-  move: 'cubic-bezier(.77,0,.175,1)',
-  exit: 'cubic-bezier(.5,0,.75,0)',
+  out:'cubic-bezier(.23,1,.32,1)',
+  enter:'cubic-bezier(.165,.84,.44,1)',
+  move:'cubic-bezier(.645,.045,.355,1)',
+  exit:'cubic-bezier(.55,.085,.68,.53)',
+  settle:'cubic-bezier(.34,1.32,.64,1)',
 };
 const T = {
-  dotEnd:.95, draw:.95, drawHalf:1.85, fill:3.05, ready:3.55,
-  stream:4.30, block:9.05, proof:9.55, scan:10.15,
-  build:14.25, collapse:14.85, collapseEnd:16.25,
+  press:.72, open:1.05, openEnd:2.52, connect:2.42, cards:3.02,
+  speak:3.28, correction:8.05, finalWord:9.02, stop:10.18,
+  delayed:11.18, payoff:12.00, reset:14.92, close:15.72,
+  closeEnd:17.52, readyAgain:17.72,
 };
-const STREAM = [
-  {start:4.30, duration:.52},
-  {start:5.05, duration:.38},
-  {start:5.62, duration:.62},
-  {start:6.50, duration:.44},
-  {start:7.18, duration:.46},
-  {start:7.90, duration:.68},
+const WORDS = [
+  {node:'#liveBook', at:3.48}, {node:'#liveA', at:4.10},
+  {node:'#liveTable', at:4.72}, {node:'#liveFor', at:5.52},
+  {node:'#liveChoice', at:6.30}, {node:'#liveTonight', at:T.finalWord},
 ];
-const PHRASE = ['Book', 'a', 'table', 'for', 'two', 'tonight'];
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const anims = [];
-
 const run = (target, frames, options = {}) => {
   const animation = target.animate(frames, {
     duration:CYCLE, iterations:Infinity, fill:'both', ...options,
@@ -179,237 +228,282 @@ const run = (target, frames, options = {}) => {
   anims.push(animation);
   return animation;
 };
+const fadeWindow = (target, start, end, rise=6) => run(target, [
+  {offset:0,opacity:0,transform:`translateY(${rise}px)`},
+  {offset:o(start),opacity:0,transform:`translateY(${rise}px)`,easing:E.out},
+  {offset:o(start+.24),opacity:1,transform:'translateY(0)'},
+  {offset:o(end-.20),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(end),opacity:0,transform:`translateY(${-rise}px)`},
+  {offset:1,opacity:0,transform:`translateY(${-rise}px)`},
+]);
 
-const buildWords = (host) => PHRASE.map((text) => {
-  const word = document.createElement('span');
-  word.className = 'word';
-  word.textContent = text;
-  host.appendChild(word);
-  return word;
-});
-const wordsA = buildWords($('#wordsA'));
-const wordsB = buildWords($('#wordsB'));
-
-/* The opening point becomes the top-left anchor instead of disappearing as a
-   disconnected ornament. The frame grows directly from that same object. */
-run($('#dot'), [
-  {offset:0,opacity:0,transform:'translate(-34px,16px) scale(.6)'},
-  {offset:o(.14),opacity:1,transform:'translate(0,0) scale(1)',easing:E.out},
-  {offset:o(.52),opacity:1,transform:'translate(0,0) scale(1)',easing:E.move},
-  {offset:o(T.dotEnd),opacity:1,transform:'translate(-606px,-293px) scale(1.4)'},
-  {offset:o(T.fill-.10),opacity:1,transform:'translate(-606px,-293px) scale(1.4)',easing:E.out},
-  {offset:o(T.fill+.14),opacity:0,transform:'translate(-606px,-293px) scale(1)'},
-  {offset:1,opacity:0,transform:'translate(-606px,-293px) scale(1)'},
-]);
-const roundedOutline = $('#roundFrame rect');
-run(roundedOutline, [
-  {offset:0,strokeDashoffset:1},
-  {offset:o(T.draw),strokeDashoffset:1,easing:E.out},
-  {offset:o(T.fill),strokeDashoffset:0},
-  {offset:1,strokeDashoffset:0},
-]);
-run($('#panel'), [
-  {offset:0,opacity:0,transform:'scale(.994)'},
-  {offset:o(T.fill),opacity:0,transform:'scale(.994)',easing:E.out},
-  {offset:o(T.ready),opacity:1,transform:'scale(1)'},
-  {offset:1,opacity:1,transform:'scale(1)'},
-]);
-$$('#frame .handle').forEach((handle) => run(handle, [
-  {offset:0,opacity:0,transform:'scale(0)'},
-  {offset:o(T.fill-.12),opacity:0,transform:'scale(0)',easing:E.snap},
-  {offset:o(T.fill+.10),opacity:1,transform:'scale(1.28)',easing:E.out},
-  {offset:o(T.fill+.28),opacity:1,transform:'scale(1)'},
-  {offset:1,opacity:1,transform:'scale(1)'},
-]));
-
-/* The rounded input control bridges abstract frame construction to a concrete
-   user action: speaking. It remains visible while both feedback models run. */
-run($('#voice'), [
-  {offset:0,opacity:0,transform:'translateY(12px) scale(.985)'},
-  {offset:o(T.ready+.08),opacity:0,transform:'translateY(12px) scale(.985)',easing:E.snap},
-  {offset:o(T.ready+.38),opacity:1,transform:'translateY(-2px) scale(1)',easing:E.out},
-  {offset:o(T.ready+.56),opacity:1,transform:'translateY(0) scale(1)'},
-  {offset:1,opacity:1,transform:'translateY(0) scale(1)'},
-]);
-run($('#wave'), [
-  {offset:0,opacity:0},{offset:o(T.stream-.10),opacity:0,easing:E.out},
-  {offset:o(T.stream+.08),opacity:1},{offset:o(T.block-.12),opacity:1},
-  {offset:o(T.block+.18),opacity:.22},{offset:1,opacity:.22},
-]);
-$$('#wave i').forEach((bar, index) => {
-  const animation = bar.animate([
-    {transform:'scaleY(.18)',opacity:.45},
-    {transform:`scaleY(${.58 + (index%4)*.14})`,opacity:1},
-    {transform:'scaleY(.26)',opacity:.58},
-  ], {
-    duration:620 + (index%3)*170, delay:index*54, iterations:Infinity,
-    easing:'cubic-bezier(.45,0,.55,1)', fill:'both',
-  });
-  anims.push(animation);
-});
-run($('#mic'), [
-  {offset:0,boxShadow:'0 0 0 0 rgba(56,189,248,0)'},
-  {offset:o(T.stream),boxShadow:'0 0 0 0 rgba(56,189,248,0)',easing:E.out},
-  {offset:o(T.stream+.36),boxShadow:'0 0 0 9px rgba(56,189,248,.12)'},
-  {offset:o(T.stream+.72),boxShadow:'0 0 0 0 rgba(56,189,248,0)'},
-  {offset:o(T.block),boxShadow:'0 0 0 0 rgba(56,189,248,0)'},
-  {offset:1,boxShadow:'0 0 0 0 rgba(56,189,248,0)'},
-]);
-run($('#voiceListening'), [
+/* 1 — The microphone is the actual opening control. Press feedback initiates
+   the recorder; the same element moves into the expanded surface. */
+run($('#readyCue'), [
   {offset:0,opacity:1,transform:'translateY(0)'},
-  {offset:o(T.block-.14),opacity:1,transform:'translateY(0)',easing:E.out},
-  {offset:o(T.block+.14),opacity:0,transform:'translateY(-6px)'},
-  {offset:1,opacity:0,transform:'translateY(-6px)'},
-]);
-run($('#voiceCaptured'), [
-  {offset:0,opacity:0,transform:'translateY(7px)'},
-  {offset:o(T.block-.05),opacity:0,transform:'translateY(7px)',easing:E.out},
-  {offset:o(T.block+.20),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.press),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.open+.16),opacity:0,transform:'translateY(8px)'},
+  {offset:o(T.readyAgain),opacity:0,transform:'translateY(8px)',easing:E.out},
+  {offset:o(18.02),opacity:1,transform:'translateY(0)'},
   {offset:1,opacity:1,transform:'translateY(0)'},
 ]);
-
-/* The two feedback models enter within the same rounded hero. */
-[$('#laneA'), $('#laneB')].forEach((lane, index) => {
-  const start = T.ready + .28 + index*.10;
-  run(lane, [
-    {offset:0,opacity:0,transform:'translateY(14px)'},
-    {offset:o(start),opacity:0,transform:'translateY(14px)',easing:E.snap},
-    {offset:o(start+.26),opacity:1,transform:'translateY(-2px)',easing:E.out},
-    {offset:o(start+.44),opacity:1,transform:'translateY(0)'},
-    {offset:1,opacity:1,transform:'translateY(0)'},
-  ]);
-});
-run($('#loader'), [
-  {offset:0,opacity:0},{offset:o(T.ready+.10),opacity:0},
-  {offset:o(T.ready+.30),opacity:1},{offset:o(T.block-.10),opacity:1},
-  {offset:o(T.block+.05),opacity:0},{offset:1,opacity:0},
+run($('#mic'), [
+  {offset:0,transform:'translate(565px,217px) scale(1)'},
+  {offset:o(T.press),transform:'translate(565px,217px) scale(1)',easing:E.settle},
+  {offset:o(T.press+.16),transform:'translate(565px,217px) scale(.91)',easing:E.out},
+  {offset:o(T.openEnd),transform:'translate(0,0) scale(1)'},
+  {offset:o(T.close),transform:'translate(0,0) scale(1)',easing:E.move},
+  {offset:o(T.closeEnd),transform:'translate(565px,217px) scale(1)'},
+  {offset:1,transform:'translate(565px,217px) scale(1)'},
 ]);
-$$('#loader i').forEach((dot, index) => {
-  const animation = dot.animate([{opacity:.22},{opacity:1},{opacity:.22}], {
-    duration:1040, delay:index*145, iterations:Infinity,
-    easing:'cubic-bezier(.45,0,.55,1)', fill:'both',
-  });
+run($('#shell'), [
+  {offset:0,clipPath:'inset(257px 607px round 38px)',boxShadow:'0 0 0 rgba(10,20,25,0)'},
+  {offset:o(T.open),clipPath:'inset(257px 607px round 38px)',boxShadow:'0 0 0 rgba(10,20,25,0)',easing:E.out},
+  {offset:o(T.openEnd),clipPath:'inset(0 round 42px)',boxShadow:'0 24px 60px rgba(10,20,25,.24)'},
+  {offset:o(T.close),clipPath:'inset(0 round 42px)',boxShadow:'0 24px 60px rgba(10,20,25,.24)',easing:E.move},
+  {offset:o(T.closeEnd),clipPath:'inset(257px 607px round 38px)',boxShadow:'0 0 0 rgba(10,20,25,0)'},
+  {offset:1,clipPath:'inset(257px 607px round 38px)',boxShadow:'0 0 0 rgba(10,20,25,0)'},
+]);
+run($('#captureBar'), [
+  {offset:0,opacity:0,clipPath:'inset(0 1110px 0 0 round 24px)'},
+  {offset:o(T.open+.34),opacity:0,clipPath:'inset(0 1110px 0 0 round 24px)',easing:E.out},
+  {offset:o(T.openEnd+.16),opacity:1,clipPath:'inset(0 round 24px)'},
+  {offset:o(T.close-.18),opacity:1,clipPath:'inset(0 round 24px)',easing:E.exit},
+  {offset:o(T.close+.12),opacity:0,clipPath:'inset(0 1110px 0 0 round 24px)'},
+  {offset:1,opacity:0,clipPath:'inset(0 1110px 0 0 round 24px)'},
+]);
+fadeWindow($('#captureCopy'), T.openEnd-.12, T.close+.10, 5);
+fadeWindow($('#stopControl'), T.openEnd+.16, T.reset+.52, 4);
+
+/* 2 — The audio is visibly active. Only the waveform uses continuous repeated
+   motion because it represents changing acoustic energy. */
+run($('#wave'), [
+  {offset:0,opacity:0},{offset:o(T.speak-.12),opacity:0,easing:E.out},
+  {offset:o(T.speak+.12),opacity:1},{offset:o(T.stop-.12),opacity:1},
+  {offset:o(T.stop+.22),opacity:.18},{offset:o(T.reset),opacity:.18},
+  {offset:o(T.reset+.24),opacity:0},{offset:1,opacity:0},
+]);
+$$('#wave i').forEach((bar,index) => {
+  const animation = bar.animate([
+    {transform:'scaleY(.18)',opacity:.45},
+    {transform:`scaleY(${.58+(index%4)*.13})`,opacity:1},
+    {transform:'scaleY(.26)',opacity:.55},
+  ], {duration:610+(index%3)*155,delay:index*52,iterations:Infinity,
+      easing:'cubic-bezier(.45,0,.55,1)',fill:'both'});
   anims.push(animation);
 });
-
-/* Live transcript: the words appear at the moment they are heard, so the user
-   can read back the request while still speaking. */
-wordsB.forEach((word, index) => {
-  const reveal = STREAM[index].start + .18;
-  run(word, [
-    {offset:0,opacity:0,transform:'translateY(10px) scale(.96)'},
-    {offset:o(reveal),opacity:0,transform:'translateY(10px) scale(.96)',easing:E.snap},
-    {offset:o(reveal+.20),opacity:1,transform:'translateY(-2px) scale(1.03)',easing:E.out},
-    {offset:o(reveal+.38),opacity:1,transform:'translateY(0) scale(1)'},
-    {offset:1,opacity:1,transform:'translateY(0) scale(1)'},
-  ]);
-});
-
-/* The caret advances word by word, then becomes the comparison outline. */
-const caretFrames = [{offset:0,transform:'translate(0,0)'}];
-let caretRight = 0;
-wordsB.forEach((word, index) => {
-  const reveal = STREAM[index].start + .18;
-  const nextRight = word.offsetLeft + word.offsetWidth + 8;
-  caretFrames.push({offset:o(reveal),transform:`translate(${caretRight}px,0)`,easing:E.snap});
-  caretFrames.push({offset:o(reveal+.22),transform:`translate(${nextRight}px,0)`});
-  caretRight = nextRight;
-});
-caretFrames.push({offset:1,transform:caretFrames.at(-1).transform});
-run($('#caret'), caretFrames);
-run($('#caret'), [
-  {offset:0,opacity:0},{offset:o(T.stream-.08),opacity:0},
-  {offset:o(T.stream+.04),opacity:1},{offset:o(T.scan-.36),opacity:1},
-  {offset:o(T.scan-.12),opacity:0},{offset:1,opacity:0},
+run($('#timer'), [
+  {offset:0,opacity:0},{offset:o(T.speak-.08),opacity:0},
+  {offset:o(T.speak+.14),opacity:1},{offset:o(T.reset),opacity:1},
+  {offset:o(T.reset+.24),opacity:0},{offset:1,opacity:0},
 ]);
-
-/* Delayed transcript: no text feedback is available until recording ends. */
-wordsA.forEach((word, index) => {
-  const start = T.block + index*.055;
-  run(word, [
-    {offset:0,opacity:0,transform:'translateY(14px) scale(.97)'},
-    {offset:o(start),opacity:0,transform:'translateY(14px) scale(.97)',easing:E.snap},
-    {offset:o(start+.20),opacity:1,transform:'translateY(-2px) scale(1.02)',easing:E.out},
-    {offset:o(start+.38),opacity:1,transform:'translateY(0) scale(1)'},
-    {offset:1,opacity:1,transform:'translateY(0) scale(1)'},
-  ]);
-});
-
-/* The completed caret expands into one rounded comparison outline: muted row
-   first, live colourful row second. No new unrelated object is introduced. */
-const rowWidth = Math.max(
-  wordsA.at(-1).offsetLeft + wordsA.at(-1).offsetWidth,
-  wordsB.at(-1).offsetLeft + wordsB.at(-1).offsetWidth,
-) + 16;
-const caretJoin = {x:caretRight+8, y:195};
-const selectionFrames = [
-  {offset:0,opacity:0,transform:`translate(${caretJoin.x}px,${caretJoin.y}px) scaleY(.5)`,width:'0px'},
-  {offset:o(T.scan-.36),opacity:0,transform:`translate(${caretJoin.x}px,${caretJoin.y}px) scaleY(.5)`,width:'0px'},
-  {offset:o(T.scan-.16),opacity:1,transform:`translate(${caretJoin.x}px,${caretJoin.y}px) scaleY(.5)`,width:'0px',easing:E.move},
-  {offset:o(T.scan+.22),opacity:1,transform:'translate(0,0) scaleY(1)',width:rowWidth+'px'},
-  {offset:o(T.scan+1.52),opacity:1,transform:'translate(0,0) scaleY(1)',width:rowWidth+'px',easing:E.move},
-  {offset:o(T.scan+2.02),opacity:1,transform:'translate(0,180px) scaleY(1)',width:rowWidth+'px'},
-  {offset:o(T.scan+3.28),opacity:1,transform:'translate(0,180px) scaleY(1)',width:rowWidth+'px',easing:E.out},
-  {offset:o(T.scan+3.55),opacity:0,transform:'translate(0,180px) scaleY(.94)',width:rowWidth+'px'},
-  {offset:1,opacity:0,transform:'translate(0,180px) scaleY(.94)',width:rowWidth+'px'},
+const timerWindows = [
+  ['#time1',3.30,4.45],['#time2',4.45,5.75],['#time3',5.75,7.05],
+  ['#time4',7.05,8.40],['#time5',8.40,T.stop+.04],['#timeStop',T.stop-.02,T.reset],
 ];
-run($('#selection'), selectionFrames);
-const colourHandoff = T.scan + 1.60;
-run($('#selection'), [
-  {offset:0,borderColor:'var(--bar-a)'},
-  {offset:o(colourHandoff-.12),borderColor:'var(--bar-a)',easing:E.out},
-  {offset:o(colourHandoff+.20),borderColor:'var(--accent)'},
-  {offset:1,borderColor:'var(--accent)'},
-]);
-$$('#selection i').forEach((handle) => run(handle, [
-  {offset:0,backgroundColor:'var(--bar-a)'},
-  {offset:o(colourHandoff-.12),backgroundColor:'var(--bar-a)',easing:E.out},
-  {offset:o(colourHandoff+.20),backgroundColor:'var(--accent)'},
-  {offset:1,backgroundColor:'var(--accent)'},
+timerWindows.forEach(([node,start,end]) => run($(node), [
+  {offset:0,opacity:0},{offset:o(start),opacity:0},
+  {offset:o(start+.10),opacity:1},{offset:o(end-.10),opacity:1},
+  {offset:o(end),opacity:0},{offset:1,opacity:0},
 ]));
 
-/* One fixed state slot; outgoing text is gone before the next label enters. */
-const label = (node, start, end) => run(node, [
-  {offset:0,opacity:0,transform:'translateY(8px)'},
-  {offset:o(start),opacity:0,transform:'translateY(8px)',easing:E.out},
-  {offset:o(start+.26),opacity:1,transform:'translateY(0)'},
-  {offset:o(end-.24),opacity:1,transform:'translateY(0)',easing:E.out},
-  {offset:o(end),opacity:0,transform:'translateY(-6px)'},
-  {offset:1,opacity:0,transform:'translateY(-6px)'},
+/* 3 — One audio source branches into two labelled behaviours. The paths draw
+   from the source toward their destination cards, preserving causal direction. */
+run($('#routes'), [
+  {offset:0,opacity:0},{offset:o(T.connect),opacity:0},
+  {offset:o(T.connect+.14),opacity:1},{offset:o(T.reset-.12),opacity:1},
+  {offset:o(T.reset+.22),opacity:0},{offset:1,opacity:0},
 ]);
-const firstStreamReadable = STREAM[0].start + .38;
-const firstBlockReadable = T.block + .40;
-$('#stateProof').textContent = `Feedback ${(firstBlockReadable-firstStreamReadable).toFixed(1)}s sooner`;
-label($('#stateStart'), T.ready+.05, firstStreamReadable-.04);
-label($('#stateReadable'), firstStreamReadable, T.proof-.04);
-label($('#stateProof'), T.proof, T.collapse+.35);
+[$('#routeWait'),$('#routeLive')].forEach((path,index) => run(path, [
+  {offset:0,strokeDashoffset:1},
+  {offset:o(T.connect+index*.10),strokeDashoffset:1,easing:E.out},
+  {offset:o(T.cards+.08+index*.10),strokeDashoffset:0},
+  {offset:o(T.reset-.20),strokeDashoffset:0,easing:E.exit},
+  {offset:o(T.reset+.18),strokeDashoffset:1},
+  {offset:1,strokeDashoffset:1},
+]));
+fadeWindow($('#waitRouteLabel'), T.cards-.08, T.reset-.04, 5);
+fadeWindow($('#liveRouteLabel'), T.cards+.04, T.reset-.04, 5);
+[$('#waitCard'),$('#liveCard')].forEach((card,index) => run(card, [
+  {offset:0,opacity:0,transform:'translateY(18px) scale(.985)'},
+  {offset:o(T.cards+index*.12),opacity:0,transform:'translateY(18px) scale(.985)',easing:E.enter},
+  {offset:o(T.cards+.38+index*.12),opacity:1,transform:'translateY(0) scale(1)'},
+  {offset:o(T.reset-.08),opacity:1,transform:'translateY(0) scale(1)',easing:E.exit},
+  {offset:o(T.reset+.26),opacity:0,transform:'translateY(-16px) scale(.985)'},
+  {offset:1,opacity:0,transform:'translateY(-16px) scale(.985)'},
+]));
 
-/* Reference payoff: chrome turns accent, then the complete hero collapses to a
-   point and fades before the cycle resets. */
-$$('#frame .edge, #frame .handle').forEach((chrome, index) => {
-  const start = T.build + index*.055;
-  run(chrome, [
-  {offset:0,backgroundColor:'var(--frame)'},
-  {offset:o(start),backgroundColor:'var(--frame)',easing:E.out},
-  {offset:o(start+.34),backgroundColor:'var(--accent)'},
-  {offset:1,backgroundColor:'var(--accent)'},
+/* 4 — Interim words arrive as natural transcript text, not tags. Each new word
+   is briefly blue, then stabilises to normal text as the next word arrives. */
+WORDS.forEach(({node,at},index) => {
+  const word = $(node);
+  run(word, [
+    {offset:0,opacity:0,transform:'translateY(9px)',color:'var(--live-soft)'},
+    {offset:o(at),opacity:0,transform:'translateY(9px)',color:'var(--live-soft)',easing:E.settle},
+    {offset:o(at+.20),opacity:1,transform:'translateY(-1px)',color:'var(--live-soft)',easing:E.out},
+    {offset:o(at+.38),opacity:1,transform:'translateY(0)',color:index===4?'var(--interim)':'var(--text)'},
+    {offset:o(T.reset-.12),opacity:1,transform:'translateY(0)',color:index===4?'var(--interim)':'var(--text)'},
+    {offset:o(T.reset+.18),opacity:0,transform:'translateY(-7px)',color:'var(--text)'},
+    {offset:1,opacity:0,transform:'translateY(-7px)',color:'var(--text)'},
   ]);
 });
-run(roundedOutline, [
-  {offset:0,stroke:'var(--frame)'},
-  {offset:o(T.build),stroke:'var(--frame)',easing:E.out},
-  {offset:o(T.build+.34),stroke:'var(--accent)'},
-  {offset:1,stroke:'var(--accent)'},
-]);
-run($('#unit'), [
-  {offset:0,transform:'scale(1)',opacity:1},
-  {offset:o(T.collapse),transform:'scale(1)',opacity:1,easing:E.out},
-  {offset:o(T.collapse+.24),transform:'scale(1.018)',opacity:1,easing:E.exit},
-  {offset:o(T.collapseEnd),transform:'scale(.012)',opacity:0},
-  {offset:1,transform:'scale(.012)',opacity:0},
+
+const caretFrames = [{offset:0,transform:'translateX(0)'}];
+let lastRight = 0;
+WORDS.forEach(({node,at}) => {
+  const target = $(node);
+  const nextRight = target.offsetLeft + target.offsetWidth + 7;
+  caretFrames.push({offset:o(at),transform:`translateX(${lastRight}px)`,easing:E.out});
+  caretFrames.push({offset:o(at+.22),transform:`translateX(${nextRight}px)`});
+  lastRight = nextRight;
+});
+caretFrames.push({offset:1,transform:caretFrames.at(-1).transform});
+run($('#liveCaret'), caretFrames);
+run($('#liveCaret'), [
+  {offset:0,opacity:0},{offset:o(WORDS[0].at-.08),opacity:0},
+  {offset:o(WORDS[0].at+.10),opacity:1},{offset:o(T.stop-.10),opacity:1},
+  {offset:o(T.stop+.14),opacity:0},{offset:1,opacity:0},
 ]);
 
-/* Synchronize, then expose a deterministic inspection contract. */
+/* 5 — The benefit is made literal: the interim hypothesis “four” is visible,
+   then changes to “two” while capture is still active. */
+run($('#liveFour'), [
+  {offset:0,opacity:1,transform:'translateY(0)'},
+  {offset:o(T.correction),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.correction+.22),opacity:0,transform:'translateY(-8px)'},
+  {offset:1,opacity:0,transform:'translateY(-8px)'},
+]);
+run($('#liveTwo'), [
+  {offset:0,opacity:0,transform:'translateY(8px)'},
+  {offset:o(T.correction+.04),opacity:0,transform:'translateY(8px)',easing:E.settle},
+  {offset:o(T.correction+.28),opacity:1,transform:'translateY(-1px)',easing:E.out},
+  {offset:o(T.correction+.46),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset-.12),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset+.18),opacity:0,transform:'translateY(-7px)'},
+  {offset:1,opacity:0,transform:'translateY(-7px)'},
+]);
+run($('#liveStatus'), [
+  {offset:0,color:'#9cc5ff',backgroundColor:'rgba(47,124,255,.14)'},
+  {offset:o(T.correction),color:'#9cc5ff',backgroundColor:'rgba(47,124,255,.14)',easing:E.out},
+  {offset:o(T.correction+.30),color:'#8ce3c7',backgroundColor:'rgba(53,200,155,.14)'},
+  {offset:o(T.stop),color:'#8ce3c7',backgroundColor:'rgba(53,200,155,.14)',easing:E.out},
+  {offset:o(T.stop+.30),color:'#c5d5dd',backgroundColor:'rgba(145,162,170,.14)'},
+  {offset:1,color:'#c5d5dd',backgroundColor:'rgba(145,162,170,.14)'},
+]);
+run($('#liveInterim'), [
+  {offset:0,opacity:1,transform:'translateY(0)'},
+  {offset:o(T.correction-.12),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.correction+.12),opacity:0,transform:'translateY(-5px)'},
+  {offset:1,opacity:0,transform:'translateY(-5px)'},
+]);
+run($('#liveCorrected'), [
+  {offset:0,opacity:0,transform:'translateY(5px)'},
+  {offset:o(T.correction-.02),opacity:0,transform:'translateY(5px)',easing:E.out},
+  {offset:o(T.correction+.20),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.stop-.12),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.stop+.12),opacity:0,transform:'translateY(-5px)'},
+  {offset:1,opacity:0,transform:'translateY(-5px)'},
+]);
+run($('#liveFinal'), [
+  {offset:0,opacity:0,transform:'translateY(5px)'},
+  {offset:o(T.stop-.02),opacity:0,transform:'translateY(5px)',easing:E.out},
+  {offset:o(T.stop+.20),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset+.20),opacity:0,transform:'translateY(-5px)'},
+  {offset:1,opacity:0,transform:'translateY(-5px)'},
+]);
+fadeWindow($('#liveNote'), T.correction+.18, T.reset-.10, 6);
+
+/* 6 — Stop finalises the live result. Only now does the delayed path reveal its
+   transcript, making the difference understandable without an invented metric. */
+run($('#stopSquare'), [
+  {offset:0,opacity:1,transform:'scale(1)'},
+  {offset:o(T.stop),opacity:1,transform:'scale(1)',easing:E.exit},
+  {offset:o(T.stop+.20),opacity:0,transform:'scale(.72)'},
+  {offset:1,opacity:0,transform:'scale(.72)'},
+]);
+run($('#doneCheck'), [
+  {offset:0,opacity:0,transform:'rotate(-45deg) scale(.82)'},
+  {offset:o(T.stop+.04),opacity:0,transform:'rotate(-45deg) scale(.82)',easing:E.settle},
+  {offset:o(T.stop+.30),opacity:1,transform:'rotate(-45deg) scale(1)'},
+  {offset:o(T.reset),opacity:1,transform:'rotate(-45deg) scale(1)'},
+  {offset:o(T.reset+.20),opacity:0,transform:'rotate(-45deg) scale(.86)'},
+  {offset:1,opacity:0,transform:'rotate(-45deg) scale(.86)'},
+]);
+run($('#listeningLabel'), [
+  {offset:0,opacity:1,transform:'translateY(0)'},
+  {offset:o(T.stop-.12),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.stop+.16),opacity:0,transform:'translateY(-7px)'},
+  {offset:1,opacity:0,transform:'translateY(-7px)'},
+]);
+run($('#capturedLabel'), [
+  {offset:0,opacity:0,transform:'translateY(7px)'},
+  {offset:o(T.stop-.02),opacity:0,transform:'translateY(7px)',easing:E.out},
+  {offset:o(T.stop+.24),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset-.10),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.reset+.16),opacity:0,transform:'translateY(-7px)'},
+  {offset:1,opacity:0,transform:'translateY(-7px)'},
+]);
+run($('#waitEmpty'), [
+  {offset:0,opacity:1,transform:'translateY(0)'},
+  {offset:o(T.delayed-.12),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.delayed+.18),opacity:0,transform:'translateY(-7px)'},
+  {offset:1,opacity:0,transform:'translateY(-7px)'},
+]);
+run($('#waitTranscript'), [
+  {offset:0,opacity:0,transform:'translateY(10px)'},
+  {offset:o(T.delayed),opacity:0,transform:'translateY(10px)',easing:E.enter},
+  {offset:o(T.delayed+.30),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset-.12),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.reset+.18),opacity:0,transform:'translateY(-7px)'},
+  {offset:1,opacity:0,transform:'translateY(-7px)'},
+]);
+run($('#waitStatus'), [
+  {offset:0,color:'#9aa9b0',backgroundColor:'#2a3b43'},
+  {offset:o(T.delayed),color:'#9aa9b0',backgroundColor:'#2a3b43',easing:E.out},
+  {offset:o(T.delayed+.28),color:'#c2cdd2',backgroundColor:'#344750'},
+  {offset:1,color:'#c2cdd2',backgroundColor:'#344750'},
+]);
+run($('#waitWaiting'), [
+  {offset:0,opacity:1,transform:'translateY(0)'},
+  {offset:o(T.delayed-.12),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.delayed+.12),opacity:0,transform:'translateY(-5px)'},
+  {offset:1,opacity:0,transform:'translateY(-5px)'},
+]);
+run($('#waitAvailable'), [
+  {offset:0,opacity:0,transform:'translateY(5px)'},
+  {offset:o(T.delayed-.02),opacity:0,transform:'translateY(5px)',easing:E.out},
+  {offset:o(T.delayed+.20),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset+.20),opacity:0,transform:'translateY(-5px)'},
+  {offset:1,opacity:0,transform:'translateY(-5px)'},
+]);
+fadeWindow($('#waitNote'), T.payoff, T.reset-.10, 6);
+
+/* 7 — The outcome stays inside the product cards. A calm hold lets viewers
+   compare “while speaking” with “after stop”; no selection frame is needed. */
+run($('#liveCard'), [
+  {offset:0,borderColor:'#315f86',boxShadow:'0 18px 42px rgba(2,15,22,.18)'},
+  {offset:o(T.payoff),borderColor:'#315f86',boxShadow:'0 18px 42px rgba(2,15,22,.18)',easing:E.settle},
+  {offset:o(T.payoff+.34),borderColor:'var(--corrected)',boxShadow:'0 18px 48px rgba(47,124,255,.22)'},
+  {offset:o(T.reset),borderColor:'var(--corrected)',boxShadow:'0 18px 48px rgba(47,124,255,.22)'},
+  {offset:o(T.reset+.24),borderColor:'#315f86',boxShadow:'0 18px 42px rgba(2,15,22,.18)'},
+  {offset:1,borderColor:'#315f86',boxShadow:'0 18px 42px rgba(2,15,22,.18)'},
+]);
+
+/* 8 — “Ready for next message” names the reset. Cards and routes leave first;
+   then the recorder contracts back into the same microphone control. */
+run($('#nextLabel'), [
+  {offset:0,opacity:0,transform:'translateY(7px)'},
+  {offset:o(T.reset-.02),opacity:0,transform:'translateY(7px)',easing:E.out},
+  {offset:o(T.reset+.22),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.close-.18),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.close+.08),opacity:0,transform:'translateY(-7px)'},
+  {offset:1,opacity:0,transform:'translateY(-7px)'},
+]);
+fadeWindow($('#sessionReset'), T.reset+.12, T.close-.04, 5);
+
+/* Deterministic seek contract for review and export. */
 const timelineNow = document.timeline.currentTime ?? 0;
 anims.forEach((animation) => { animation.startTime = timelineNow; });
 const seek = (seconds) => {
@@ -422,21 +516,16 @@ const play = () => anims.forEach((animation) => animation.play());
 const pause = () => anims.forEach((animation) => animation.pause());
 const hasPinnedTime = requested !== null && Number.isFinite(Number(requested));
 if (hasPinnedTime) seek(Number(requested));
-else if (reduceQuery.matches) seek(9.70);
-
-/* Live pages must react when the OS preference changes and must not burn frames
-   in a hidden tab. Pinned ?t=N inspection always wins over both behaviours. */
+else if (reduceQuery.matches) seek(12.72);
 reduceQuery.addEventListener('change', (event) => {
   if (hasPinnedTime) return;
-  if (event.matches) seek(9.70);
+  if (event.matches) seek(12.72);
   else play();
 });
 document.addEventListener('visibilitychange', () => {
   if (hasPinnedTime || reduceQuery.matches) return;
-  if (document.hidden) pause();
-  else play();
+  if (document.hidden) pause(); else play();
 });
-
 window.__anims = anims;
 window.__seek = seek;
 window.__setPlaying = (shouldPlay) => shouldPlay ? play() : pause();

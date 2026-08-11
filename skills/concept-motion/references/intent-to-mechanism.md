@@ -10,12 +10,13 @@ concrete mechanism you can write a beat sheet against.
 - [Find the claim](#find-the-claim)
 - [Pick the mechanism from the claim](#pick-the-mechanism-from-the-claim)
 - [Pick the representation register](#pick-the-representation-register)
+- [Audit objects and feedback](#audit-objects-and-feedback)
 - [When animation is the wrong medium](#when-animation-is-the-wrong-medium)
 - [Pressure-test before building](#pressure-test-before-building)
 
 ## The interview
 
-Four questions. Ask them before writing anything, because each one changes the
+Five questions. Ask them before writing anything, because each one changes the
 build in a way that's expensive to retrofit. Ask them conversationally — the goal
 is to get the user talking about what they actually care about, not to fill a form.
 
@@ -32,6 +33,10 @@ is to get the user talking about what they actually care about, not to fill a fo
 4. **"Is the subject a UI, an abstract system, a physical product, or data?"**
    This picks the representation register, which determines whether you draw
    panels and bars, nodes and edges, or a device silhouette.
+5. **"What action starts it, and what feedback can the person react to?"**
+   This turns a feature claim into a causal story. If no one acts, name the data
+   or event that starts the system. If no feedback can be observed, the scene is
+   illustrating internals rather than a user benefit.
 
 If the user can't answer (1), that's the real finding. Help them narrow: ask what
 they'd cut if the clip had to be five seconds. Building against a muddy claim
@@ -105,6 +110,18 @@ localize, nothing to go stale at the next redesign, and nothing that turns to
 mush under H.264. It also directs attention — viewers can't read fake content, so
 they watch the change, which is the actual subject.
 
+Use stylized UI instead when the claim depends on a familiar interaction state:
+input acknowledged, interim text, correction, validation, error recovery or a
+control becoming available. Replacing those states with generic bars can remove
+the very feedback the animation is meant to explain.
+
+## Audit objects and feedback
+
+Before the beat sheet, read `semantic-continuity.md` and fill its object ledger.
+The mechanism says what overall change to show; the ledger proves each visible
+object belongs to that change. Reference artifacts such as editor handles,
+selection boxes and loading dots must pass the same test as newly invented UI.
+
 ## When animation is the wrong medium
 
 Say so early. Recommending the right medium is more useful than delivering a
@@ -134,6 +151,8 @@ Cheap checks that catch expensive mistakes:
   wide. Anything relying on small elements or fine text is already lost.
 - **Silent test.** These almost always play muted and with no narration. If the
   motion needs a voiceover, it needs a rethink or a label.
+- **Object test.** Point at every visible object and finish “this represents…”;
+  then state where it came from and where it goes. Remove any failure.
 - **Confirm the beat sheet with the user before writing markup.** It's a table of
   four rows and takes a minute to read. Restructuring beats after the timeline is
   built is the single most expensive change in this whole workflow.

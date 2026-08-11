@@ -53,7 +53,7 @@ micro-motion:
 ```bash
 node scripts/reference-board.mjs goal.mov --seconds 10 --samples 12 --out work/goal
 node scripts/export.mjs assets/scene-race-streaming.html --formats sheet \
-  --seconds 16.8 --samples 12 --out work/output
+  --seconds 18.4 --samples 16 --out work/output
 ```
 
 ## What's in it
@@ -156,14 +156,15 @@ rendered, nothing animated, and no error was visible anywhere.
 
 It also demonstrates reference adaptation: the speed comparison stays inside one
 centered hero with the goal clip's frame draw, flat material and closing collapse.
-The opening point becomes the frame anchor, the live-transcript caret becomes the
-comparison box, and the closing collapse returns to the opening point, preserving
-object continuity across beats. The example turns a spoken request into readable
-word chips while audio is still being captured; the better path remains colourful
-while the after-recording path stays grey. Rounded geometry is repeated across the
-hero, audio control, word chips and comparison outline. The earlier side-by-side
-four-second version explained the claim, but changed the composition, cycle, focal
-path and material at once, so it could never resemble a single-hero reference.
+The microphone is the shared element from ready state to active recorder and back.
+One captured utterance feeds two labelled routes: the live path exposes interim
+text and a correction before stop, while the delayed path stays unavailable until
+recording completes. The final result remains inside the product cards — there are
+no editor handles, decorative activity dots or selection outlines. Rounded
+geometry is concentric across the recorder and result cards. The earlier version
+copied those editor metaphors from the reference even though they had no meaning
+in the audio-input story; `references/semantic-continuity.md` now prevents that
+class of transfer error.
 
 If a scene must survive an unknown network, prefer WAAPI. Each element gets one
 animation covering the full cycle, so the loop resets itself and no reset block is
