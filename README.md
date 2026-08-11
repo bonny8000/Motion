@@ -4,16 +4,17 @@ An agent skill for building **short looping motion graphics that explain a produ
 concept** — the kind of 10–20 second abstract animation that sits at the top of a
 product or model landing page, in a pitch deck, or in a design review.
 
-The animation is authored as one HTML scene with a seekable timeline, then either
-shipped as a live page or exported frame-exact to MP4 / WebM / GIF.
+The animation is authored as a seekable HTML scene, then either shipped as a
+verified standalone page or exported frame-exact to MP4 / WebM / GIF.
 
 ## Why it's built this way
 
 The craft half of a concept loop — a seekable timeline, loop-safety, frame-exact
 export, correct easing — is a solved problem that shouldn't be re-solved each
 time. The hard half is deciding **what should move**, and that isn't a code
-problem. So the skill is intent-first: work out the claim, choose a mechanism that
-*is* that claim, agree a beat sheet, and only then open a scaffold.
+problem. So the skill is intent-first and reference-aware: isolate the goal
+clip's visual grammar, work out the claim, combine them in a fidelity contract,
+agree a beat sheet, and only then open a scaffold.
 
 ## Install
 
@@ -28,7 +29,7 @@ Then, from the skill directory, once:
 cd ~/.claude/skills/concept-motion/scripts && npm install && npx playwright install chromium
 ```
 
-Requires Node 18+ and `ffmpeg` on PATH (only for export). Scenes load
+Requires Node 18+ and `ffmpeg`/`ffprobe` on PATH for reference boards and export. Kit scenes load
 [Motion](https://motion.dev) from a CDN at runtime.
 
 ## Quick start
@@ -46,6 +47,15 @@ Export (starts the same server automatically):
 node scripts/export.mjs assets/scene-phase-spine.html --formats mp4,webm,gif --seconds 10.8
 ```
 
+When a goal video is supplied, build two normalized review boards before tuning
+micro-motion:
+
+```bash
+node scripts/reference-board.mjs goal.mov --seconds 10 --samples 12 --out work/goal
+node scripts/export.mjs assets/scene-race-streaming.html --formats sheet \
+  --seconds 10.2 --samples 12 --out work/output
+```
+
 ## What's in it
 
 ```
@@ -58,13 +68,16 @@ skills/concept-motion/
 │   ├── scene-race-streaming.html     working scene: A/B comparison, zero-dependency WAAPI
 │   └── scene-template.html           standalone CSS-clock scaffold, zero deps
 ├── references/
-│   ├── intent-to-mechanism.md        interview → claim → mechanism. Read first.
+│   ├── reference-fidelity.md         goal clip → evidence → fidelity contract
+│   ├── intent-to-mechanism.md        interview → claim → mechanism
 │   ├── mechanisms.md                 build recipe per mechanism
-│   ├── polish.md                     radii, depth, expressive easing, choreography
+│   ├── polish.md                     material profiles, expressive easing, choreography
 │   ├── motion-craft.md               easing, physicality, vocabulary, review pass
 │   ├── house-style.md                palette, curves, visual vocabulary
 │   └── motion-track.md               Motion API guidance + silent failure modes
-└── scripts/export.mjs                serve, capture, encode
+└── scripts/
+    ├── reference-board.mjs            probe and sample goal footage
+    └── export.mjs                     serve, capture, review sheet, encode
 ```
 
 ### The kit
@@ -101,10 +114,17 @@ takes an **absolute** `at` (relative offsets make retiming one beat cascade).
 
 ### Transferring a feature
 
-1. **Shape from the noun** — what does the feature act on?
-2. **Labels from the domain's own words** — these are the only literal text in the
+1. **Reference grammar from evidence** — lock hero count, focal path, timing
+   contour and material before changing the content.
+2. **Shape from the noun** — what does the feature act on?
+3. **Labels from the domain's own words** — these are the only literal text in the
    piece, so use what the team actually says.
-3. **Beats from the mechanism** — usually reordering, not writing new ones.
+4. **Beats from the mechanism** — usually reordering, not writing new ones. The
+   mechanism happens inside the locked grammar; it does not silently replace it.
+
+The kit defaults to the flat `reference` material. Use
+`createScene({ material: 'soft' })` only when the brief actually calls for the
+rounded, elevated product-UI profile.
 
 ## Output formats
 
@@ -133,6 +153,12 @@ beat sheet over.
 preference: an earlier version imported Motion from a CDN, which is silently
 blocked by strict-CSP preview surfaces and by corporate networks. The page still
 rendered, nothing animated, and no error was visible anywhere.
+
+It also demonstrates reference adaptation: the speed comparison stays inside one
+centered hero with the goal clip's frame draw, flat material and closing collapse.
+The earlier side-by-side four-second version explained the claim, but changed the
+composition, cycle, focal path and material at once, so it could never resemble a
+single-hero ten-second reference.
 
 If a scene must survive an unknown network, prefer WAAPI. Each element gets one
 animation covering the full cycle, so the loop resets itself and no reset block is

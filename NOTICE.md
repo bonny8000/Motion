@@ -69,3 +69,9 @@ Motion is MIT licensed — <https://github.com/motiondivision/motion>.
 `skills/concept-motion/SKILL.md` points at
 <https://github.com/diffusionstudio/lottie> (MIT) for Lottie output, which this
 skill does not produce. No code from it is included.
+
+The deterministic `?t=N` inspection contract and sampled contact-sheet review
+workflow were informed by the verification approach described in iart-ai's
+`gsap-web` skill (<https://github.com/iart-ai/web-animation-skills>). The
+implementation here is independent, uses native WAAPI/Playwright, and does not
+include GSAP or code from that repository.

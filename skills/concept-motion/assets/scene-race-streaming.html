@@ -6,13 +6,9 @@
 <title>滾動式生成 vs 等待完整回覆</title>
 <style>
   :root{
-    --bg:#657689; --card:#1a2931; --accent:#0061de; --accent-soft:#2b7ff0;
-    --bar-a:#93a0a8; --bar-b:#77848c; --bar-c:#5c6a72;
-    --label:#eef3f5; --muted:#d2dbe0;
-
-    /* 幾何 token:文字佔位條一律全圓角(radius = 高度一半),
-       方角的條看起來像未完成的線框,是最快讓成品顯得廉價的細節。 */
-    --r-bar:999px; --r-panel:14px; --r-chip:10px;
+    --bg:#657689; --card:#1a2931; --accent:#0061de;
+    --bar-a:#78868e; --bar-b:#5e6c74; --bar-c:#46545c;
+    --label:#e8eef0; --frame:#fff;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;background:var(--bg)}
@@ -21,265 +17,327 @@
                 -apple-system,system-ui,sans-serif;
     -webkit-font-smoothing:antialiased}
 
-  #stage{position:relative;width:1600px;height:900px;background:var(--bg);overflow:hidden}
+  /* REFERENCE FINGERPRINT
+     One centered 1290×590 hero, a flat material, a fixed state label, frame
+     handles and a closing collapse. The comparison lives INSIDE that grammar;
+     it does not replace the reference with two unrelated hero cards. */
+  .stage{position:relative;width:1600px;height:900px;background:var(--bg);overflow:hidden}
+  #unit{position:absolute;inset:0;transform-origin:center center}
+  #panel{position:absolute;left:155px;top:155px;width:1290px;height:590px;
+         background:var(--card);border-radius:2px;opacity:0}
 
-  .col{position:absolute;top:172px;width:700px}
-  .col.a{left:70px}  .col.b{left:830px}
+  #frame{position:absolute;left:155px;top:155px;width:1290px;height:590px}
+  #frame .edge{position:absolute;background:var(--frame)}
+  #frame .top,#frame .bottom{left:0;width:100%;height:1px;transform:scaleX(0);transform-origin:left}
+  #frame .left,#frame .right{top:0;width:1px;height:100%;transform:scaleY(0);transform-origin:top}
+  #frame .top{top:0} #frame .bottom{bottom:0}
+  #frame .left{left:0} #frame .right{right:0}
+  #frame .handle{position:absolute;width:7px;height:7px;background:var(--frame);opacity:0}
+  #frame .tl{left:-3px;top:-3px} #frame .tr{right:-3px;top:-3px}
+  #frame .bl{left:-3px;bottom:-3px} #frame .br{right:-3px;bottom:-3px}
 
-  .title{font-size:30px;font-weight:500;color:var(--label);margin-bottom:16px;
-         display:flex;align-items:center;gap:12px}
-  .dotmark{width:9px;height:9px;border-radius:50%;background:var(--bar-b)}
-  .col.b .dotmark{background:var(--accent)}
+  .state{position:absolute;left:155px;top:190px;width:1244px;text-align:right;
+         color:var(--label);font-size:27px;font-weight:450;letter-spacing:-.01em;
+         white-space:nowrap;opacity:0}
 
-  /* 面板:大圓角 + 柔和陰影 + 一道極淡的上緣高光,做出「材質」而不是色塊 */
-  .panel{position:relative;height:430px;background:var(--card);
-         border-radius:var(--r-panel);overflow:hidden;
-         box-shadow:0 18px 44px rgba(12,20,26,.30), 0 2px 0 rgba(255,255,255,.07) inset;}
+  .lane{position:absolute;left:199px;width:1160px;opacity:0}
+  #laneA{top:255px} #laneB{top:478px}
+  .lane-title{display:flex;align-items:center;gap:12px;color:var(--label);
+              font-size:25px;font-weight:450;letter-spacing:-.01em}
+  .lane-title::before{content:"";display:block;width:5px;height:5px;background:var(--bar-b)}
+  #laneB .lane-title::before{background:var(--accent)}
+  .lines{position:absolute;left:0;top:56px}
+  .ln{position:relative;height:16px;margin-bottom:24px;opacity:0;
+      transform:translateY(8px)}
+  .ln i{position:absolute;inset:0;display:block;border-radius:2px;transform-origin:left center}
+  .ln .base{background:var(--bar-a);transform:scaleX(0)}
+  .ln.b .base{background:var(--bar-b)}
+  .ln.c .base{background:var(--bar-c)}
+  .ln .accent{background:var(--accent);transform:scaleX(0)}
+  #laneA .ln .base{transform:scaleX(1)}
 
-  /* 起跑信號:一道掃過面板頂緣的細光 */
-  .gun{position:absolute;left:0;top:0;height:2px;width:100%;
-       background:linear-gradient(90deg,transparent,var(--accent-soft),transparent);
-       transform:scaleX(0);transform-origin:left center;opacity:0}
+  #loader{position:absolute;left:0;top:61px;display:flex;gap:10px;opacity:0}
+  #loader i{width:10px;height:10px;border-radius:50%;background:var(--bar-b);opacity:.22}
+  #caret{position:absolute;left:199px;top:559px;width:3px;height:16px;
+         background:var(--accent);opacity:0;box-shadow:0 0 10px rgba(0,97,222,.55)}
 
-  .lines{position:absolute;left:36px;top:38px;right:36px}
-  .ln{height:15px;margin-bottom:21px;opacity:0}          /* 外層:fade + rise */
-  .ln > i{display:block;height:100%;border-radius:var(--r-bar);
-          background:var(--bar-a);transform:scaleX(0);transform-origin:left center}
-  .ln.b > i{background:var(--bar-b)}
-  .ln.c > i{background:var(--bar-c)}
-  #linesA .ln > i{transform:scaleX(1)}    /* 阻塞式:整批出現,不逐行展開 */
+  #selection{position:absolute;left:191px;top:526px;height:32px;width:0;
+             border:1px solid var(--accent);opacity:0}
+  #selection i{position:absolute;width:5px;height:5px;background:var(--accent)}
+  #selection i:nth-child(1){left:-3px;top:-3px}
+  #selection i:nth-child(2){right:-3px;top:-3px}
+  #selection i:nth-child(3){left:-3px;bottom:-3px}
+  #selection i:nth-child(4){right:-3px;bottom:-3px}
 
-  #caret{position:absolute;left:36px;top:38px;width:3px;height:15px;
-         border-radius:2px;background:var(--accent);opacity:0;
-         box-shadow:0 0 12px rgba(0,97,222,.9)}
-
-  #loader{position:absolute;left:36px;top:38px;display:flex;gap:9px}
-  #loader i{width:11px;height:11px;border-radius:50%;background:var(--bar-b);opacity:.25}
-
-  /* 「可閱讀時間」量條 */
-  .meter{position:relative;margin-top:22px;height:9px;border-radius:var(--r-bar);
-         background:rgba(255,255,255,.09)}
-  .meter i{position:absolute;inset:0;background:var(--accent);
-           border-radius:var(--r-bar);transform:scaleX(0);transform-origin:left center}
-  .col.a .meter i{background:var(--bar-b)}
-
-  /* 揭示用的倍數標籤 */
-  /* 放在量條「下方」而不是上方 —— 上方會壓到面板下緣,那種碰撞是最容易
-     被讀成「沒做完」的細節。 */
-  #mult{position:absolute;right:0;top:22px;padding:6px 14px;border-radius:var(--r-chip);
-        background:var(--accent);color:#fff;font-size:26px;font-weight:600;
-        letter-spacing:.01em;opacity:0;transform:scale(.8);
-        box-shadow:0 8px 22px rgba(0,97,222,.45)}
-
-  .legend{position:absolute;left:70px;top:752px;width:1460px;font-size:21px;
-          color:var(--muted);display:flex;justify-content:space-between;opacity:0}
-  .legend b{color:var(--label);font-weight:500}
+  #dot{position:absolute;left:797px;top:448px;width:5px;height:5px;
+       background:var(--label);opacity:0}
 </style>
 </head>
 <body>
-<div id="stage">
-  <div class="col a">
-    <div class="title"><span class="dotmark"></span>等待完整回覆</div>
-    <div class="panel">
-      <div class="gun" id="gunA"></div>
+<main class="stage" id="stage">
+  <div id="dot"></div>
+  <div id="unit">
+    <div id="panel"></div>
+    <div id="frame">
+      <i class="edge top"></i><i class="edge right"></i>
+      <i class="edge bottom"></i><i class="edge left"></i>
+      <i class="handle tl"></i><i class="handle tr"></i>
+      <i class="handle bl"></i><i class="handle br"></i>
+    </div>
+
+    <div class="state" id="stateStart">同步開始</div>
+    <div class="state" id="stateReadable">逐行可讀</div>
+    <div class="state" id="stateProof">早 0.0 秒可讀</div>
+
+    <section class="lane" id="laneA">
+      <div class="lane-title">等待完整回覆</div>
       <div id="loader"><i></i><i></i><i></i></div>
       <div class="lines" id="linesA"></div>
-    </div>
-    <div class="meter"><i id="meterA"></i></div>
-  </div>
-
-  <div class="col b">
-    <div class="title"><span class="dotmark"></span>滾動式生成</div>
-    <div class="panel">
-      <div class="gun" id="gunB"></div>
+    </section>
+    <section class="lane" id="laneB">
+      <div class="lane-title">滾動式生成</div>
       <div class="lines" id="linesB"></div>
-      <div id="caret"></div>
-    </div>
-    <div class="meter"><i id="meterB"></i><span id="mult">4×</span></div>
-  </div>
+    </section>
 
-  <div class="legend" id="legend">
-    <span>兩邊<b>同時完成</b>,總時間相同</span>
-    <span><b>藍條 = 可開始閱讀的時間</b></span>
+    <div id="caret"></div>
+    <div id="selection"><i></i><i></i><i></i><i></i></div>
   </div>
-</div>
+</main>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════════════════
-   零依賴,用瀏覽器原生的 Web Animations API。
-   (先前從 CDN 載 Motion,在有 CSP 的預覽或擋 jsdelivr 的網路裡會整段停掉,
-    症狀是版面畫得出來但完全不會動,而且沒有任何可見錯誤。)
-
-   每個元素拿到一個「整支 4 秒、自己覆蓋 0→1」的動畫,所以循環自動歸零。
-   ═══════════════════════════════════════════════════════════════════════════ */
-const CYCLE = 4000;
-const o = (s) => s * 1000 / CYCLE;
-
-/* Ease 組:GSAP 的 power/expo/back 換算成等效 cubic-bezier,拿到表現力但不必
-   多背一個函式庫。原則 —— 進場用 out(一開始快,有反應感);離場用 in(更快);
-   已在畫面上的東西移動用 inOut;只有「機械進度」可以用 linear。
-   我上一版幾乎全用 linear,那是這支動畫顯得單調的主因。 */
+/* Standalone, zero-network WAAPI scene. Every narrative animation spans the
+   same 10.2s cycle, so any moment can be sought deterministically with ?t=N. */
+const CYCLE = 10200;
+const o = (seconds) => seconds * 1000 / CYCLE;
 const E = {
-  out2 : 'cubic-bezier(.215,.61,.355,1)',   // power2.out 一般進場
-  out3 : 'cubic-bezier(.165,.84,.44,1)',    // power3.out 稍強
-  out4 : 'cubic-bezier(.23,1,.32,1)',       // power4.out 有重量的落地
-  expo : 'cubic-bezier(.19,1,.22,1)',       // expo.out   最戲劇的煞停
-  back : 'cubic-bezier(.34,1.56,.64,1)',    // back.out   輕微 overshoot
-  lin  : 'linear',
+  out:  'cubic-bezier(.23,1,.32,1)',
+  move: 'cubic-bezier(.77,0,.175,1)',
+  exit: 'cubic-bezier(.5,0,.75,0)',
+  lin:  'linear',
 };
-
-/* ── 分鏡(秒)──────────────────────────────────────────────────────────────
-   有戲的結構 = 鋪陳 → 張力 → 標點 → 揭示。上一版四樣都沒有。
-
-   0.00–0.20  停一拍(anticipation)
-   0.20–0.55  起跑信號:一道光同時掃過兩邊頂緣 —— 建立「同時開始」
-   0.30–2.55  張力:右邊逐行生成 / 左邊只有三點在轉
-   2.55–2.80  第一個標點:左邊一次倒出,power4.out,快而有重量
-   0.65→3.35  兩條量條線性成長(代表時間,必須誠實等速)
-   3.35–3.60  揭示:「4×」用 back.out 彈出 —— 全片唯一一次 overshoot
-   3.60–4.00  停住讓人比較,然後循環
-   ──────────────────────────────────────────────────────────────────────── */
-// mB / mA 刻意等於「內容真正可讀的那一刻」:右邊第一行寫完 = stream+perLine,
-// 左邊整批落地 = done+0.30。視覺和下面算出來的秒數因此永遠一致。
-const T = { gun:.20, stream:.30, perLine:.375, done:2.55,
-            mB:.675, mA:2.85, mEnd:3.35, reveal:3.35 };
-const W = [590, 545, 610, 470, 560, 330];    // 刻意不等長:等長會像載入骨架
-const PITCH = 36, RISE = 10;
-
-const $  = (s) => document.querySelector(s);
-const $$ = (s) => [...document.querySelectorAll(s)];
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const T = {
+  dotEnd:.72, draw:.72, drawHalf:1.32, fill:1.92, ready:2.18,
+  stream:2.35, per:.52, block:4.80,
+  scan:5.35, scanPer:.26, proof:5.18,
+  build:7.48, collapse:7.86, collapseEnd:9.55,
+};
+const W = [790, 930, 680, 845];
+const PITCH = 40;
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => [...document.querySelectorAll(selector)];
 const anims = [];
-const run = (el, frames, opts = {}) => {
-  const a = el.animate(frames, { duration: CYCLE, iterations: Infinity, fill: 'both', ...opts });
-  anims.push(a); return a;
+
+const run = (target, frames, options = {}) => {
+  const animation = target.animate(frames, {
+    duration:CYCLE, iterations:Infinity, fill:'both', ...options,
+  });
+  anims.push(animation);
+  return animation;
 };
-// 減少動態時把位移拿掉,但保留寬度展開和量條 —— 那些就是說明本身
-const rise = (px) => reduce ? '0px' : px + 'px';
 
-const build = (host) => W.map((w, i) => {
-  const n = document.createElement('div');
-  n.className = 'ln' + (i % 3 === 1 ? ' b' : i % 3 === 2 ? ' c' : '');
-  n.style.width = w + 'px';
-  n.appendChild(document.createElement('i'));
-  host.appendChild(n); return n;
+const buildLines = (host) => W.map((width, index) => {
+  const line = document.createElement('div');
+  line.className = 'ln' + (index % 3 === 1 ? ' b' : index % 3 === 2 ? ' c' : '');
+  line.style.width = width + 'px';
+  line.innerHTML = '<i class="base"></i><i class="accent"></i>';
+  host.appendChild(line);
+  return line;
 });
-const linesA = build($('#linesA'));
-const linesB = build($('#linesB'));
+const linesA = buildLines($('#linesA'));
+const linesB = buildLines($('#linesB'));
 
-/* ── 起跑信號 ────────────────────────────────────────────────────────────── */
-[$('#gunA'), $('#gunB')].forEach((g) => run(g, [
-  { offset:0, transform:'scaleX(0)', opacity:0 },
-  { offset:o(T.gun), transform:'scaleX(0)', opacity:1, easing:E.expo },
-  { offset:o(T.gun+.35), transform:'scaleX(1)', opacity:0 },
-  { offset:1, transform:'scaleX(1)', opacity:0 },
+/* 0.00–1.92 — the reference opening: point, then two pens trace a frame. */
+run($('#dot'), [
+  {offset:0,opacity:0,transform:'translate(-34px,16px)'},
+  {offset:o(.12),opacity:1,transform:'translate(0,0)',easing:E.out},
+  {offset:o(T.dotEnd-.12),opacity:1,transform:'translate(0,0)'},
+  {offset:o(T.dotEnd),opacity:0,transform:'translate(0,0)'},
+  {offset:1,opacity:0,transform:'translate(0,0)'},
+]);
+$$('#frame .top, #frame .left').forEach((edge) => run(edge, [
+  {offset:0,transform:edge.classList.contains('left')?'scaleY(0)':'scaleX(0)'},
+  {offset:o(T.draw),transform:edge.classList.contains('left')?'scaleY(0)':'scaleX(0)',easing:E.out},
+  {offset:o(T.drawHalf),transform:edge.classList.contains('left')?'scaleY(1)':'scaleX(1)'},
+  {offset:1,transform:edge.classList.contains('left')?'scaleY(1)':'scaleX(1)'},
+]));
+$$('#frame .right, #frame .bottom').forEach((edge) => run(edge, [
+  {offset:0,transform:edge.classList.contains('right')?'scaleY(0)':'scaleX(0)'},
+  {offset:o(T.drawHalf),transform:edge.classList.contains('right')?'scaleY(0)':'scaleX(0)',easing:E.out},
+  {offset:o(T.fill),transform:edge.classList.contains('right')?'scaleY(1)':'scaleX(1)'},
+  {offset:1,transform:edge.classList.contains('right')?'scaleY(1)':'scaleX(1)'},
+]));
+run($('#panel'), [
+  {offset:0,opacity:0},{offset:o(T.fill),opacity:0,easing:E.out},
+  {offset:o(T.ready),opacity:1},{offset:1,opacity:1},
+]);
+$$('#frame .handle').forEach((handle) => run(handle, [
+  {offset:0,opacity:0},{offset:o(T.fill-.12),opacity:0,easing:E.out},
+  {offset:o(T.fill+.10),opacity:1},{offset:1,opacity:1},
 ]));
 
-/* ── 右:逐行生成 ────────────────────────────────────────────────────────
-   兩層:外層 fade + rise(power3.out,精緻度),內層寬度展開(linear,機械感)。
-   分兩層是關鍵 —— 只有 wipe 會顯得乾,只有 fade 會失去「正在生成」的意思。 */
-linesB.forEach((el, i) => {
-  const s = T.stream + i * T.perLine, e = s + T.perLine;
-  run(el, [
-    { offset:0, opacity:0, transform:`translateY(${rise(RISE)})` },
-    { offset:o(s), opacity:0, transform:`translateY(${rise(RISE)})`, easing:E.out3 },
-    { offset:o(s+.22), opacity:1, transform:'translateY(0px)' },
-    { offset:1, opacity:1, transform:'translateY(0px)' },
-  ]);
-  run(el.firstChild, [
-    { offset:0, transform:'scaleX(0)' },
-    { offset:o(s), transform:'scaleX(0)', easing:E.lin },
-    { offset:o(e), transform:'scaleX(1)' },
-    { offset:1, transform:'scaleX(1)' },
-  ]);
-});
-
-/* ── 右:游標騎在生成前緣 ─────────────────────────────────────────────── */
-if (!reduce) {
-  const kf = [{ offset:0, transform:'translate(0px,0px)', easing:E.lin }];
-  linesB.forEach((_, i) => {
-    const s = T.stream + i*T.perLine, e = s + T.perLine, y = i*PITCH;
-    if (i === 0) kf.push({ offset:o(s), transform:`translate(0px,${y}px)`, easing:E.lin });
-    kf.push({ offset:o(e), transform:`translate(${W[i]}px,${y}px)` });
-    // 換行瞬間跳回左邊。offset 必須嚴格遞增,否則 WAAPI 直接丟例外、整段停掉。
-    if (i < W.length-1) kf.push({ offset:o(e)+1e-4, easing:E.lin,
-      transform:`translate(0px,${(i+1)*PITCH}px)` });
-  });
-  kf.push({ offset:1, transform:kf[kf.length-1].transform });
-  run($('#caret'), kf);
-}
-run($('#caret'), [
-  { offset:0, opacity:0 },
-  { offset:o(T.stream-.06), opacity:0 },
-  { offset:o(T.stream+.04), opacity:reduce?0:1 },
-  { offset:o(T.done), opacity:reduce?0:1, easing:E.out2 },
-  { offset:o(T.done+.12), opacity:0 },
-  { offset:1, opacity:0 },
-]);
-
-/* ── 左:三點載入。800ms 整除 4000ms,所以整體仍是 4 秒週期。 ───────────── */
-$$('#loader i').forEach((d, i) => run(d,
-  [{opacity:.22},{opacity:1},{opacity:.22}],
-  { duration:800, delay:i*130, easing:'ease-in-out' }));
+/* Both tracks enter together inside the ONE reference hero. */
+[$('#laneA'), $('#laneB')].forEach((lane) => run(lane, [
+  {offset:0,opacity:0},{offset:o(T.ready),opacity:0,easing:E.out},
+  {offset:o(T.ready+.24),opacity:1},{offset:1,opacity:1},
+]));
 run($('#loader'), [
-  { offset:0, opacity:1 },
-  { offset:o(T.done-.10), opacity:1, easing:E.out2 },
-  { offset:o(T.done+.04), opacity:0 },
-  { offset:1, opacity:0 },
+  {offset:0,opacity:0},{offset:o(T.ready+.10),opacity:0},
+  {offset:o(T.ready+.22),opacity:1},{offset:o(T.block-.10),opacity:1},
+  {offset:o(T.block+.05),opacity:0},{offset:1,opacity:0},
 ]);
+$$('#loader i').forEach((dot, index) => {
+  const animation = dot.animate([{opacity:.22},{opacity:1},{opacity:.22}], {
+    duration:780, delay:index*120, iterations:Infinity, easing:'ease-in-out', fill:'both',
+  });
+  anims.push(animation);
+});
 
-/* ── 左:等待結束,一次倒出。第一個標點,所以用最有重量的 out4,
-      並加 25ms 的細微 stagger,讓它是「一疊東西落下」而不是「圖層開燈」。 ── */
-linesA.forEach((el, i) => {
-  const s = T.done + i*.025;
-  run(el, [
-    { offset:0, opacity:0, transform:`translateY(${rise(14)})` },
-    { offset:o(s), opacity:0, transform:`translateY(${rise(14)})`, easing:E.out4 },
-    { offset:o(s+.30), opacity:1, transform:'translateY(0px)' },
-    { offset:1, opacity:1, transform:'translateY(0px)' },
+/* Streaming: fade/rise supplies craft; the nested base wipe stays mechanical. */
+linesB.forEach((line, index) => {
+  const start = T.stream + index*T.per;
+  run(line, [
+    {offset:0,opacity:0,transform:'translateY(8px)'},
+    {offset:o(start),opacity:0,transform:'translateY(8px)',easing:E.out},
+    {offset:o(start+.20),opacity:1,transform:'translateY(0)'},
+    {offset:1,opacity:1,transform:'translateY(0)'},
+  ]);
+  run(line.querySelector('.base'), [
+    {offset:0,transform:'scaleX(0)'},
+    {offset:o(start),transform:'scaleX(0)',easing:E.lin},
+    {offset:o(start+T.per),transform:'scaleX(1)'},
+    {offset:1,transform:'scaleX(1)'},
   ]);
 });
 
-/* ── 兩條量條:linear。量條代表時間,時間本來就等速 —— 這裡加 ease 反而不誠實。 */
-const spanB = T.mEnd - T.mB, spanA = T.mEnd - T.mA;
-const ratio = (spanA / spanB);
-run($('#meterB'), [
-  { offset:0, transform:'scaleX(0)' },
-  { offset:o(T.mB), transform:'scaleX(0)', easing:E.lin },
-  { offset:o(T.mEnd), transform:'scaleX(1)' },
-  { offset:1, transform:'scaleX(1)' },
-]);
-run($('#meterA'), [
-  { offset:0, transform:'scaleX(0)' },
-  { offset:o(T.mA), transform:'scaleX(0)', easing:E.lin },
-  { offset:o(T.mEnd), transform:`scaleX(${ratio.toFixed(4)})` },
-  { offset:1, transform:`scaleX(${ratio.toFixed(4)})` },
-]);
-
-/* ── 揭示:全片唯一一次 overshoot,所以它會是視線的落點。
-      這裡刻意不用「快 N 倍」。倍數等於 (量條長度比),而量條長度取決於我把
-      T.mEnd 訂在哪 —— 把它改成 10 秒,倍數就會趨近 1。那個數字看起來很權威,
-      其實是我挑的測量窗口製造出來的。
-      「早幾秒」是兩個可讀時刻的差,不管量到哪都一樣,所以才站得住。 ────── */
-$('#mult').textContent = '早 ' + (T.mA - T.mB).toFixed(1) + ' 秒';
-run($('#mult'), [
-  { offset:0, opacity:0, transform:'scale(.8)' },
-  { offset:o(T.reveal), opacity:0, transform:'scale(.8)', easing:E.back },
-  { offset:o(T.reveal+.28), opacity:1, transform:'scale(1)' },
-  { offset:1, opacity:1, transform:'scale(1)' },
+/* The caret rides the growing edge, then jumps to the next line. */
+const caretFrames = [{offset:0,transform:'translate(0,0)'}];
+linesB.forEach((line, index) => {
+  const start = T.stream + index*T.per;
+  if (index === 0) caretFrames.push({offset:o(start),transform:'translate(0,0)',easing:E.lin});
+  caretFrames.push({offset:o(start+T.per),transform:`translate(${W[index]}px,${index*PITCH}px)`});
+  if (index < linesB.length-1) caretFrames.push({
+    offset:o(start+T.per)+1e-5,easing:E.lin,
+    transform:`translate(0,${(index+1)*PITCH}px)`,
+  });
+});
+caretFrames.push({offset:1,transform:caretFrames.at(-1).transform});
+run($('#caret'), caretFrames);
+run($('#caret'), [
+  {offset:0,opacity:0},{offset:o(T.stream-.08),opacity:0},
+  {offset:o(T.stream+.04),opacity:1},{offset:o(T.block-.04),opacity:1},
+  {offset:o(T.block+.10),opacity:0},{offset:1,opacity:0},
 ]);
 
-/* ── 說明文字最後才出現(hero → supporting 的閱讀順序) ─────────────────── */
-run($('#legend'), [
-  { offset:0, opacity:0 },
-  { offset:o(T.done+.15), opacity:0, easing:E.out2 },
-  { offset:o(T.done+.55), opacity:1 },
-  { offset:1, opacity:1 },
+/* Blocking: the same content arrives as one weighted batch after the wait. */
+linesA.forEach((line, index) => {
+  const start = T.block + index*.025;
+  run(line, [
+    {offset:0,opacity:0,transform:'translateY(12px)'},
+    {offset:o(start),opacity:0,transform:'translateY(12px)',easing:E.out},
+    {offset:o(start+.28),opacity:1,transform:'translateY(0)'},
+    {offset:1,opacity:1,transform:'translateY(0)'},
+  ]);
+});
+
+/* After both are complete, one selection walks the two tracks and converts the
+   same neutral content to accent. This reuses the reference's review grammar. */
+const scanOrder = [...linesB, ...linesA];
+const position = (line) => {
+  const inA = linesA.includes(line);
+  const index = (inA ? linesA : linesB).indexOf(line);
+  return { x:0, y:(inA ? -223 : 0) + index*PITCH, w:W[index] };
+};
+const first = position(scanOrder[0]);
+const selectionFrames = [
+  {offset:0,opacity:0,transform:`translate(${first.x}px,${first.y}px)`,width:first.w+16+'px'},
+  {offset:o(T.scan-.05),opacity:0,transform:`translate(${first.x}px,${first.y}px)`,width:first.w+16+'px'},
+  {offset:o(T.scan+.08),opacity:1,transform:`translate(${first.x}px,${first.y}px)`,width:first.w+16+'px'},
+];
+scanOrder.forEach((line,index) => {
+  const current = position(line);
+  const at = T.scan + index*T.scanPer;
+  if (index > 0) {
+    const previous = position(scanOrder[index-1]);
+    selectionFrames.push({offset:o(at),opacity:1,
+      transform:`translate(${previous.x}px,${previous.y}px)`,width:previous.w+16+'px',easing:E.move});
+    selectionFrames.push({offset:o(at+.20),opacity:1,
+      transform:`translate(${current.x}px,${current.y}px)`,width:current.w+16+'px'});
+  }
+  run(line.querySelector('.accent'), [
+    {offset:0,transform:'scaleX(0)'},{offset:o(at+.08),transform:'scaleX(0)',easing:E.lin},
+    {offset:o(at+.30),transform:'scaleX(1)'},{offset:1,transform:'scaleX(1)'},
+  ]);
+});
+const scanEnd = T.scan + scanOrder.length*T.scanPer;
+selectionFrames.push({offset:o(scanEnd),opacity:1,
+  transform:selectionFrames.at(-1).transform,width:selectionFrames.at(-1).width});
+selectionFrames.push({offset:o(scanEnd+.16),opacity:0,
+  transform:selectionFrames.at(-1).transform,width:selectionFrames.at(-1).width});
+selectionFrames.push({offset:1,opacity:0,
+  transform:selectionFrames.at(-1).transform,width:selectionFrames.at(-1).width});
+run($('#selection'), selectionFrames);
+
+/* One fixed state slot; outgoing text is gone before the next label enters. */
+const label = (node, start, end) => run(node, [
+  {offset:0,opacity:0},{offset:o(start),opacity:0,easing:E.out},
+  {offset:o(start+.20),opacity:1},{offset:o(end-.20),opacity:1},
+  {offset:o(end),opacity:0},{offset:1,opacity:0},
+]);
+const firstStreamReadable = T.stream + T.per;
+const firstBlockReadable = T.block + .28;
+$('#stateProof').textContent = `早 ${(firstBlockReadable-firstStreamReadable).toFixed(1)} 秒可讀`;
+label($('#stateStart'), T.ready+.05, firstStreamReadable-.04);
+label($('#stateReadable'), firstStreamReadable, T.proof-.04);
+label($('#stateProof'), T.proof, T.collapse+.35);
+
+/* Reference payoff: chrome turns accent, then the complete hero collapses to a
+   point and fades before the cycle resets. */
+$$('#frame .edge, #frame .handle').forEach((chrome) => run(chrome, [
+  {offset:0,backgroundColor:'var(--frame)'},
+  {offset:o(T.build),backgroundColor:'var(--frame)'},
+  {offset:o(T.build+.28),backgroundColor:'var(--accent)'},
+  {offset:1,backgroundColor:'var(--accent)'},
+]));
+run($('#unit'), [
+  {offset:0,transform:'scale(1)',opacity:1},
+  {offset:o(T.collapse),transform:'scale(1)',opacity:1,easing:E.exit},
+  {offset:o(T.collapseEnd),transform:'scale(.012)',opacity:0},
+  {offset:1,transform:'scale(.012)',opacity:0},
 ]);
 
-const t0 = anims[0]?.timeline?.currentTime ?? 0;
-anims.forEach((a) => { a.startTime = t0; });
+/* Synchronize, then expose a deterministic inspection contract. */
+const timelineNow = document.timeline.currentTime ?? 0;
+anims.forEach((animation) => { animation.startTime = timelineNow; });
+const seek = (seconds) => {
+  const ms = ((Number(seconds)*1000 % CYCLE) + CYCLE) % CYCLE;
+  anims.forEach((animation) => { animation.pause(); animation.currentTime = ms; });
+};
+const requested = new URLSearchParams(location.search).get('t');
+const reduceQuery = matchMedia('(prefers-reduced-motion: reduce)');
+const play = () => anims.forEach((animation) => animation.play());
+const pause = () => anims.forEach((animation) => animation.pause());
+const hasPinnedTime = requested !== null && Number.isFinite(Number(requested));
+if (hasPinnedTime) seek(Number(requested));
+else if (reduceQuery.matches) seek(6.35);
+
+/* Live pages must react when the OS preference changes and must not burn frames
+   in a hidden tab. Pinned ?t=N inspection always wins over both behaviours. */
+reduceQuery.addEventListener('change', (event) => {
+  if (hasPinnedTime) return;
+  if (event.matches) seek(6.35);
+  else play();
+});
+document.addEventListener('visibilitychange', () => {
+  if (hasPinnedTime || reduceQuery.matches) return;
+  if (document.hidden) pause();
+  else play();
+});
+
 window.__anims = anims;
+window.__seek = seek;
+window.__setPlaying = (shouldPlay) => shouldPlay ? play() : pause();
+window.__cycle = CYCLE/1000;
+window.__ready = true;
 </script>
 </body>
 </html>

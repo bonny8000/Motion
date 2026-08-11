@@ -150,6 +150,12 @@ actually provoke vestibular discomfort.
 Use `reduced: 'still'` only when large movement *is* the scene's whole point, so
 calming it would leave nothing coherent.
 
+For a live page, treat the preference as state rather than a one-time load check:
+listen to the media query's `change` event and switch to or from the reduced
+version when the OS setting changes. Also pause an unattended infinite loop while
+`document.hidden`; resume only when motion is allowed. A video export is already
+frame-seeked and needs neither runtime behaviour.
+
 ## Masking an imperfect crossfade
 
 When two states overlap visibly during a transition and no amount of easing or

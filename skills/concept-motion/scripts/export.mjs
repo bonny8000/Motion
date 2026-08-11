@@ -17,10 +17,11 @@
 import { chromium } from 'playwright';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { mkdir, rm, readdir, stat, readFile } from 'node:fs/promises';
+import { mkdir, rm, readdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync, statSync } from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 
 const run = promisify(execFile);
 
@@ -28,9 +29,10 @@ const run = promisify(execFile);
 const argv = process.argv.slice(2);
 const scene = argv.find((a) => !a.startsWith('--'));
 if (!scene) {
-  console.error('usage: node export.mjs <scene.html> [--formats mp4,webm,gif,frames]\n' +
+  console.error('usage: node export.mjs <scene.html> [--formats mp4,webm,gif,frames,sheet]\n' +
                 '                        [--seconds 14] [--fps 30] [--width 1600]\n' +
                 '                        [--height 900] [--scale 2] [--out dist/name]\n' +
+                '                        [--samples 12] [--columns 4] [--sheet-width 640]\n' +
                 '                        [--root dir] [--serve]\n\n' +
                 '  --serve  start the local server and stop, for eyeballing a scene\n' +
                 '           in your own browser instead of capturing it');
@@ -98,6 +100,20 @@ const scale   = Number(flag('scale', 2));
 const formats = String(flag('formats', 'mp4')).split(',').map((f) => f.trim()).filter(Boolean);
 const outBase = path.resolve(flag('out', path.join('dist', path.basename(scene, '.html'))));
 
+if (formats.includes('sheet') && formats.length !== 1) {
+  console.error('sheet is a sampled review mode; run it separately from video/GIF/frames export');
+  process.exit(1);
+}
+
+const sheetOnly = formats[0] === 'sheet';
+const sampleCount = Math.round(Number(flag('samples', 12)));
+const sheetColumns = Math.round(Number(flag('columns', 4)));
+const sheetWidth = Math.round(Number(flag('sheet-width', 640)));
+if (sheetOnly && (sampleCount < 3 || sampleCount > 40 || sheetColumns < 1 || sheetWidth < 160)) {
+  console.error('sheet needs --samples 3-40, --columns >= 1 and --sheet-width >= 160');
+  process.exit(1);
+}
+
 // H.264 requires even dimensions in yuv420p. Catch it here rather than letting
 // ffmpeg fail after several minutes of frame capture.
 if (formats.includes('mp4') && ((width * scale) % 2 || (height * scale) % 2)) {
@@ -106,13 +122,17 @@ if (formats.includes('mp4') && ((width * scale) % 2 || (height * scale) % 2)) {
 }
 
 const totalFrames = Math.round(seconds * fps);
+const captureTimes = sheetOnly
+  // Stop at 99%, not the exact loop boundary, so the seam pose remains visible.
+  ? Array.from({ length: sampleCount }, (_, i) => seconds * .99 * i / (sampleCount - 1))
+  : Array.from({ length: totalFrames }, (_, i) => i / fps);
 const framesDir = `${outBase}-frames`;
 await mkdir(path.dirname(outBase), { recursive: true });
 await rm(framesDir, { recursive: true, force: true });
 await mkdir(framesDir, { recursive: true });
 
 // ── capture ─────────────────────────────────────────────────────────────────
-console.log(`capturing ${totalFrames} frames @ ${width * scale}x${height * scale}`);
+console.log(`capturing ${captureTimes.length} frames @ ${width * scale}x${height * scale}`);
 
 const browser = await chromium.launch();
 const page = await browser.newPage({
@@ -152,8 +172,8 @@ console.log(`  ${animCount} animation(s) paused for seeking`);
 const target = page.locator('.stage').first();
 const clip = (await target.count()) ? target : page;
 
-for (let i = 0; i < totalFrames; i++) {
-  const ms = (i / fps) * 1000;
+for (let i = 0; i < captureTimes.length; i++) {
+  const ms = captureTimes[i] * 1000;
   await page.evaluate((t) => {
     document.getAnimations().forEach((a) => { a.currentTime = t; });
     // Motion (motion.dev) controls, if the scene registered any on window.
@@ -166,27 +186,31 @@ for (let i = 0; i < totalFrames; i++) {
   await clip.screenshot({
     path: path.join(framesDir, `f${String(i).padStart(5, '0')}.png`),
   });
-  if (i % fps === 0) process.stdout.write(`\r  ${i}/${totalFrames}`);
+  if (sheetOnly || i % fps === 0) process.stdout.write(`\r  ${i + 1}/${captureTimes.length}`);
 }
-process.stdout.write(`\r  ${totalFrames}/${totalFrames}\n`);
+process.stdout.write(`\r  ${captureTimes.length}/${captureTimes.length}\n`);
 await browser.close();
 server.close();
 
 // Cheap guard against the failure mode above and its cousins: if seeking did
-// not actually take effect, every PNG is byte-identical. That is invisible in a
-// 14-second video and obvious here.
+// not actually take effect, every PNG is byte-identical. Hash the bytes rather
+// than comparing file sizes; different flat frames often compress to the same
+// number of bytes.
 {
-  const sizes = new Set();
+  const hashes = new Set();
   for (const f of await readdir(framesDir)) {
-    if (f.endsWith('.png')) sizes.add((await stat(path.join(framesDir, f))).size);
+    if (f.endsWith('.png')) {
+      const bytes = await readFile(path.join(framesDir, f));
+      hashes.add(createHash('sha256').update(bytes).digest('hex'));
+    }
   }
-  if (sizes.size === 1) {
+  if (hashes.size === 1) {
     console.error('\nERROR: all frames are identical — seeking had no effect.\n' +
       '  If the scene drives motion from JS, register its controls on\n' +
       '  window.__motionControls (see references/motion-track.md).');
     process.exit(1);
   }
-  console.log(`  ${sizes.size} distinct frame sizes — motion confirmed`);
+  console.log(`  ${hashes.size} distinct frame(s) — motion confirmed`);
 }
 
 // ── encode ──────────────────────────────────────────────────────────────────
@@ -204,7 +228,7 @@ const ffmpeg = async (args, label) => {
 };
 
 for (const fmt of formats) {
-  const out = `${outBase}.${fmt}`;
+  const out = fmt === 'sheet' ? `${outBase}-sheet.png` : `${outBase}.${fmt}`;
 
   if (fmt === 'mp4') {
     // crf 18 is visually lossless for flat motion graphics. faststart lets the
@@ -232,6 +256,21 @@ for (const fmt of formats) {
 
   } else if (fmt === 'frames') {
     console.log(`frames kept at ${framesDir}`);
+
+  } else if (fmt === 'sheet') {
+    const rows = Math.ceil(captureTimes.length / sheetColumns);
+    await ffmpeg([
+      '-y', '-framerate', '1', '-i', path.join(framesDir, 'f%05d.png'),
+      '-vf', `scale=${sheetWidth}:-2,tile=${sheetColumns}x${rows}:padding=8:margin=8:color=white`,
+      '-frames:v', '1', out,
+    ], 'contact sheet');
+    await writeFile(`${outBase}-sheet.json`, `${JSON.stringify({
+      scene: scenePath,
+      seconds,
+      samples: captureTimes.map((time, index) => ({ index, time: Number(time.toFixed(6)) })),
+      board: { file: path.basename(out), columns: sheetColumns, rows, sampleWidth: sheetWidth },
+      note: 'Frames sample 0-99% of the requested cycle.',
+    }, null, 2)}\n`);
 
   } else {
     console.warn(`unknown format "${fmt}" — skipped`);
