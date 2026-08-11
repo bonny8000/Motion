@@ -8,6 +8,8 @@
   :root{
     --bg:#657689; --card:#1a2931; --accent:#0061de;
     --bar-a:#78868e; --bar-b:#5e6c74; --bar-c:#46545c;
+    --good-a:#2f7cff; --good-b:#38bdf8;
+    --good-c:#7c6cff; --good-d:#24c997;
     --label:#e8eef0; --frame:#fff;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -45,6 +47,7 @@
   .lane-title{display:flex;align-items:center;gap:12px;color:var(--label);
               font-size:25px;font-weight:450;letter-spacing:-.01em}
   .lane-title::before{content:"";display:block;width:5px;height:5px;background:var(--bar-b)}
+  #laneA .lane-title{color:#aeb9be}
   #laneB .lane-title::before{background:var(--accent)}
   .lines{position:absolute;left:0;top:56px}
   .ln{position:relative;height:16px;margin-bottom:24px;opacity:0;
@@ -55,6 +58,11 @@
   .ln.c .base{background:var(--bar-c)}
   .ln .accent{background:var(--accent);transform:scaleX(0)}
   #laneA .ln .base{transform:scaleX(1)}
+  #laneB .ln:nth-child(1) .base{background:var(--good-a)}
+  #laneB .ln:nth-child(2) .base{background:var(--good-b)}
+  #laneB .ln:nth-child(3) .base{background:var(--good-c)}
+  #laneB .ln:nth-child(4) .base{background:var(--good-d)}
+  #laneB .ln .accent{background:rgba(255,255,255,.18)}
 
   #loader{position:absolute;left:0;top:61px;display:flex;gap:10px;opacity:0}
   #loader i{width:10px;height:10px;border-radius:50%;background:var(--bar-b);opacity:.22}
@@ -106,21 +114,28 @@
 
 <script>
 /* Standalone, zero-network WAAPI scene. Every narrative animation spans the
-   same 10.2s cycle, so any moment can be sought deterministically with ?t=N. */
-const CYCLE = 10200;
+   same 16.8s cycle, so any moment can be sought deterministically with ?t=N. */
+const CYCLE = 16800;
 const o = (seconds) => seconds * 1000 / CYCLE;
 const E = {
   out:  'cubic-bezier(.23,1,.32,1)',
+  snap: 'cubic-bezier(.34,1.42,.64,1)',
+  wipe: 'cubic-bezier(.18,.78,.24,1)',
   move: 'cubic-bezier(.77,0,.175,1)',
   exit: 'cubic-bezier(.5,0,.75,0)',
-  lin:  'linear',
 };
 const T = {
-  dotEnd:.72, draw:.72, drawHalf:1.32, fill:1.92, ready:2.18,
-  stream:2.35, per:.52, block:4.80,
-  scan:5.35, scanPer:.26, proof:5.18,
-  build:7.48, collapse:7.86, collapseEnd:9.55,
+  dotEnd:.95, draw:.95, drawHalf:1.85, fill:3.05, ready:3.55,
+  stream:4.30, block:9.05, proof:9.55, scan:9.80,
+  build:14.25, collapse:14.85, collapseEnd:16.25,
 };
+const STREAM = [
+  {start:4.30, duration:.82},
+  {start:5.50, duration:.66},
+  {start:6.42, duration:.98},
+  {start:7.85, duration:.78},
+];
+const SCAN_DELAYS = [0, .54, .96, 1.56, 2.34, 2.82, 3.28, 3.88];
 const W = [790, 930, 680, 845];
 const PITCH = 40;
 const $ = (selector) => document.querySelector(selector);
@@ -146,13 +161,16 @@ const buildLines = (host) => W.map((width, index) => {
 const linesA = buildLines($('#linesA'));
 const linesB = buildLines($('#linesB'));
 
-/* 0.00–1.92 — the reference opening: point, then two pens trace a frame. */
+/* The opening point becomes the top-left anchor instead of disappearing as a
+   disconnected ornament. The frame grows directly from that same object. */
 run($('#dot'), [
-  {offset:0,opacity:0,transform:'translate(-34px,16px)'},
-  {offset:o(.12),opacity:1,transform:'translate(0,0)',easing:E.out},
-  {offset:o(T.dotEnd-.12),opacity:1,transform:'translate(0,0)'},
-  {offset:o(T.dotEnd),opacity:0,transform:'translate(0,0)'},
-  {offset:1,opacity:0,transform:'translate(0,0)'},
+  {offset:0,opacity:0,transform:'translate(-34px,16px) scale(.6)'},
+  {offset:o(.14),opacity:1,transform:'translate(0,0) scale(1)',easing:E.out},
+  {offset:o(.52),opacity:1,transform:'translate(0,0) scale(1)',easing:E.move},
+  {offset:o(T.dotEnd),opacity:1,transform:'translate(-642px,-293px) scale(1.4)'},
+  {offset:o(T.fill-.10),opacity:1,transform:'translate(-642px,-293px) scale(1.4)',easing:E.out},
+  {offset:o(T.fill+.14),opacity:0,transform:'translate(-642px,-293px) scale(1)'},
+  {offset:1,opacity:0,transform:'translate(-642px,-293px) scale(1)'},
 ]);
 $$('#frame .top, #frame .left').forEach((edge) => run(edge, [
   {offset:0,transform:edge.classList.contains('left')?'scaleY(0)':'scaleX(0)'},
@@ -167,44 +185,58 @@ $$('#frame .right, #frame .bottom').forEach((edge) => run(edge, [
   {offset:1,transform:edge.classList.contains('right')?'scaleY(1)':'scaleX(1)'},
 ]));
 run($('#panel'), [
-  {offset:0,opacity:0},{offset:o(T.fill),opacity:0,easing:E.out},
-  {offset:o(T.ready),opacity:1},{offset:1,opacity:1},
+  {offset:0,opacity:0,transform:'scale(.994)'},
+  {offset:o(T.fill),opacity:0,transform:'scale(.994)',easing:E.out},
+  {offset:o(T.ready),opacity:1,transform:'scale(1)'},
+  {offset:1,opacity:1,transform:'scale(1)'},
 ]);
 $$('#frame .handle').forEach((handle) => run(handle, [
-  {offset:0,opacity:0},{offset:o(T.fill-.12),opacity:0,easing:E.out},
-  {offset:o(T.fill+.10),opacity:1},{offset:1,opacity:1},
+  {offset:0,opacity:0,transform:'scale(0)'},
+  {offset:o(T.fill-.12),opacity:0,transform:'scale(0)',easing:E.snap},
+  {offset:o(T.fill+.10),opacity:1,transform:'scale(1.28)',easing:E.out},
+  {offset:o(T.fill+.28),opacity:1,transform:'scale(1)'},
+  {offset:1,opacity:1,transform:'scale(1)'},
 ]));
 
 /* Both tracks enter together inside the ONE reference hero. */
-[$('#laneA'), $('#laneB')].forEach((lane) => run(lane, [
-  {offset:0,opacity:0},{offset:o(T.ready),opacity:0,easing:E.out},
-  {offset:o(T.ready+.24),opacity:1},{offset:1,opacity:1},
-]));
+[$('#laneA'), $('#laneB')].forEach((lane, index) => {
+  const start = T.ready + index*.08;
+  run(lane, [
+    {offset:0,opacity:0,transform:'translateY(14px)'},
+    {offset:o(start),opacity:0,transform:'translateY(14px)',easing:E.snap},
+    {offset:o(start+.26),opacity:1,transform:'translateY(-2px)',easing:E.out},
+    {offset:o(start+.44),opacity:1,transform:'translateY(0)'},
+    {offset:1,opacity:1,transform:'translateY(0)'},
+  ]);
+});
 run($('#loader'), [
   {offset:0,opacity:0},{offset:o(T.ready+.10),opacity:0},
-  {offset:o(T.ready+.22),opacity:1},{offset:o(T.block-.10),opacity:1},
+  {offset:o(T.ready+.30),opacity:1},{offset:o(T.block-.10),opacity:1},
   {offset:o(T.block+.05),opacity:0},{offset:1,opacity:0},
 ]);
 $$('#loader i').forEach((dot, index) => {
   const animation = dot.animate([{opacity:.22},{opacity:1},{opacity:.22}], {
-    duration:780, delay:index*120, iterations:Infinity, easing:'ease-in-out', fill:'both',
+    duration:1040, delay:index*145, iterations:Infinity,
+    easing:'cubic-bezier(.45,0,.55,1)', fill:'both',
   });
   anims.push(animation);
 });
 
-/* Streaming: fade/rise supplies craft; the nested base wipe stays mechanical. */
+/* Streaming breathes in phrases: unequal starts and durations create a
+   fast/slow cadence while the caret remains locked to each growing edge. */
 linesB.forEach((line, index) => {
-  const start = T.stream + index*T.per;
+  const {start, duration} = STREAM[index];
   run(line, [
-    {offset:0,opacity:0,transform:'translateY(8px)'},
-    {offset:o(start),opacity:0,transform:'translateY(8px)',easing:E.out},
-    {offset:o(start+.20),opacity:1,transform:'translateY(0)'},
+    {offset:0,opacity:0,transform:'translateY(10px)'},
+    {offset:o(start),opacity:0,transform:'translateY(10px)',easing:E.snap},
+    {offset:o(start+.18),opacity:1,transform:'translateY(-1px)',easing:E.out},
+    {offset:o(start+.34),opacity:1,transform:'translateY(0)'},
     {offset:1,opacity:1,transform:'translateY(0)'},
   ]);
   run(line.querySelector('.base'), [
     {offset:0,transform:'scaleX(0)'},
-    {offset:o(start),transform:'scaleX(0)',easing:E.lin},
-    {offset:o(start+T.per),transform:'scaleX(1)'},
+    {offset:o(start),transform:'scaleX(0)',easing:E.wipe},
+    {offset:o(start+duration),transform:'scaleX(1)'},
     {offset:1,transform:'scaleX(1)'},
   ]);
 });
@@ -212,11 +244,11 @@ linesB.forEach((line, index) => {
 /* The caret rides the growing edge, then jumps to the next line. */
 const caretFrames = [{offset:0,transform:'translate(0,0)'}];
 linesB.forEach((line, index) => {
-  const start = T.stream + index*T.per;
-  if (index === 0) caretFrames.push({offset:o(start),transform:'translate(0,0)',easing:E.lin});
-  caretFrames.push({offset:o(start+T.per),transform:`translate(${W[index]}px,${index*PITCH}px)`});
+  const {start, duration} = STREAM[index];
+  caretFrames.push({offset:o(start),transform:`translate(0,${index*PITCH}px)`,easing:E.wipe});
+  caretFrames.push({offset:o(start+duration),transform:`translate(${W[index]}px,${index*PITCH}px)`});
   if (index < linesB.length-1) caretFrames.push({
-    offset:o(start+T.per)+1e-5,easing:E.lin,
+    offset:o(start+duration)+1e-5,easing:'steps(1,end)',
     transform:`translate(0,${(index+1)*PITCH}px)`,
   });
 });
@@ -224,51 +256,58 @@ caretFrames.push({offset:1,transform:caretFrames.at(-1).transform});
 run($('#caret'), caretFrames);
 run($('#caret'), [
   {offset:0,opacity:0},{offset:o(T.stream-.08),opacity:0},
-  {offset:o(T.stream+.04),opacity:1},{offset:o(T.block-.04),opacity:1},
-  {offset:o(T.block+.10),opacity:0},{offset:1,opacity:0},
+  {offset:o(T.stream+.04),opacity:1},{offset:o(T.scan-.36),opacity:1},
+  {offset:o(T.scan-.12),opacity:0},{offset:1,opacity:0},
 ]);
 
-/* Blocking: the same content arrives as one weighted batch after the wait. */
+/* Blocking: the content arrives as one weighted batch, but the stagger and
+   small overshoot give the batch physical weight instead of a flat fade. */
 linesA.forEach((line, index) => {
-  const start = T.block + index*.025;
+  const start = T.block + index*.055;
   run(line, [
-    {offset:0,opacity:0,transform:'translateY(12px)'},
-    {offset:o(start),opacity:0,transform:'translateY(12px)',easing:E.out},
-    {offset:o(start+.28),opacity:1,transform:'translateY(0)'},
+    {offset:0,opacity:0,transform:'translateY(16px)'},
+    {offset:o(start),opacity:0,transform:'translateY(16px)',easing:E.snap},
+    {offset:o(start+.20),opacity:1,transform:'translateY(-3px)',easing:E.out},
+    {offset:o(start+.40),opacity:1,transform:'translateY(0)'},
     {offset:1,opacity:1,transform:'translateY(0)'},
   ]);
 });
 
-/* After both are complete, one selection walks the two tracks and converts the
-   same neutral content to accent. This reuses the reference's review grammar. */
-const scanOrder = [...linesB, ...linesA];
+/* The completed caret hands off into the comparison box. It reviews the muted
+   blocking result first, then moves to the already-colourful streaming result. */
+const scanOrder = [...linesA, ...linesB];
 const position = (line) => {
   const inA = linesA.includes(line);
   const index = (inA ? linesA : linesB).indexOf(line);
   return { x:0, y:(inA ? -223 : 0) + index*PITCH, w:W[index] };
 };
 const first = position(scanOrder[0]);
+const caretJoin = {x:W.at(-1)+8, y:3*PITCH+33};
 const selectionFrames = [
-  {offset:0,opacity:0,transform:`translate(${first.x}px,${first.y}px)`,width:first.w+16+'px'},
-  {offset:o(T.scan-.05),opacity:0,transform:`translate(${first.x}px,${first.y}px)`,width:first.w+16+'px'},
-  {offset:o(T.scan+.08),opacity:1,transform:`translate(${first.x}px,${first.y}px)`,width:first.w+16+'px'},
+  {offset:0,opacity:0,transform:`translate(${caretJoin.x}px,${caretJoin.y}px) scaleY(.5)`,width:'0px'},
+  {offset:o(T.scan-.38),opacity:0,transform:`translate(${caretJoin.x}px,${caretJoin.y}px) scaleY(.5)`,width:'0px'},
+  {offset:o(T.scan-.18),opacity:1,transform:`translate(${caretJoin.x}px,${caretJoin.y}px) scaleY(.5)`,width:'0px',easing:E.move},
+  {offset:o(T.scan+.10),opacity:1,transform:`translate(${first.x}px,${first.y}px) scaleY(1)`,width:first.w+16+'px'},
 ];
 scanOrder.forEach((line,index) => {
   const current = position(line);
-  const at = T.scan + index*T.scanPer;
+  const at = T.scan + SCAN_DELAYS[index];
   if (index > 0) {
     const previous = position(scanOrder[index-1]);
     selectionFrames.push({offset:o(at),opacity:1,
       transform:`translate(${previous.x}px,${previous.y}px)`,width:previous.w+16+'px',easing:E.move});
-    selectionFrames.push({offset:o(at+.20),opacity:1,
+    selectionFrames.push({offset:o(at+.26),opacity:1,
       transform:`translate(${current.x}px,${current.y}px)`,width:current.w+16+'px'});
   }
-  run(line.querySelector('.accent'), [
-    {offset:0,transform:'scaleX(0)'},{offset:o(at+.08),transform:'scaleX(0)',easing:E.lin},
-    {offset:o(at+.30),transform:'scaleX(1)'},{offset:1,transform:'scaleX(1)'},
-  ]);
+  if (linesB.includes(line)) {
+    run(line.querySelector('.accent'), [
+      {offset:0,transform:'scaleX(0)'},
+      {offset:o(at+.10),transform:'scaleX(0)',easing:E.wipe},
+      {offset:o(at+.38),transform:'scaleX(1)'},{offset:1,transform:'scaleX(1)'},
+    ]);
+  }
 });
-const scanEnd = T.scan + scanOrder.length*T.scanPer;
+const scanEnd = T.scan + SCAN_DELAYS.at(-1) + .42;
 selectionFrames.push({offset:o(scanEnd),opacity:1,
   transform:selectionFrames.at(-1).transform,width:selectionFrames.at(-1).width});
 selectionFrames.push({offset:o(scanEnd+.16),opacity:0,
@@ -276,15 +315,31 @@ selectionFrames.push({offset:o(scanEnd+.16),opacity:0,
 selectionFrames.push({offset:1,opacity:0,
   transform:selectionFrames.at(-1).transform,width:selectionFrames.at(-1).width});
 run($('#selection'), selectionFrames);
+const colourHandoff = T.scan + SCAN_DELAYS[linesA.length];
+run($('#selection'), [
+  {offset:0,borderColor:'var(--bar-a)'},
+  {offset:o(colourHandoff-.12),borderColor:'var(--bar-a)',easing:E.out},
+  {offset:o(colourHandoff+.20),borderColor:'var(--accent)'},
+  {offset:1,borderColor:'var(--accent)'},
+]);
+$$('#selection i').forEach((handle) => run(handle, [
+  {offset:0,backgroundColor:'var(--bar-a)'},
+  {offset:o(colourHandoff-.12),backgroundColor:'var(--bar-a)',easing:E.out},
+  {offset:o(colourHandoff+.20),backgroundColor:'var(--accent)'},
+  {offset:1,backgroundColor:'var(--accent)'},
+]));
 
 /* One fixed state slot; outgoing text is gone before the next label enters. */
 const label = (node, start, end) => run(node, [
-  {offset:0,opacity:0},{offset:o(start),opacity:0,easing:E.out},
-  {offset:o(start+.20),opacity:1},{offset:o(end-.20),opacity:1},
-  {offset:o(end),opacity:0},{offset:1,opacity:0},
+  {offset:0,opacity:0,transform:'translateY(8px)'},
+  {offset:o(start),opacity:0,transform:'translateY(8px)',easing:E.out},
+  {offset:o(start+.26),opacity:1,transform:'translateY(0)'},
+  {offset:o(end-.24),opacity:1,transform:'translateY(0)',easing:E.out},
+  {offset:o(end),opacity:0,transform:'translateY(-6px)'},
+  {offset:1,opacity:0,transform:'translateY(-6px)'},
 ]);
-const firstStreamReadable = T.stream + T.per;
-const firstBlockReadable = T.block + .28;
+const firstStreamReadable = STREAM[0].start + STREAM[0].duration;
+const firstBlockReadable = T.block + .40;
 $('#stateProof').textContent = `Readable ${(firstBlockReadable-firstStreamReadable).toFixed(1)}s earlier`;
 label($('#stateStart'), T.ready+.05, firstStreamReadable-.04);
 label($('#stateReadable'), firstStreamReadable, T.proof-.04);
@@ -292,15 +347,19 @@ label($('#stateProof'), T.proof, T.collapse+.35);
 
 /* Reference payoff: chrome turns accent, then the complete hero collapses to a
    point and fades before the cycle resets. */
-$$('#frame .edge, #frame .handle').forEach((chrome) => run(chrome, [
+$$('#frame .edge, #frame .handle').forEach((chrome, index) => {
+  const start = T.build + index*.055;
+  run(chrome, [
   {offset:0,backgroundColor:'var(--frame)'},
-  {offset:o(T.build),backgroundColor:'var(--frame)'},
-  {offset:o(T.build+.28),backgroundColor:'var(--accent)'},
+  {offset:o(start),backgroundColor:'var(--frame)',easing:E.out},
+  {offset:o(start+.34),backgroundColor:'var(--accent)'},
   {offset:1,backgroundColor:'var(--accent)'},
-]));
+  ]);
+});
 run($('#unit'), [
   {offset:0,transform:'scale(1)',opacity:1},
-  {offset:o(T.collapse),transform:'scale(1)',opacity:1,easing:E.exit},
+  {offset:o(T.collapse),transform:'scale(1)',opacity:1,easing:E.out},
+  {offset:o(T.collapse+.24),transform:'scale(1.018)',opacity:1,easing:E.exit},
   {offset:o(T.collapseEnd),transform:'scale(.012)',opacity:0},
   {offset:1,transform:'scale(.012)',opacity:0},
 ]);
@@ -318,13 +377,13 @@ const play = () => anims.forEach((animation) => animation.play());
 const pause = () => anims.forEach((animation) => animation.pause());
 const hasPinnedTime = requested !== null && Number.isFinite(Number(requested));
 if (hasPinnedTime) seek(Number(requested));
-else if (reduceQuery.matches) seek(6.35);
+else if (reduceQuery.matches) seek(9.70);
 
 /* Live pages must react when the OS preference changes and must not burn frames
    in a hidden tab. Pinned ?t=N inspection always wins over both behaviours. */
 reduceQuery.addEventListener('change', (event) => {
   if (hasPinnedTime) return;
-  if (event.matches) seek(6.35);
+  if (event.matches) seek(9.70);
   else play();
 });
 document.addEventListener('visibilitychange', () => {

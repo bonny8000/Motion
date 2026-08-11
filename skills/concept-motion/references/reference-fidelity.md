@@ -143,7 +143,7 @@ For a seekable HTML scene:
 
 ```bash
 node scripts/export.mjs assets/scene.html --formats sheet \
-  --seconds 10.2 --samples 12 --out work/scene-review
+  --seconds 16.8 --samples 12 --out work/scene-review
 ```
 
 The output includes a PNG board and JSON timestamps. Place it beside the video

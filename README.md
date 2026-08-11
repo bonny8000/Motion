@@ -53,7 +53,7 @@ micro-motion:
 ```bash
 node scripts/reference-board.mjs goal.mov --seconds 10 --samples 12 --out work/goal
 node scripts/export.mjs assets/scene-race-streaming.html --formats sheet \
-  --seconds 10.2 --samples 12 --out work/output
+  --seconds 16.8 --samples 12 --out work/output
 ```
 
 ## What's in it
@@ -156,9 +156,12 @@ rendered, nothing animated, and no error was visible anywhere.
 
 It also demonstrates reference adaptation: the speed comparison stays inside one
 centered hero with the goal clip's frame draw, flat material and closing collapse.
-The earlier side-by-side four-second version explained the claim, but changed the
-composition, cycle, focal path and material at once, so it could never resemble a
-single-hero ten-second reference.
+The opening point becomes the frame anchor, the streaming caret becomes the
+comparison box, and the closing collapse returns to the opening point, preserving
+object continuity across beats. The better path remains colourful while the
+blocking path stays grey. The earlier side-by-side four-second version explained
+the claim, but changed the composition, cycle, focal path and material at once, so
+it could never resemble a single-hero reference.
 
 If a scene must survive an unknown network, prefer WAAPI. Each element gets one
 animation covering the full cycle, so the loop resets itself and no reset block is
