@@ -54,6 +54,8 @@ micro-motion:
 node scripts/reference-board.mjs goal.mov --seconds 10 --samples 12 --out work/goal
 node scripts/export.mjs assets/scene-race-streaming.html --formats sheet \
   --seconds 18.4 --samples 16 --out work/output
+node scripts/layout-audit.mjs assets/scene-race-streaming.html \
+  --times 4.9,8.5,12.6 --out work/layout-audit
 ```
 
 ## What's in it
@@ -77,6 +79,7 @@ skills/concept-motion/
 │   └── motion-track.md               Motion API guidance + silent failure modes
 └── scripts/
     ├── reference-board.mjs            probe and sample goal footage
+    ├── layout-audit.mjs               full-resolution alignment/collision gate
     └── export.mjs                     serve, capture, review sheet, encode
 ```
 
@@ -157,13 +160,14 @@ rendered, nothing animated, and no error was visible anywhere.
 It also demonstrates reference adaptation: the speed comparison stays inside one
 centered hero with the goal clip's frame draw, flat material and closing collapse.
 The microphone is the shared element from ready state to active recorder and back.
-One captured utterance feeds two labelled routes: the live path exposes interim
-text and a correction before stop, while the delayed path stays unavailable until
-recording completes. The final result remains inside the product cards — there are
-no editor handles, decorative activity dots or selection outlines. Rounded
-geometry is concentric across the recorder and result cards. The earlier version
-copied those editor metaphors from the reference even though they had no meaning
-in the audio-input story; `references/semantic-continuity.md` now prevents that
+One captured utterance is compared in two vertically aligned timing states: the
+live result exposes interim text and a correction before stop, while the delayed
+result stays unavailable until recording completes. The capture bar and both cards
+share one centre column, and a compact semantic key replaces crossing route lines.
+There are no editor handles, decorative activity dots or selection outlines.
+Rounded geometry is concentric across the recorder and result cards. The earlier
+version copied those editor metaphors from the reference even though they had no
+meaning in the audio-input story; `references/semantic-continuity.md` now prevents that
 class of transfer error.
 
 If a scene must survive an unknown network, prefer WAAPI. Each element gets one

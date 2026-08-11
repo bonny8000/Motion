@@ -55,6 +55,11 @@ do not stretch text or icons with the container.
 If no object is shared, use a brief fade and name the state change. Do not invent
 a travelling object merely to make the transition look sophisticated.
 
+Connectors need their own geometric lane. Never place explanatory copy on top of
+a path, and never let a path enter a card through its title or transcript. If a
+shared centre column communicates the relationship more clearly than branching
+lines, keep the column and replace the lines with one concise semantic key.
+
 ## 4. Transfer a reference through a meaning gate
 
 Classify each reference feature twice:

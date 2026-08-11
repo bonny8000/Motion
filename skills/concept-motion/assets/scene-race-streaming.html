@@ -38,12 +38,14 @@
   #readyCue{position:absolute;left:0;top:510px;width:1600px;text-align:center;
             color:var(--text);font-size:24px;font-weight:560;letter-spacing:-.015em}
 
-  #captureBar{position:absolute;left:32px;top:32px;width:1226px;height:100px;
+  /* One 1040px centre column governs the capture bar and both comparison cards.
+     Shared edges keep every state visually stable as content changes. */
+  #captureBar{position:absolute;left:125px;top:32px;width:1040px;height:92px;
               overflow:hidden;border:1px solid var(--line);border-radius:var(--r-control);
-              background:var(--surface);opacity:0;clip-path:inset(0 1110px 0 0 round 24px)}
-  #mic{position:absolute;left:54px;top:52px;width:52px;height:52px;border-radius:50%;
+              background:var(--surface);opacity:0;clip-path:inset(0 964px 0 0 round 24px)}
+  #mic{position:absolute;left:151px;top:52px;width:52px;height:52px;border-radius:50%;
        background:#183e53;border:1px solid #2f88ba;z-index:4;
-       transform:translate(565px,217px)}
+       transform:translate(468px,217px)}
   #mic::before{content:"";position:absolute;left:19px;top:10px;width:10px;height:19px;
                border:2px solid #82d5ff;border-radius:8px}
   #mic::after{content:"";position:absolute;left:14px;top:25px;width:20px;height:12px;
@@ -51,43 +53,38 @@
   #micStem{position:absolute;left:25px;top:37px;width:2px;height:6px;
            border-radius:2px;background:#82d5ff}
 
-  #captureCopy{position:absolute;left:98px;top:23px;height:54px;color:var(--text);opacity:0}
+  #captureCopy{position:absolute;left:222px;top:51px;height:54px;color:var(--text);opacity:0}
   #captureCopy small{display:block;color:var(--muted);font-size:14px;font-weight:650;
                      letter-spacing:.055em;text-transform:uppercase}
   #captureCopy strong{position:absolute;left:0;top:22px;font-size:25px;font-weight:570;
                       white-space:nowrap;letter-spacing:-.015em}
   #captureCopy strong:not(:first-of-type){opacity:0}
 
-  #timer{position:absolute;right:196px;top:34px;width:72px;height:32px;color:var(--muted);
+  #timer{position:absolute;right:240px;top:63px;width:72px;height:32px;color:var(--muted);
          font-variant-numeric:tabular-nums;font-size:20px;font-weight:600;text-align:right;opacity:0}
   #timer span{position:absolute;inset:0;opacity:0}
-  #wave{position:absolute;right:292px;top:32px;height:36px;display:flex;align-items:center;
+  #wave{position:absolute;right:334px;top:60px;height:36px;display:flex;align-items:center;
         gap:6px;opacity:0}
   #wave i{display:block;width:4px;height:30px;border-radius:4px;
           background:var(--live-soft);transform:scaleY(.2)}
-  #stopControl{position:absolute;right:24px;top:22px;width:56px;height:56px;
+  #stopControl{position:absolute;right:149px;top:50px;width:56px;height:56px;
                display:grid;place-items:center;border:1px solid #48616c;border-radius:18px;
                background:#29404a;opacity:0}
   #stopSquare{width:16px;height:16px;border-radius:4px;background:#ff7d74}
   #doneCheck{position:absolute;width:19px;height:10px;border-left:3px solid var(--corrected);
              border-bottom:3px solid var(--corrected);transform:rotate(-45deg) scale(.82);opacity:0}
 
-  /* These are data routes, not decoration: one captured utterance feeds both
-     recognition behaviours. Grey waits for stop; blue returns interim text. */
-  #routes{position:absolute;left:0;top:134px;width:1290px;height:105px;overflow:visible;opacity:0}
-  #routes path{fill:none;stroke-width:2;stroke-linecap:round;pathLength:1;
-               stroke-dasharray:1;stroke-dashoffset:1}
-  #routeWait{stroke:#60727b}
-  #routeLive{stroke:var(--live)}
-  .routeLabel{position:absolute;top:185px;font-size:14px;font-weight:620;
-              letter-spacing:.04em;text-transform:uppercase;opacity:0}
-  #waitRouteLabel{left:250px;color:#7f9199}
-  #liveRouteLabel{right:244px;color:#70a7ff}
+  #timingKey{position:absolute;left:125px;top:142px;width:1040px;height:24px;
+             display:flex;align-items:center;justify-content:center;gap:10px;
+             color:var(--muted);font-size:13px;font-weight:650;letter-spacing:.045em;
+             text-transform:uppercase;opacity:0}
+  #timingKey i{display:block;width:4px;height:4px;border-radius:50%;background:var(--live-soft)}
+  #timingKey span:last-child{color:#9cc5ff}
 
-  .track{position:absolute;top:238px;width:566px;height:292px;padding:26px 28px;
+  .track{position:absolute;left:125px;width:1040px;height:170px;padding:22px 28px;
          border-radius:var(--r-card);opacity:0;transform:translateY(18px) scale(.985)}
-  #waitCard{left:64px;background:#1b2c34;border:1px solid #354851}
-  #liveCard{left:660px;background:var(--surface-2);border:1px solid #315f86;
+  #waitCard{top:180px;background:#1b2c34;border:1px solid #354851}
+  #liveCard{top:366px;background:var(--surface-2);border:1px solid #315f86;
             box-shadow:0 18px 42px rgba(2,15,22,.18)}
   .trackHeader{display:flex;align-items:center;justify-content:space-between}
   .trackTitle{font-size:20px;font-weight:620;letter-spacing:-.01em}
@@ -101,9 +98,9 @@
   #waitStatus{color:#9aa9b0;background:#2a3b43}
   #liveStatus{color:#9cc5ff;background:rgba(47,124,255,.14)}
 
-  .transcript{position:absolute;left:28px;right:28px;top:96px;height:72px;
-              display:flex;align-items:baseline;gap:8px;color:var(--text);
-              font-size:31px;font-weight:540;letter-spacing:-.025em;white-space:nowrap}
+  .transcript{position:absolute;left:28px;right:28px;top:65px;height:55px;
+              display:flex;align-items:baseline;justify-content:center;gap:8px;color:var(--text);
+              font-size:29px;font-weight:540;letter-spacing:-.025em;white-space:nowrap}
   #waitTranscript{opacity:0;color:#b6c1c6}
   #liveTranscript .word{opacity:0;transform:translateY(9px);display:inline-block}
   #liveTranscript .choice{position:relative;display:inline-block;width:54px;height:38px}
@@ -112,7 +109,8 @@
   #liveCaret{position:absolute;left:0;top:5px;width:3px;height:34px;border-radius:3px;
              background:var(--live-soft);opacity:0;box-shadow:0 0 10px rgba(112,207,255,.45)}
 
-  #waitEmpty{position:absolute;left:28px;top:102px;display:flex;align-items:center;gap:14px;
+  #waitEmpty{position:absolute;left:28px;right:28px;top:65px;height:55px;
+             display:flex;align-items:center;justify-content:center;gap:14px;
              color:#71838b;font-size:20px;font-weight:500}
   #clockIcon{position:relative;width:34px;height:34px;border:2px solid #60727b;border-radius:50%}
   #clockIcon::before{content:"";position:absolute;left:15px;top:7px;width:2px;height:10px;
@@ -120,8 +118,8 @@
   #clockIcon::after{content:"";position:absolute;left:15px;top:15px;width:8px;height:2px;
                    border-radius:2px;background:#71838b}
 
-  .cardNote{position:absolute;left:28px;right:28px;bottom:24px;height:42px;display:flex;
-            align-items:center;gap:10px;padding:0 14px;border-radius:14px;font-size:16px;
+  .cardNote{position:absolute;left:28px;right:28px;bottom:14px;height:34px;display:flex;
+            align-items:center;justify-content:center;gap:10px;padding:0 14px;border-radius:14px;font-size:15px;
             font-weight:560;opacity:0;transform:translateY(6px)}
   #waitNote{color:#9ba9af;background:#273942}
   #liveNote{color:#bcd5ff;background:rgba(47,124,255,.12)}
@@ -136,45 +134,40 @@
 <main class="stage" id="stage">
   <div id="readyCue">Tap to speak</div>
   <section id="shell" aria-label="Audio transcription comparison">
-    <div id="captureBar"></div>
-    <div id="mic"><i id="micStem"></i></div>
-    <div id="captureCopy">
+    <div id="captureBar" data-audit-column></div>
+    <div id="mic" data-audit-parent="#captureBar" data-audit-no-overlap="capture"><i id="micStem"></i></div>
+    <div id="captureCopy" data-audit-parent="#captureBar" data-audit-no-overlap="capture">
       <small>Audio input</small>
       <strong id="listeningLabel">Listening</strong>
       <strong id="capturedLabel">Recording complete</strong>
       <strong id="nextLabel">Ready for next message</strong>
     </div>
-    <div id="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-    <div id="timer">
+    <div id="wave" data-audit-parent="#captureBar" data-audit-no-overlap="capture"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div id="timer" data-audit-parent="#captureBar" data-audit-no-overlap="capture">
       <span id="time1">00:01</span><span id="time2">00:02</span>
       <span id="time3">00:03</span><span id="time4">00:04</span>
       <span id="time5">00:05</span><span id="timeStop">Stopped</span>
     </div>
-    <div id="stopControl"><i id="stopSquare"></i><i id="doneCheck"></i></div>
+    <div id="stopControl" data-audit-parent="#captureBar" data-audit-no-overlap="capture"><i id="stopSquare"></i><i id="doneCheck"></i></div>
 
-    <svg id="routes" viewBox="0 0 1290 105" aria-hidden="true">
-      <path id="routeWait" d="M645 0 C645 48 347 30 347 105" pathLength="1"></path>
-      <path id="routeLive" d="M645 0 C645 48 943 30 943 105" pathLength="1"></path>
-    </svg>
-    <div class="routeLabel" id="waitRouteLabel">Waits for stop</div>
-    <div class="routeLabel" id="liveRouteLabel">Returns interim text</div>
+    <div id="timingKey"><span>Same audio input</span><i></i><span>Two feedback timings</span></div>
 
-    <article class="track" id="waitCard">
+    <article class="track" id="waitCard" data-audit-column>
       <header class="trackHeader">
         <h2 class="trackTitle">After recording</h2>
         <span class="status" id="waitStatus"><i id="waitWaiting">Waiting</i><i id="waitAvailable">Available</i></span>
       </header>
-      <div id="waitEmpty"><i id="clockIcon"></i><span>Transcript unavailable while speaking</span></div>
-      <div class="transcript" id="waitTranscript">Book a table for two tonight</div>
+      <div id="waitEmpty" data-audit-center><i id="clockIcon"></i><span>Transcript unavailable while speaking</span></div>
+      <div class="transcript" id="waitTranscript" data-audit-center>Book a table for two tonight</div>
       <div class="cardNote" id="waitNote">Visible only after recording stops</div>
     </article>
 
-    <article class="track" id="liveCard">
+    <article class="track" id="liveCard" data-audit-column>
       <header class="trackHeader">
         <h2 class="trackTitle">Live transcript</h2>
         <span class="status" id="liveStatus"><i id="liveInterim">Interim</i><i id="liveCorrected">Corrected</i><i id="liveFinal">Final</i></span>
       </header>
-      <div class="transcript" id="liveTranscript">
+      <div class="transcript" id="liveTranscript" data-audit-center>
         <span class="word" id="liveBook">Book</span>
         <span class="word" id="liveA">a</span>
         <span class="word" id="liveTable">table</span>
@@ -194,7 +187,7 @@
 /* Semantic object ledger
    mic → the user's action and the source of the session
    waveform + timer → captured speech and elapsed recording time
-   routes → the same audio entering two recognition behaviours
+   timing key → the same audio compared at two feedback timings
    text + caret → interim feedback the user can inspect while speaking
    status notes → the consequence of each behaviour
    Every object has a source, a product role and an explicit exit. */
@@ -248,13 +241,13 @@ run($('#readyCue'), [
   {offset:1,opacity:1,transform:'translateY(0)'},
 ]);
 run($('#mic'), [
-  {offset:0,transform:'translate(565px,217px) scale(1)'},
-  {offset:o(T.press),transform:'translate(565px,217px) scale(1)',easing:E.settle},
-  {offset:o(T.press+.16),transform:'translate(565px,217px) scale(.91)',easing:E.out},
+  {offset:0,transform:'translate(468px,217px) scale(1)'},
+  {offset:o(T.press),transform:'translate(468px,217px) scale(1)',easing:E.settle},
+  {offset:o(T.press+.16),transform:'translate(468px,217px) scale(.91)',easing:E.out},
   {offset:o(T.openEnd),transform:'translate(0,0) scale(1)'},
   {offset:o(T.close),transform:'translate(0,0) scale(1)',easing:E.move},
-  {offset:o(T.closeEnd),transform:'translate(565px,217px) scale(1)'},
-  {offset:1,transform:'translate(565px,217px) scale(1)'},
+  {offset:o(T.closeEnd),transform:'translate(468px,217px) scale(1)'},
+  {offset:1,transform:'translate(468px,217px) scale(1)'},
 ]);
 run($('#shell'), [
   {offset:0,clipPath:'inset(257px 607px round 38px)',boxShadow:'0 0 0 rgba(10,20,25,0)'},
@@ -265,12 +258,12 @@ run($('#shell'), [
   {offset:1,clipPath:'inset(257px 607px round 38px)',boxShadow:'0 0 0 rgba(10,20,25,0)'},
 ]);
 run($('#captureBar'), [
-  {offset:0,opacity:0,clipPath:'inset(0 1110px 0 0 round 24px)'},
-  {offset:o(T.open+.34),opacity:0,clipPath:'inset(0 1110px 0 0 round 24px)',easing:E.out},
+  {offset:0,opacity:0,clipPath:'inset(0 964px 0 0 round 24px)'},
+  {offset:o(T.open+.34),opacity:0,clipPath:'inset(0 964px 0 0 round 24px)',easing:E.out},
   {offset:o(T.openEnd+.16),opacity:1,clipPath:'inset(0 round 24px)'},
   {offset:o(T.close-.18),opacity:1,clipPath:'inset(0 round 24px)',easing:E.exit},
-  {offset:o(T.close+.12),opacity:0,clipPath:'inset(0 1110px 0 0 round 24px)'},
-  {offset:1,opacity:0,clipPath:'inset(0 1110px 0 0 round 24px)'},
+  {offset:o(T.close+.12),opacity:0,clipPath:'inset(0 964px 0 0 round 24px)'},
+  {offset:1,opacity:0,clipPath:'inset(0 964px 0 0 round 24px)'},
 ]);
 fadeWindow($('#captureCopy'), T.openEnd-.12, T.close+.10, 5);
 fadeWindow($('#stopControl'), T.openEnd+.16, T.reset+.52, 4);
@@ -307,23 +300,9 @@ timerWindows.forEach(([node,start,end]) => run($(node), [
   {offset:o(end),opacity:0},{offset:1,opacity:0},
 ]));
 
-/* 3 — One audio source branches into two labelled behaviours. The paths draw
-   from the source toward their destination cards, preserving causal direction. */
-run($('#routes'), [
-  {offset:0,opacity:0},{offset:o(T.connect),opacity:0},
-  {offset:o(T.connect+.14),opacity:1},{offset:o(T.reset-.12),opacity:1},
-  {offset:o(T.reset+.22),opacity:0},{offset:1,opacity:0},
-]);
-[$('#routeWait'),$('#routeLive')].forEach((path,index) => run(path, [
-  {offset:0,strokeDashoffset:1},
-  {offset:o(T.connect+index*.10),strokeDashoffset:1,easing:E.out},
-  {offset:o(T.cards+.08+index*.10),strokeDashoffset:0},
-  {offset:o(T.reset-.20),strokeDashoffset:0,easing:E.exit},
-  {offset:o(T.reset+.18),strokeDashoffset:1},
-  {offset:1,strokeDashoffset:1},
-]));
-fadeWindow($('#waitRouteLabel'), T.cards-.08, T.reset-.04, 5);
-fadeWindow($('#liveRouteLabel'), T.cards+.04, T.reset-.04, 5);
+/* 3 — A compact semantic key names the comparison without adding crossing
+   paths. Both behaviours then enter on the exact same centre column. */
+fadeWindow($('#timingKey'), T.connect+.08, T.reset-.04, 4);
 [$('#waitCard'),$('#liveCard')].forEach((card,index) => run(card, [
   {offset:0,opacity:0,transform:'translateY(18px) scale(.985)'},
   {offset:o(T.cards+index*.12),opacity:0,transform:'translateY(18px) scale(.985)',easing:E.enter},
@@ -348,14 +327,34 @@ WORDS.forEach(({node,at},index) => {
   ]);
 });
 
+/* The corrected word is shorter than the interim hypothesis. Let the sentence
+   close that space so it remains natural prose, then keep the caret attached. */
+const correctedChoiceWidth = Math.ceil($('#liveTwo').getBoundingClientRect().width);
+const correctedChoiceDelta = $('#liveChoice').offsetWidth - correctedChoiceWidth;
+run($('#liveChoice'), [
+  {offset:0,width:'54px'},
+  {offset:o(T.correction),width:'54px',easing:E.move},
+  {offset:o(T.correction+.30),width:`${correctedChoiceWidth}px`},
+  {offset:o(T.close),width:`${correctedChoiceWidth}px`,easing:E.out},
+  {offset:o(T.closeEnd),width:'54px'},
+  {offset:1,width:'54px'},
+]);
+
 const caretFrames = [{offset:0,transform:'translateX(0)'}];
 let lastRight = 0;
 WORDS.forEach(({node,at}) => {
   const target = $(node);
-  const nextRight = target.offsetLeft + target.offsetWidth + 7;
+  const afterCorrection = node === '#liveTonight';
+  const nextRight = target.offsetLeft + target.offsetWidth + 7 - (afterCorrection ? correctedChoiceDelta : 0);
   caretFrames.push({offset:o(at),transform:`translateX(${lastRight}px)`,easing:E.out});
   caretFrames.push({offset:o(at+.22),transform:`translateX(${nextRight}px)`});
   lastRight = nextRight;
+  if (node === '#liveChoice') {
+    const correctedRight = nextRight - correctedChoiceDelta;
+    caretFrames.push({offset:o(T.correction),transform:`translateX(${nextRight}px)`,easing:E.move});
+    caretFrames.push({offset:o(T.correction+.30),transform:`translateX(${correctedRight}px)`});
+    lastRight = correctedRight;
+  }
 });
 caretFrames.push({offset:1,transform:caretFrames.at(-1).transform});
 run($('#liveCaret'), caretFrames);
@@ -491,7 +490,7 @@ run($('#liveCard'), [
   {offset:1,borderColor:'#315f86',boxShadow:'0 18px 42px rgba(2,15,22,.18)'},
 ]);
 
-/* 8 — “Ready for next message” names the reset. Cards and routes leave first;
+/* 8 — “Ready for next message” names the reset. Cards and the timing key leave first;
    then the recorder contracts back into the same microphone control. */
 run($('#nextLabel'), [
   {offset:0,opacity:0,transform:'translateY(7px)'},

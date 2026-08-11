@@ -75,8 +75,9 @@ than one that explains anything.
    `references/motion-craft.md`; when a goal exists also use the normalized-phase
    comparison in `references/reference-fidelity.md`. Generate a 8–12 frame board
    with `scripts/export.mjs --formats sheet` and compare it beside the goal board.
-   Check the loop seam explicitly; it is the most common defect and the easiest
-   to miss while watching casually.
+   A contact sheet verifies sequence, not layout: also inspect opening, midpoint
+   and payoff screenshots at full resolution and run `scripts/layout-audit.mjs`
+   for shared edges, containment and overlap. Check the loop seam explicitly.
 
 8. **Export only what the destination needs** — `scripts/export.mjs`. If the
    deliverable is the live page, skip export entirely.
@@ -473,6 +474,8 @@ which is worth it: the naive single-pass path is where most ugly GIFs come from.
 - `scripts/export.mjs` — serve, capture, encode. Seeks CSS animations and Motion
   controls, creates sampled review sheets, and fails loudly on page errors or if
   every captured frame is byte-identical.
+- `scripts/layout-audit.mjs` — capture full-resolution keyframes and fail on
+  broken shared columns, escaped controls, declared collisions or off-centre content.
 
 Copy a scene rather than editing one in place, so the next transfer still starts
 from something known to run. Extend `lib/kit.js` when a shape or beat would serve

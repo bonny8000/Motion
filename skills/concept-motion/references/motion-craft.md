@@ -204,22 +204,25 @@ fix as soon as one fails rather than collecting a list.
    destination. Reference-derived chrome gets no exemption.
 3. **Is geometry connected across state changes?** Track the shared element from
    source to destination. If nothing is shared, use an honest labelled fade.
-4. **Is the loop seam invisible?** Compare the last frame to the first, explicitly.
+4. **Does the layout survive at full resolution?** Inspect at least three keyframes;
+   confirm shared edges, centred content, parent containment and zero unintended
+   overlaps. A contact sheet alone is not sufficient evidence.
+5. **Is the loop seam invisible?** Compare the last frame to the first, explicitly.
    The most common defect and the easiest to miss when watching casually.
-5. **Can you name what each beat is about?** If a beat has two things changing for
+6. **Can you name what each beat is about?** If a beat has two things changing for
    two different reasons, the viewer tracks one and misses both.
-6. **Does anything move at constant velocity?** Only fill wipes are allowed.
-7. **Does anything appear from `scale(0)` or vanish to nothing?**
-8. **Is one accent colour carrying one meaning?** Two accents, or an accent spent
+7. **Does anything move at constant velocity?** Only fill wipes are allowed.
+8. **Does anything appear from `scale(0)` or vanish to nothing?**
+9. **Is one accent colour carrying one meaning?** Two accents, or an accent spent
    during authoring instead of on verification, destroys the signal.
-9. **Squint test.** Scale to 200px wide. Does the mechanism still read? Small text
+10. **Squint test.** Scale to 200px wide. Does the mechanism still read? Small text
    and fine detail are already gone at hero-thumbnail size.
-10. **Silent test.** These play muted with no narration. If a beat needs a
+11. **Silent test.** These play muted with no narration. If a beat needs a
    voiceover to make sense, it needs a label or a rethink.
-11. **Does it hold at the start and end?** Motion beginning on frame 1 reads as a
+12. **Does it hold at the start and end?** Motion beginning on frame 1 reads as a
    dropped frame.
-12. **Reduced motion:** does something coherent still play?
-13. **Cohesion:** does the motion match the product's personality? A professional
+13. **Reduced motion:** does something coherent still play?
+14. **Cohesion:** does the motion match the product's personality? A professional
     tool should be crisp and fast; a playful product can carry more bounce. Easing,
     duration, palette and subject should agree.
 

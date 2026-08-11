@@ -44,14 +44,21 @@ more "finished" than the other:
   the reference or brand world contains elevation. A flat reference with a new
   shadow is lower fidelity, not higher craft.
 - **Standard offsets: 8 / 16 / 24px.** Pick spacing from a scale, not per element.
+- **Declare an alignment contract.** Name the shared column, edges and centreline
+  before placing content. Components explaining the same comparison should not
+  invent independent coordinate systems.
 - **Use concentric radii for nested surfaces.** Start with
   `inner radius = outer radius - inset`, then adjust optically. Arbitrary radii
   make related layers look assembled from different systems.
 - **Match handoff geometry.** A shared element must keep the same centerline or
   edge contact at the transition boundary. Connectors meet the actual source and
   destination surfaces; they do not stop in nearby empty space.
-- **Check for collisions at the final frame.** A badge overlapping a panel edge by
-  a few pixels is invisible while building and unmistakable in a screenshot.
+- **Reserve separate lanes for text and paths.** Connector labels need a clear
+  gutter; when a route crosses its explanation, simplify or remove the route.
+- **Check collisions at full resolution across keyframes.** A reduced contact
+  sheet proves sequence, not spacing. Inspect opening, midpoint and payoff at the
+  delivery resolution and use `scripts/layout-audit.mjs` when the scene declares
+  audit attributes.
 
 `lib/kit.js` defaults to `material: 'reference'`. Opt into the other profile:
 
@@ -173,7 +180,8 @@ Run alongside the review pass in `motion-craft.md`:
 
 - [ ] Geometry matches the chosen material profile or supplied reference
 - [ ] Radius, shadow and bar-end treatment form one material language
-- [ ] Nothing collides at any frame, especially the final one
+- [ ] Related surfaces share the declared edges and centreline
+- [ ] Full-resolution keyframes show no text, path or component collisions
 - [ ] Entrances are two-layer (fade + rise, plus the meaningful transform)
 - [ ] Every `linear` is genuinely mechanical progress
 - [ ] Entrances `out`, exits `in` and faster
