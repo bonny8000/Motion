@@ -30,7 +30,14 @@ than one that explains anything.
 
 ## Workflow
 
-1. **Interview for intent.** What one sentence should the viewer remember? Where
+1. **Lock the reference grammar when a goal clip exists.** Read
+   `references/reference-fidelity.md`, run `scripts/reference-board.mjs`, isolate
+   one loop, and write the short lock/adapt table before interpreting the new
+   subject. When the user says "similar" and supplies a goal, default to content
+   adaptation: preserve composition, focal path, cycle contour and material.
+   Generic polish never overrides observed reference decisions.
+
+2. **Interview for intent.** What one sentence should the viewer remember? Where
    does it play and who's watching? What must they be able to name afterward? Is
    the subject a UI, an abstract system, hardware, or data?
    Read `references/intent-to-mechanism.md` — it has the questions, and the reason
@@ -41,32 +48,41 @@ than one that explains anything.
    quantitative claim, a flow they need to reproduce step by step — say so now
    rather than after building it.
 
-2. **Choose the mechanism from the claim, not from the product.** "Many become
+3. **Choose the mechanism from the claim, not from the product.** "Many become
    one" for narrowing, a race for speed, a phase spine for autonomous work. The
    mapping table is in `references/intent-to-mechanism.md`. Animating the
    architecture diagram when the claim was about speed is the most common way
    these fail, and it fails *after* all the work is done.
 
-3. **Write the beat sheet and confirm it with the user** before any markup. It's
-   four rows and takes a minute to read. Restructuring beats after the timeline
-   exists is the most expensive change in this workflow. See "Beat sheets" below.
+4. **Audit meaning and continuity before the beat sheet.** Read
+   `references/semantic-continuity.md`. Make an object ledger: every visible
+   object needs a user-world meaning, a cause for appearing, and a destination or
+   exit. Reference chrome is content, not style, when it implies editing,
+   selection, loading or review.
 
-4. **Copy the closest working scene** from `assets/` and swap its shape, labels
-   and beats — see "Transferring a feature" below. Both scenes run as-is, so you
+5. **Write a causal beat sheet and confirm material direction changes** before
+   any markup. Each row must name the trigger, the shared object and the user
+   feedback — not merely what fades or moves. Restructuring beats after the
+   timeline exists is the most expensive change in this workflow. See "Beat
+   sheets" below.
+
+6. **Copy the closest working scene** from `assets/` and swap its shape, labels
+   and beats — see "Transferring a feature" below. The shipped scenes run as-is, so you
    always start from something that works. Put anything reusable in `lib/kit.js`
    rather than in the scene.
 
-5. **Verify in a browser, then run the review pass** in
-   `references/motion-craft.md`. Seek to 4-6 points across the cycle and actually
-   look at them — export is slow, catching a broken layout from a screenshot is
-   fast. The review pass is ordered by severity, so stop and fix at the first
-   failure rather than collecting a list. Check the loop seam explicitly; it's the
-   most common defect and the easiest to miss when watching casually.
+7. **Verify in a browser, then run both review passes.** Read
+   `references/motion-craft.md`; when a goal exists also use the normalized-phase
+   comparison in `references/reference-fidelity.md`. Generate a 8–12 frame board
+   with `scripts/export.mjs --formats sheet` and compare it beside the goal board.
+   A contact sheet verifies sequence, not layout: also inspect opening, midpoint
+   and payoff screenshots at full resolution and run `scripts/layout-audit.mjs`
+   for shared edges, containment and overlap. Check the loop seam explicitly.
 
-6. **Export only what the destination needs** — `scripts/export.mjs`. If the
+8. **Export only what the destination needs** — `scripts/export.mjs`. If the
    deliverable is the live page, skip export entirely.
 
-7. **Show the user the result**, not a description of it. Send the file, or publish
+9. **Show the user the result**, not a description of it. Send the file, or publish
    the HTML as an artifact for a shareable link.
 
 ## Pick the output format from the destination
@@ -134,6 +150,11 @@ This is the common case: a feature exists, and it needs an animation. The kit at
 — so a transfer is three edits, not a rewrite. Every shape exposes the same
 contract, so every beat works against every shape.
 
+When a supplied reference defines a different grammar, keep its locked traits
+around this transfer. The claim mechanism chooses what happens inside the hero;
+it does not automatically replace one centered hero with two cards, add depth to
+a flat material, or compress a ten-second cycle to four seconds.
+
 **1. Pick the shape from the noun.** What does the feature act *on*?
 
 | The feature acts on | Shape |
@@ -200,6 +221,22 @@ no extra step. It also fails loudly on page errors and failed requests now,
 because a scene whose module graph didn't load still captures happily as a blank
 video.
 
+### A module scene is not a standalone HTML deliverable
+
+Be literal about the output contract. A page that imports `../lib/kit.js` or a
+CDN is source code for the pipeline, not "one self-contained HTML file." When the
+user requests a single HTML file that opens from `file://`:
+
+- prefer a zero-network WAAPI scene such as `assets/scene-race-streaming.html`;
+- keep all CSS, markup and JS inline;
+- expose `?t=N`, `window.__ready` and a seek function for deterministic review;
+- test with the network unavailable and from `file://`;
+- do not add a library for a fixed sequence that WAAPI expresses clearly.
+
+Use the kit for reusable source scenes and video export. Use a build/bundle step
+only if an interactive feature genuinely earns the dependency, and verify the
+bundled result rather than handing over the module source.
+
 ## The zero-dependency alternative
 
 `assets/scene-template.html` is a separate, self-contained CSS-clock scaffold: one
@@ -228,6 +265,13 @@ rename to the domain, because it reads as a story rather than a feature list:
 | 4 | `Reviewing` | a selection box scans down the rows, converting each to accent |
 | 5 | `Testing` → `Building` | remaining rows convert; chrome turns accent; the panel collapses to a point |
 
+This is a domain-specific storyboard, not a bag of reusable decoration. A dot,
+frame handle or selection box transfers only when the new story also contains a
+source token, editable frame or selection action. Otherwise keep the reference's
+composition and material while replacing that object with a meaningful trigger,
+status or outcome. Run the ledger in `references/semantic-continuity.md` before
+copying any of these beats.
+
 Two details carry most of the credibility. Content types in **grey and only later
 turns accent** — accent means *verified*, so spending it during authoring throws
 away the one signal you have. And the caret riding the growing edge is what makes
@@ -239,18 +283,23 @@ Write this as a table before you write markup. It's the artifact worth reviewing
 with the user, because restructuring beats after the fact is expensive.
 
 ```
-| Beat | Window   | What changes                      | What it says             |
-|------|----------|-----------------------------------|--------------------------|
-| 1    | 0-4%     | card full size, one row selected  | "here is a unit of work" |
-| 2    | 4-36%    | zoom out, rows fill blue top-down | "it's being worked on"   |
-| 3    | 36-70%   | label swaps, fill completes       | "now it's verified"      |
-| 4    | 70-96%   | zoom out to a point               | "and it scales"          |
+| Beat | Window | Trigger | Shared object / change | User-visible meaning |
+|------|--------|---------|------------------------|----------------------|
+| 1 | 0-8% | user starts input | input control opens | "the system heard me" |
+| 2 | 8-58% | input continues | the same data becomes partial output | "I can inspect it now" |
+| 3 | 58-76% | processing completes | partial output settles, not replaced | "this is final" |
+| 4 | 76-96% | session ends | result returns to the same ready control | "I can do this again" |
 ```
 
 Rules that hold across concepts:
 
 - **One idea per beat.** Two simultaneous changes read as noise; the viewer
   tracks one thing at a time and misses both.
+- **Every object earns its place.** If the team cannot answer what an object
+  represents, why it appears now and what it becomes next, remove it.
+- **Connect cause to feedback.** New surfaces originate from the action or data
+  that creates them. Reusing a position is not continuity; reusing the same
+  semantic object is.
 - **8-20 seconds.** Under 8 and beats get clipped; over 20 and a looping
   background animation becomes an irritant on a page.
 - **Loop-safe by construction.** Either end where you began, or end somewhere
@@ -362,12 +411,14 @@ npm install && npx playwright install chromium
 
 | Flag | Default | Notes |
 |---|---|---|
-| `--formats` | `mp4` | any of `mp4,webm,gif,frames` |
+| `--formats` | `mp4` | any of `mp4,webm,gif,frames,sheet`; run `sheet` alone |
 | `--seconds` | `14` | must equal the CSS `--loop` or the seam won't match |
 | `--fps` | `30` | 30 is plenty for this style; 60 doubles size for little gain |
 | `--width` / `--height` | `1600` / `900` | keep both even for H.264 |
 | `--scale` | `2` | capture at 2x for retina, then downscale for video |
 | `--out` | `dist/<scene>` | extension appended per format |
+| `--samples` | `12` | sampled frames in `sheet` review mode |
+| `--columns` | `4` | contact-sheet grid columns |
 
 The script pauses all animations and seeks each frame individually, so output is
 deterministic — rerunning gives byte-comparable frames, and you can diff two
@@ -376,15 +427,23 @@ which is worth it: the naive single-pass path is where most ugly GIFs come from.
 
 ## Reference
 
+- `references/reference-fidelity.md` — match modes, the seven-axis evidence
+  matrix, fidelity contracts, style-vs-meaning separation, normalized-phase
+  comparison and the reference review gate. **Read first whenever a goal video,
+  GIF or screenshots are supplied.**
 - `references/intent-to-mechanism.md` — the interview questions, how to extract the
   claim, the claim→mechanism mapping table, representation registers, and when to
-  tell the user animation is the wrong medium. **Read this first**, before any
-  scene; it's the part that decides whether the animation explains anything.
+  tell the user animation is the wrong medium. Read it first when no reference is
+  supplied, or immediately after the fidelity contract when one is.
+- `references/semantic-continuity.md` — the semantic object ledger, causal beat
+  sheet, connected-geometry map and transfer gate for reference artifacts. Read
+  it before markup whenever a scene contains UI, labels, loaders, connectors,
+  selection chrome or a supplied reference.
 - `references/polish.md` — geometry tokens (radii, depth), the expressive easing
   set, two-layer entrances, the four-movement choreography model, and how to avoid
   displaying a dishonest metric. **Read it before finalising any scene** — it
   covers the three failures that make a first draft look like a prototype:
-  default geometry, everything `linear`, and no dramatic structure.
+  unresolved geometry, everything `linear`, and no dramatic structure.
 - `references/motion-craft.md` — easing decision table, physicality rules, stagger
   ranges, performance, reduced motion, the standard **vocabulary** for what this
   skill builds, the **review pass**, and how to debug feel. Also states plainly
@@ -405,9 +464,18 @@ which is worth it: the naive single-pass path is where most ugly GIFs come from.
   states. The reference reproduction.
 - `assets/scene-field-collapse.html` — working scene: many candidates narrow to a
   few. Search, ranking, matching, filtering.
+- `assets/scene-race-streaming.html` — standalone WAAPI scene: one audio input
+  feeding delayed and live transcription, including an interim correction before
+  stop. Opens from `file://`, supports `?t=N`, and demonstrates semantic object
+  continuity without reference-derived editor chrome.
 - `assets/scene-template.html` — standalone CSS-clock scaffold, no kit, no deps.
+- `scripts/reference-board.mjs` — probe a goal video and create a timestamped-
+  by-manifest contact sheet for one selected cycle.
 - `scripts/export.mjs` — serve, capture, encode. Seeks CSS animations and Motion
-  controls, and fails loudly on page errors or if every frame comes out identical.
+  controls, creates sampled review sheets, and fails loudly on page errors or if
+  every captured frame is byte-identical.
+- `scripts/layout-audit.mjs` — capture full-resolution keyframes and fail on
+  broken shared columns, escaped controls, declared collisions or off-centre content.
 
 Copy a scene rather than editing one in place, so the next transfer still starts
 from something known to run. Extend `lib/kit.js` when a shape or beat would serve

@@ -1,4 +1,5 @@
 node_modules/
 dist/
 *-frames/
+work/
 .DS_Store

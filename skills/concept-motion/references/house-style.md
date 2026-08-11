@@ -30,7 +30,7 @@ Element vocabulary:
 
 | Element | Means | Build |
 |---|---|---|
-| Grey bar | inert / untouched content | flat rounded rect, 6-10px tall at 1x |
+| Grey bar | inert / untouched content | flat rect with 1-3px radius, 6-10px tall at 1x |
 | Accent bar | touched, generated, active | same rect, accent fill |
 | Partially filled bar | in progress right now | width wipe on a child element |
 | Dark panel | a document, editor, or window | flat fill, no gradient, slight radius |
@@ -41,8 +41,10 @@ Element vocabulary:
 Vary bar widths and indentation irregularly. Evenly sized bars read as a loading
 skeleton (broken); irregular ones read as content.
 
-Keep the panel fill perfectly flat. Gradients and shadows fight the flatness that
-makes this style read as diagrammatic rather than as a screenshot.
+Keep the panel fill perfectly flat, with a 1–2px radius. Gradients, pill ends and
+shadows fight the flatness that makes this style read as diagrammatic rather than
+as a screenshot. If the brief calls for a softer product-UI material instead,
+use `createScene({ material: 'soft' })` consistently rather than mixing traits.
 
 ## Palette
 
@@ -153,6 +155,11 @@ Ratio to use per step: `(end / start) ^ (1 / steps)`.
 
 When handed a reference clip or a set of frames:
 
+0. **Read `reference-fidelity.md` and declare the match mode.** A reproduction,
+   a content adaptation and a loose inspiration permit different changes. When
+   the user says "similar" and supplies a goal clip, default to content adaptation:
+   preserve the clip's composition and motion grammar; change the subject matter.
+
 1. **Name the single mechanism.** Almost every good concept loop has exactly one:
    a continuous zoom, a left-to-right pipeline, an orbit, a stack collapsing. Find
    it before cataloguing details. Everything else is decoration on top.
@@ -170,8 +177,9 @@ When handed a reference clip or a set of frames:
 6. **Count the accent colors.** Usually one. If you think you see two, one is
    probably an opacity variant.
 
-Reproduce the mechanism first with placeholder geometry and confirm the *feel*
-before matching colors. Color is a five-minute fix; a wrong mechanism is a rebuild.
+Reproduce the composition and motion topology first with placeholder geometry,
+then confirm the *feel* before matching colors. Color is a five-minute fix; a
+wrong number of hero objects or a wrong movement path is a rebuild.
 
 ## Failure modes
 
@@ -179,11 +187,15 @@ Things that make an otherwise fine loop look amateur, roughly in order of how
 often they show up:
 
 - **A visible loop seam.** Check t=99% against t=0 explicitly. Always.
+- **Polishing away from the reference.** Added shadow, larger radius, pill bars or
+  bounce are regressions when the goal clip is flat and square.
 - **Linear easing on movement.** See above.
 - **Everything moving at once.** If you can't name what a beat is about, it's
   about nothing.
-- **Chrome that scales.** A 3px border at large scale and a hairline at small
-  scale immediately reads as a video game asset.
+- **Chrome that scales while the viewer must read it.** Decouple chrome during a
+  held zoom. Scaling the whole unit is acceptable during a fast closing collapse,
+  where the chrome is no longer inspectable, or when the reference does exactly
+  that.
 - **Uniform bar widths.** Reads as a loading skeleton, not content.
 - **Text too small to survive.** Anything under 14px at 1x will not survive
   H.264 or a mobile embed. If it matters, make it bigger; if it can't be bigger,

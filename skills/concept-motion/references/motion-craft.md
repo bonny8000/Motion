@@ -150,6 +150,12 @@ actually provoke vestibular discomfort.
 Use `reduced: 'still'` only when large movement *is* the scene's whole point, so
 calming it would leave nothing coherent.
 
+For a live page, treat the preference as state rather than a one-time load check:
+listen to the media query's `change` event and switch to or from the reduced
+version when the OS setting changes. Also pause an unattended infinite loop while
+`document.hidden`; resume only when motion is allowed. A video export is already
+frame-seeked and needs neither runtime behaviour.
+
 ## Masking an imperfect crossfade
 
 When two states overlap visibly during a transition and no amount of easing or
@@ -194,22 +200,29 @@ fix as soon as one fails rather than collecting a list.
 1. **Does the mechanism match the claim?** Say the mechanism aloud without naming
    the product. If that sentence isn't recognisably the claim, nothing below
    matters. Rebuild rather than polish.
-2. **Is the loop seam invisible?** Compare the last frame to the first, explicitly.
+2. **Does every object have product meaning?** Name its role, cause and
+   destination. Reference-derived chrome gets no exemption.
+3. **Is geometry connected across state changes?** Track the shared element from
+   source to destination. If nothing is shared, use an honest labelled fade.
+4. **Does the layout survive at full resolution?** Inspect at least three keyframes;
+   confirm shared edges, centred content, parent containment and zero unintended
+   overlaps. A contact sheet alone is not sufficient evidence.
+5. **Is the loop seam invisible?** Compare the last frame to the first, explicitly.
    The most common defect and the easiest to miss when watching casually.
-3. **Can you name what each beat is about?** If a beat has two things changing for
+6. **Can you name what each beat is about?** If a beat has two things changing for
    two different reasons, the viewer tracks one and misses both.
-4. **Does anything move at constant velocity?** Only fill wipes are allowed.
-5. **Does anything appear from `scale(0)` or vanish to nothing?**
-6. **Is one accent colour carrying one meaning?** Two accents, or an accent spent
+7. **Does anything move at constant velocity?** Only fill wipes are allowed.
+8. **Does anything appear from `scale(0)` or vanish to nothing?**
+9. **Is one accent colour carrying one meaning?** Two accents, or an accent spent
    during authoring instead of on verification, destroys the signal.
-7. **Squint test.** Scale to 200px wide. Does the mechanism still read? Small text
+10. **Squint test.** Scale to 200px wide. Does the mechanism still read? Small text
    and fine detail are already gone at hero-thumbnail size.
-8. **Silent test.** These play muted with no narration. If a beat needs a
+11. **Silent test.** These play muted with no narration. If a beat needs a
    voiceover to make sense, it needs a label or a rethink.
-9. **Does it hold at the start and end?** Motion beginning on frame 1 reads as a
+12. **Does it hold at the start and end?** Motion beginning on frame 1 reads as a
    dropped frame.
-10. **Reduced motion:** does something coherent still play?
-11. **Cohesion:** does the motion match the product's personality? A professional
+13. **Reduced motion:** does something coherent still play?
+14. **Cohesion:** does the motion match the product's personality? A professional
     tool should be crisp and fast; a playful product can carry more bounce. Easing,
     duration, palette and subject should agree.
 

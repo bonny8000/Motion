@@ -57,6 +57,22 @@ export const TOKENS = {
   barC:   '#46545c',
   label:  '#e8eef0',
   frame:  '#ffffff',
+  panelRadius: '2px',
+  panelShadow: 'none',
+  barRadius:   '2px',
+};
+
+/* Material is a style decision, not a quality ladder. `reference` preserves the
+   flat, diagrammatic grammar of the source footage. `soft` is available for a
+   reference-free product-UI treatment, but must never be applied as automatic
+   "polish" when the supplied reference is square and flat. */
+export const MATERIALS = {
+  reference: {},
+  soft: {
+    panelRadius: '14px',
+    panelShadow: '0 18px 44px rgba(12,20,26,.30), 0 2px 0 rgba(255,255,255,.07) inset',
+    barRadius: '999px',
+  },
 };
 
 const CSS = `
@@ -67,10 +83,8 @@ body{display:grid;place-items:center;
   -webkit-font-smoothing:antialiased}
 .cm-stage{position:relative;background:var(--bg);overflow:hidden}
 .cm-unit{position:absolute;inset:0;transform-origin:center center}
-/* Soft shadow + a barely-there top highlight turns a flat rectangle into a
-   material. 4px radii read as a 2015 dialog; 12–16px is current. */
-.cm-panel{position:absolute;background:var(--card);opacity:0;border-radius:14px;
-  box-shadow:0 18px 44px rgba(12,20,26,.30), 0 2px 0 rgba(255,255,255,.07) inset}
+.cm-panel{position:absolute;background:var(--card);opacity:0;
+  border-radius:var(--panel-radius);box-shadow:var(--panel-shadow)}
 /* Frame as four 1px divs, not an SVG dash animation: Motion's pathLength lives
    in its React SVG renderer and silently does nothing from vanilla animate().
    Per-edge timing is also what makes the two-pen trace possible. */
@@ -84,11 +98,8 @@ body{display:grid;place-items:center;
 .cm-frame .hd.tl{left:-3px;top:-3px}.cm-frame .hd.tr{right:-3px;top:-3px}
 .cm-frame .hd.bl{left:-3px;bottom:-3px}.cm-frame .hd.br{right:-3px;bottom:-3px}
 .cm-body{position:absolute}
-/* Content bars are FULLY round. A 15px bar with a 2px radius reads as an
-   unfinished wireframe — it is the fastest way to make output look cheap.
-   999px clamps to a semicircle at any height, so it survives resizing. */
-.cm-item{position:absolute;border-radius:999px;transform-origin:left center;transform:scaleX(0)}
-.cm-item>span{position:absolute;inset:0;background:var(--accent);border-radius:999px;
+.cm-item{position:absolute;border-radius:var(--bar-radius);transform-origin:left center;transform:scaleX(0)}
+.cm-item>span{position:absolute;inset:0;background:var(--accent);border-radius:var(--bar-radius);
   transform-origin:left center;transform:scaleX(0)}
 /* Never scale(0). Nothing in the physical world appears from literally nothing,
    and the eye reads it as a glitch rather than an entrance. Start near full size
@@ -126,7 +137,10 @@ const el = (cls, parent, style) => {
 export function createScene(opts = {}) {
   const w = opts.w ?? 1600, h = opts.h ?? 900;
   const card = opts.card ?? { w: 1290, h: 590 };
-  const tokens = { ...TOKENS, ...(opts.tokens ?? {}) };
+  const material = typeof opts.material === 'string'
+    ? (MATERIALS[opts.material] ?? MATERIALS.reference)
+    : (opts.material ?? MATERIALS.reference);
+  const tokens = { ...TOKENS, ...material, ...(opts.tokens ?? {}) };
 
   const style = document.createElement('style');
   style.textContent = `:root{${Object.entries(tokens)

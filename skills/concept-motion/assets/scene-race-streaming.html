@@ -1,285 +1,551 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>滾動式生成 vs 等待完整回覆</title>
+<title>Live Audio Feedback</title>
 <style>
   :root{
-    --bg:#657689; --card:#1a2931; --accent:#0061de; --accent-soft:#2b7ff0;
-    --bar-a:#93a0a8; --bar-b:#77848c; --bar-c:#5c6a72;
-    --label:#eef3f5; --muted:#d2dbe0;
-
-    /* 幾何 token:文字佔位條一律全圓角(radius = 高度一半),
-       方角的條看起來像未完成的線框,是最快讓成品顯得廉價的細節。 */
-    --r-bar:999px; --r-panel:14px; --r-chip:10px;
+    --bg:#67798b;
+    --shell:#14262e;
+    --surface:#1d313b;
+    --surface-2:#223944;
+    --line:#38505b;
+    --text:#f4f8fa;
+    --muted:#91a2aa;
+    --quiet:#60727b;
+    --live:#2f7cff;
+    --live-soft:#70cfff;
+    --interim:#f1b84b;
+    --corrected:#35c89b;
+    --r-shell:42px;
+    --r-card:28px;
+    --r-control:24px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;background:var(--bg)}
-  body{display:grid;place-items:center;
-    font-family:'Inter','PingFang TC','Microsoft JhengHei','Noto Sans TC',
-                -apple-system,system-ui,sans-serif;
-    -webkit-font-smoothing:antialiased}
+  body{display:grid;place-items:center;font-family:Inter,-apple-system,BlinkMacSystemFont,
+       "Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+  .stage{position:relative;width:1600px;height:900px;overflow:hidden;background:var(--bg)}
 
-  #stage{position:relative;width:1600px;height:900px;background:var(--bg);overflow:hidden}
+  /* The product surface begins and ends as the microphone control. Expanding
+     this one surface creates the recorder; no editor handles or decorative
+     frame are introduced. */
+  #shell{position:absolute;left:155px;top:155px;width:1290px;height:590px;
+         overflow:hidden;background:var(--shell);border-radius:var(--r-shell);
+         clip-path:inset(257px 607px round 38px);
+         box-shadow:0 0 0 rgba(10,20,25,0)}
+  #readyCue{position:absolute;left:0;top:510px;width:1600px;text-align:center;
+            color:var(--text);font-size:24px;font-weight:560;letter-spacing:-.015em}
 
-  .col{position:absolute;top:172px;width:700px}
-  .col.a{left:70px}  .col.b{left:830px}
+  /* One 1040px centre column governs the capture bar and both comparison cards.
+     Shared edges keep every state visually stable as content changes. */
+  #captureBar{position:absolute;left:125px;top:32px;width:1040px;height:92px;
+              overflow:hidden;border:1px solid var(--line);border-radius:var(--r-control);
+              background:var(--surface);opacity:0;clip-path:inset(0 964px 0 0 round 24px)}
+  #mic{position:absolute;left:151px;top:52px;width:52px;height:52px;border-radius:50%;
+       background:#183e53;border:1px solid #2f88ba;z-index:4;
+       transform:translate(468px,217px)}
+  #mic::before{content:"";position:absolute;left:19px;top:10px;width:10px;height:19px;
+               border:2px solid #82d5ff;border-radius:8px}
+  #mic::after{content:"";position:absolute;left:14px;top:25px;width:20px;height:12px;
+              border:2px solid #82d5ff;border-top:0;border-radius:0 0 12px 12px}
+  #micStem{position:absolute;left:25px;top:37px;width:2px;height:6px;
+           border-radius:2px;background:#82d5ff}
 
-  .title{font-size:30px;font-weight:500;color:var(--label);margin-bottom:16px;
-         display:flex;align-items:center;gap:12px}
-  .dotmark{width:9px;height:9px;border-radius:50%;background:var(--bar-b)}
-  .col.b .dotmark{background:var(--accent)}
+  #captureCopy{position:absolute;left:222px;top:51px;height:54px;color:var(--text);opacity:0}
+  #captureCopy small{display:block;color:var(--muted);font-size:14px;font-weight:650;
+                     letter-spacing:.055em;text-transform:uppercase}
+  #captureCopy strong{position:absolute;left:0;top:22px;font-size:25px;font-weight:570;
+                      white-space:nowrap;letter-spacing:-.015em}
+  #captureCopy strong:not(:first-of-type){opacity:0}
 
-  /* 面板:大圓角 + 柔和陰影 + 一道極淡的上緣高光,做出「材質」而不是色塊 */
-  .panel{position:relative;height:430px;background:var(--card);
-         border-radius:var(--r-panel);overflow:hidden;
-         box-shadow:0 18px 44px rgba(12,20,26,.30), 0 2px 0 rgba(255,255,255,.07) inset;}
+  #timer{position:absolute;right:240px;top:63px;width:72px;height:32px;color:var(--muted);
+         font-variant-numeric:tabular-nums;font-size:20px;font-weight:600;text-align:right;opacity:0}
+  #timer span{position:absolute;inset:0;opacity:0}
+  #wave{position:absolute;right:334px;top:60px;height:36px;display:flex;align-items:center;
+        gap:6px;opacity:0}
+  #wave i{display:block;width:4px;height:30px;border-radius:4px;
+          background:var(--live-soft);transform:scaleY(.2)}
+  #stopControl{position:absolute;right:149px;top:50px;width:56px;height:56px;
+               display:grid;place-items:center;border:1px solid #48616c;border-radius:18px;
+               background:#29404a;opacity:0}
+  #stopSquare{width:16px;height:16px;border-radius:4px;background:#ff7d74}
+  #doneCheck{position:absolute;width:19px;height:10px;border-left:3px solid var(--corrected);
+             border-bottom:3px solid var(--corrected);transform:rotate(-45deg) scale(.82);opacity:0}
 
-  /* 起跑信號:一道掃過面板頂緣的細光 */
-  .gun{position:absolute;left:0;top:0;height:2px;width:100%;
-       background:linear-gradient(90deg,transparent,var(--accent-soft),transparent);
-       transform:scaleX(0);transform-origin:left center;opacity:0}
+  #timingKey{position:absolute;left:125px;top:142px;width:1040px;height:24px;
+             display:flex;align-items:center;justify-content:center;gap:10px;
+             color:var(--muted);font-size:13px;font-weight:650;letter-spacing:.045em;
+             text-transform:uppercase;opacity:0}
+  #timingKey i{display:block;width:4px;height:4px;border-radius:50%;background:var(--live-soft)}
+  #timingKey span:last-child{color:#9cc5ff}
 
-  .lines{position:absolute;left:36px;top:38px;right:36px}
-  .ln{height:15px;margin-bottom:21px;opacity:0}          /* 外層:fade + rise */
-  .ln > i{display:block;height:100%;border-radius:var(--r-bar);
-          background:var(--bar-a);transform:scaleX(0);transform-origin:left center}
-  .ln.b > i{background:var(--bar-b)}
-  .ln.c > i{background:var(--bar-c)}
-  #linesA .ln > i{transform:scaleX(1)}    /* 阻塞式:整批出現,不逐行展開 */
+  .track{position:absolute;left:125px;width:1040px;height:170px;padding:22px 28px;
+         border-radius:var(--r-card);opacity:0;transform:translateY(18px) scale(.985)}
+  #waitCard{top:180px;background:#1b2c34;border:1px solid #354851}
+  #liveCard{top:366px;background:var(--surface-2);border:1px solid #315f86;
+            box-shadow:0 18px 42px rgba(2,15,22,.18)}
+  .trackHeader{display:flex;align-items:center;justify-content:space-between}
+  .trackTitle{font-size:20px;font-weight:620;letter-spacing:-.01em}
+  #waitCard .trackTitle{color:#a0adb3}
+  #liveCard .trackTitle{color:var(--text)}
+  .status{position:relative;min-width:84px;height:30px;padding:7px 11px;
+          border-radius:999px;font-size:13px;font-weight:650;
+          letter-spacing:.015em;white-space:nowrap;text-align:center}
+  .status i{position:absolute;inset:7px 8px auto;font-style:normal;opacity:0}
+  .status i:first-child{opacity:1}
+  #waitStatus{color:#9aa9b0;background:#2a3b43}
+  #liveStatus{color:#9cc5ff;background:rgba(47,124,255,.14)}
 
-  #caret{position:absolute;left:36px;top:38px;width:3px;height:15px;
-         border-radius:2px;background:var(--accent);opacity:0;
-         box-shadow:0 0 12px rgba(0,97,222,.9)}
+  .transcript{position:absolute;left:28px;right:28px;top:65px;height:55px;
+              display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+              align-items:baseline;column-gap:8px;color:var(--text);
+              font-size:29px;font-weight:540;letter-spacing:-.025em;white-space:nowrap}
+  #waitTranscript{opacity:0;color:#b6c1c6}
+  .sentencePrefix{justify-self:end}
+  .sentenceAnchor{justify-self:center}
+  .sentenceSuffix{justify-self:start}
+  #livePrefix{display:flex;align-items:baseline;justify-self:end;gap:8px}
+  #liveTranscript .word{opacity:0;transform:translateY(9px);display:inline-block}
+  #liveTranscript .choice{display:inline-grid;grid-template-areas:"swap";align-self:baseline;
+                          justify-self:center;width:54px;line-height:normal}
+  #liveFour,#liveTwo{position:static;grid-area:swap;align-self:baseline;justify-self:start}
+  #liveTwo{opacity:0;color:var(--corrected)}
+  #liveTonight{justify-self:start}
+  #liveCaret{position:absolute;left:0;top:5px;width:3px;height:34px;border-radius:3px;
+             background:var(--live-soft);opacity:0;box-shadow:0 0 10px rgba(112,207,255,.45)}
 
-  #loader{position:absolute;left:36px;top:38px;display:flex;gap:9px}
-  #loader i{width:11px;height:11px;border-radius:50%;background:var(--bar-b);opacity:.25}
+  #waitEmpty{position:absolute;left:28px;right:28px;top:65px;height:55px;
+             display:flex;align-items:center;justify-content:center;gap:14px;
+             color:#71838b;font-size:20px;font-weight:500}
+  #clockIcon{position:relative;width:34px;height:34px;border:2px solid #60727b;border-radius:50%}
+  #clockIcon::before{content:"";position:absolute;left:15px;top:7px;width:2px;height:10px;
+                    border-radius:2px;background:#71838b;transform-origin:bottom}
+  #clockIcon::after{content:"";position:absolute;left:15px;top:15px;width:8px;height:2px;
+                   border-radius:2px;background:#71838b}
 
-  /* 「可閱讀時間」量條 */
-  .meter{position:relative;margin-top:22px;height:9px;border-radius:var(--r-bar);
-         background:rgba(255,255,255,.09)}
-  .meter i{position:absolute;inset:0;background:var(--accent);
-           border-radius:var(--r-bar);transform:scaleX(0);transform-origin:left center}
-  .col.a .meter i{background:var(--bar-b)}
+  .cardNote{position:absolute;left:28px;right:28px;bottom:14px;height:34px;display:flex;
+            align-items:center;justify-content:center;gap:10px;padding:0 14px;border-radius:14px;font-size:15px;
+            font-weight:560;opacity:0;transform:translateY(6px)}
+  #waitNote{color:#9ba9af;background:#273942}
+  #liveNote{color:#bcd5ff;background:rgba(47,124,255,.12)}
+  #liveNote i{width:8px;height:8px;border-radius:50%;background:var(--corrected);
+              box-shadow:0 0 0 5px rgba(53,200,155,.10)}
 
-  /* 揭示用的倍數標籤 */
-  /* 放在量條「下方」而不是上方 —— 上方會壓到面板下緣,那種碰撞是最容易
-     被讀成「沒做完」的細節。 */
-  #mult{position:absolute;right:0;top:22px;padding:6px 14px;border-radius:var(--r-chip);
-        background:var(--accent);color:#fff;font-size:26px;font-weight:600;
-        letter-spacing:.01em;opacity:0;transform:scale(.8);
-        box-shadow:0 8px 22px rgba(0,97,222,.45)}
-
-  .legend{position:absolute;left:70px;top:752px;width:1460px;font-size:21px;
-          color:var(--muted);display:flex;justify-content:space-between;opacity:0}
-  .legend b{color:var(--label);font-weight:500}
+  #sessionReset{position:absolute;left:0;bottom:20px;width:1290px;text-align:center;
+                color:var(--muted);font-size:16px;font-weight:550;opacity:0}
 </style>
 </head>
 <body>
-<div id="stage">
-  <div class="col a">
-    <div class="title"><span class="dotmark"></span>等待完整回覆</div>
-    <div class="panel">
-      <div class="gun" id="gunA"></div>
-      <div id="loader"><i></i><i></i><i></i></div>
-      <div class="lines" id="linesA"></div>
+<main class="stage" id="stage">
+  <div id="readyCue">Tap to speak</div>
+  <section id="shell" aria-label="Audio transcription comparison">
+    <div id="captureBar" data-audit-column></div>
+    <div id="mic" data-audit-parent="#captureBar" data-audit-no-overlap="capture"><i id="micStem"></i></div>
+    <div id="captureCopy" data-audit-parent="#captureBar" data-audit-no-overlap="capture">
+      <small>Audio input</small>
+      <strong id="listeningLabel">Listening</strong>
+      <strong id="capturedLabel">Recording complete</strong>
+      <strong id="nextLabel">Ready for next message</strong>
     </div>
-    <div class="meter"><i id="meterA"></i></div>
-  </div>
-
-  <div class="col b">
-    <div class="title"><span class="dotmark"></span>滾動式生成</div>
-    <div class="panel">
-      <div class="gun" id="gunB"></div>
-      <div class="lines" id="linesB"></div>
-      <div id="caret"></div>
+    <div id="wave" data-audit-parent="#captureBar" data-audit-no-overlap="capture"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div id="timer" data-audit-parent="#captureBar" data-audit-no-overlap="capture">
+      <span id="time1">00:01</span><span id="time2">00:02</span>
+      <span id="time3">00:03</span><span id="time4">00:04</span>
+      <span id="time5">00:05</span><span id="timeStop">Stopped</span>
     </div>
-    <div class="meter"><i id="meterB"></i><span id="mult">4×</span></div>
-  </div>
+    <div id="stopControl" data-audit-parent="#captureBar" data-audit-no-overlap="capture"><i id="stopSquare"></i><i id="doneCheck"></i></div>
 
-  <div class="legend" id="legend">
-    <span>兩邊<b>同時完成</b>,總時間相同</span>
-    <span><b>藍條 = 可開始閱讀的時間</b></span>
-  </div>
-</div>
+    <div id="timingKey"><span>Same audio input</span><i></i><span>Two feedback timings</span></div>
+
+    <article class="track" id="waitCard" data-audit-column>
+      <header class="trackHeader">
+        <h2 class="trackTitle">After recording</h2>
+        <span class="status" id="waitStatus"><i id="waitWaiting">Waiting</i><i id="waitAvailable">Available</i></span>
+      </header>
+      <div id="waitEmpty" data-audit-center><i id="clockIcon"></i><span>Transcript unavailable while speaking</span></div>
+      <div class="transcript" id="waitTranscript" data-audit-center>
+        <span class="sentencePrefix">Book a table for</span>
+        <span class="sentenceAnchor" id="waitAnchor" data-audit-anchor>two</span>
+        <span class="sentenceSuffix">tonight</span>
+      </div>
+      <div class="cardNote" id="waitNote">Visible only after recording stops</div>
+    </article>
+
+    <article class="track" id="liveCard" data-audit-column>
+      <header class="trackHeader">
+        <h2 class="trackTitle">Live transcript</h2>
+        <span class="status" id="liveStatus"><i id="liveInterim">Interim</i><i id="liveCorrected">Corrected</i><i id="liveFinal">Final</i></span>
+      </header>
+      <div class="transcript" id="liveTranscript" data-audit-center>
+        <span id="livePrefix">
+          <span class="word" id="liveBook">Book</span>
+          <span class="word" id="liveA">a</span>
+          <span class="word" id="liveTable">table</span>
+          <span class="word" id="liveFor">for</span>
+        </span>
+        <span class="word choice" id="liveChoice"><span id="liveFour">four</span><span id="liveTwo" data-audit-anchor>two</span></span>
+        <span class="word" id="liveTonight">tonight</span>
+        <i id="liveCaret"></i>
+      </div>
+      <div class="cardNote" id="liveNote"><i></i><span>Corrected before recording stopped</span></div>
+    </article>
+
+    <div id="sessionReset">Session complete</div>
+  </section>
+</main>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════════════════
-   零依賴,用瀏覽器原生的 Web Animations API。
-   (先前從 CDN 載 Motion,在有 CSP 的預覽或擋 jsdelivr 的網路裡會整段停掉,
-    症狀是版面畫得出來但完全不會動,而且沒有任何可見錯誤。)
-
-   每個元素拿到一個「整支 4 秒、自己覆蓋 0→1」的動畫,所以循環自動歸零。
-   ═══════════════════════════════════════════════════════════════════════════ */
-const CYCLE = 4000;
-const o = (s) => s * 1000 / CYCLE;
-
-/* Ease 組:GSAP 的 power/expo/back 換算成等效 cubic-bezier,拿到表現力但不必
-   多背一個函式庫。原則 —— 進場用 out(一開始快,有反應感);離場用 in(更快);
-   已在畫面上的東西移動用 inOut;只有「機械進度」可以用 linear。
-   我上一版幾乎全用 linear,那是這支動畫顯得單調的主因。 */
+/* Semantic object ledger
+   mic → the user's action and the source of the session
+   waveform + timer → captured speech and elapsed recording time
+   timing key → the same audio compared at two feedback timings
+   text + caret → interim feedback the user can inspect while speaking
+   status notes → the consequence of each behaviour
+   Every object has a source, a product role and an explicit exit. */
+const CYCLE = 18400;
+const o = (seconds) => seconds * 1000 / CYCLE;
 const E = {
-  out2 : 'cubic-bezier(.215,.61,.355,1)',   // power2.out 一般進場
-  out3 : 'cubic-bezier(.165,.84,.44,1)',    // power3.out 稍強
-  out4 : 'cubic-bezier(.23,1,.32,1)',       // power4.out 有重量的落地
-  expo : 'cubic-bezier(.19,1,.22,1)',       // expo.out   最戲劇的煞停
-  back : 'cubic-bezier(.34,1.56,.64,1)',    // back.out   輕微 overshoot
-  lin  : 'linear',
+  out:'cubic-bezier(.23,1,.32,1)',
+  enter:'cubic-bezier(.165,.84,.44,1)',
+  move:'cubic-bezier(.645,.045,.355,1)',
+  exit:'cubic-bezier(.55,.085,.68,.53)',
+  settle:'cubic-bezier(.34,1.32,.64,1)',
 };
-
-/* ── 分鏡(秒)──────────────────────────────────────────────────────────────
-   有戲的結構 = 鋪陳 → 張力 → 標點 → 揭示。上一版四樣都沒有。
-
-   0.00–0.20  停一拍(anticipation)
-   0.20–0.55  起跑信號:一道光同時掃過兩邊頂緣 —— 建立「同時開始」
-   0.30–2.55  張力:右邊逐行生成 / 左邊只有三點在轉
-   2.55–2.80  第一個標點:左邊一次倒出,power4.out,快而有重量
-   0.65→3.35  兩條量條線性成長(代表時間,必須誠實等速)
-   3.35–3.60  揭示:「4×」用 back.out 彈出 —— 全片唯一一次 overshoot
-   3.60–4.00  停住讓人比較,然後循環
-   ──────────────────────────────────────────────────────────────────────── */
-// mB / mA 刻意等於「內容真正可讀的那一刻」:右邊第一行寫完 = stream+perLine,
-// 左邊整批落地 = done+0.30。視覺和下面算出來的秒數因此永遠一致。
-const T = { gun:.20, stream:.30, perLine:.375, done:2.55,
-            mB:.675, mA:2.85, mEnd:3.35, reveal:3.35 };
-const W = [590, 545, 610, 470, 560, 330];    // 刻意不等長:等長會像載入骨架
-const PITCH = 36, RISE = 10;
-
-const $  = (s) => document.querySelector(s);
-const $$ = (s) => [...document.querySelectorAll(s)];
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const T = {
+  press:.72, open:1.05, openEnd:2.52, connect:2.42, cards:3.02,
+  speak:3.28, correction:8.05, finalWord:9.02, stop:10.18,
+  delayed:11.18, payoff:12.00, reset:14.92, close:15.72,
+  closeEnd:17.52, readyAgain:17.72,
+};
+const WORDS = [
+  {node:'#liveBook', at:3.48}, {node:'#liveA', at:4.10},
+  {node:'#liveTable', at:4.72}, {node:'#liveFor', at:5.52},
+  {node:'#liveChoice', at:6.30}, {node:'#liveTonight', at:T.finalWord},
+];
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => [...document.querySelectorAll(selector)];
 const anims = [];
-const run = (el, frames, opts = {}) => {
-  const a = el.animate(frames, { duration: CYCLE, iterations: Infinity, fill: 'both', ...opts });
-  anims.push(a); return a;
+const run = (target, frames, options = {}) => {
+  const animation = target.animate(frames, {
+    duration:CYCLE, iterations:Infinity, fill:'both', ...options,
+  });
+  anims.push(animation);
+  return animation;
 };
-// 減少動態時把位移拿掉,但保留寬度展開和量條 —— 那些就是說明本身
-const rise = (px) => reduce ? '0px' : px + 'px';
+const fadeWindow = (target, start, end, rise=6) => run(target, [
+  {offset:0,opacity:0,transform:`translateY(${rise}px)`},
+  {offset:o(start),opacity:0,transform:`translateY(${rise}px)`,easing:E.out},
+  {offset:o(start+.24),opacity:1,transform:'translateY(0)'},
+  {offset:o(end-.20),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(end),opacity:0,transform:`translateY(${-rise}px)`},
+  {offset:1,opacity:0,transform:`translateY(${-rise}px)`},
+]);
 
-const build = (host) => W.map((w, i) => {
-  const n = document.createElement('div');
-  n.className = 'ln' + (i % 3 === 1 ? ' b' : i % 3 === 2 ? ' c' : '');
-  n.style.width = w + 'px';
-  n.appendChild(document.createElement('i'));
-  host.appendChild(n); return n;
+/* 1 — The microphone is the actual opening control. Press feedback initiates
+   the recorder; the same element moves into the expanded surface. */
+run($('#readyCue'), [
+  {offset:0,opacity:1,transform:'translateY(0)'},
+  {offset:o(T.press),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.open+.16),opacity:0,transform:'translateY(8px)'},
+  {offset:o(T.readyAgain),opacity:0,transform:'translateY(8px)',easing:E.out},
+  {offset:o(18.02),opacity:1,transform:'translateY(0)'},
+  {offset:1,opacity:1,transform:'translateY(0)'},
+]);
+run($('#mic'), [
+  {offset:0,transform:'translate(468px,217px) scale(1)'},
+  {offset:o(T.press),transform:'translate(468px,217px) scale(1)',easing:E.settle},
+  {offset:o(T.press+.16),transform:'translate(468px,217px) scale(.91)',easing:E.out},
+  {offset:o(T.openEnd),transform:'translate(0,0) scale(1)'},
+  {offset:o(T.close),transform:'translate(0,0) scale(1)',easing:E.move},
+  {offset:o(T.closeEnd),transform:'translate(468px,217px) scale(1)'},
+  {offset:1,transform:'translate(468px,217px) scale(1)'},
+]);
+run($('#shell'), [
+  {offset:0,clipPath:'inset(257px 607px round 38px)',boxShadow:'0 0 0 rgba(10,20,25,0)'},
+  {offset:o(T.open),clipPath:'inset(257px 607px round 38px)',boxShadow:'0 0 0 rgba(10,20,25,0)',easing:E.out},
+  {offset:o(T.openEnd),clipPath:'inset(0 round 42px)',boxShadow:'0 24px 60px rgba(10,20,25,.24)'},
+  {offset:o(T.close),clipPath:'inset(0 round 42px)',boxShadow:'0 24px 60px rgba(10,20,25,.24)',easing:E.move},
+  {offset:o(T.closeEnd),clipPath:'inset(257px 607px round 38px)',boxShadow:'0 0 0 rgba(10,20,25,0)'},
+  {offset:1,clipPath:'inset(257px 607px round 38px)',boxShadow:'0 0 0 rgba(10,20,25,0)'},
+]);
+run($('#captureBar'), [
+  {offset:0,opacity:0,clipPath:'inset(0 964px 0 0 round 24px)'},
+  {offset:o(T.open+.34),opacity:0,clipPath:'inset(0 964px 0 0 round 24px)',easing:E.out},
+  {offset:o(T.openEnd+.16),opacity:1,clipPath:'inset(0 round 24px)'},
+  {offset:o(T.close-.18),opacity:1,clipPath:'inset(0 round 24px)',easing:E.exit},
+  {offset:o(T.close+.12),opacity:0,clipPath:'inset(0 964px 0 0 round 24px)'},
+  {offset:1,opacity:0,clipPath:'inset(0 964px 0 0 round 24px)'},
+]);
+fadeWindow($('#captureCopy'), T.openEnd-.12, T.close+.10, 5);
+fadeWindow($('#stopControl'), T.openEnd+.16, T.reset+.52, 4);
+
+/* 2 — The audio is visibly active. Only the waveform uses continuous repeated
+   motion because it represents changing acoustic energy. */
+run($('#wave'), [
+  {offset:0,opacity:0},{offset:o(T.speak-.12),opacity:0,easing:E.out},
+  {offset:o(T.speak+.12),opacity:1},{offset:o(T.stop-.12),opacity:1},
+  {offset:o(T.stop+.22),opacity:.18},{offset:o(T.reset),opacity:.18},
+  {offset:o(T.reset+.24),opacity:0},{offset:1,opacity:0},
+]);
+$$('#wave i').forEach((bar,index) => {
+  const animation = bar.animate([
+    {transform:'scaleY(.18)',opacity:.45},
+    {transform:`scaleY(${.58+(index%4)*.13})`,opacity:1},
+    {transform:'scaleY(.26)',opacity:.55},
+  ], {duration:610+(index%3)*155,delay:index*52,iterations:Infinity,
+      easing:'cubic-bezier(.45,0,.55,1)',fill:'both'});
+  anims.push(animation);
 });
-const linesA = build($('#linesA'));
-const linesB = build($('#linesB'));
-
-/* ── 起跑信號 ────────────────────────────────────────────────────────────── */
-[$('#gunA'), $('#gunB')].forEach((g) => run(g, [
-  { offset:0, transform:'scaleX(0)', opacity:0 },
-  { offset:o(T.gun), transform:'scaleX(0)', opacity:1, easing:E.expo },
-  { offset:o(T.gun+.35), transform:'scaleX(1)', opacity:0 },
-  { offset:1, transform:'scaleX(1)', opacity:0 },
+run($('#timer'), [
+  {offset:0,opacity:0},{offset:o(T.speak-.08),opacity:0},
+  {offset:o(T.speak+.14),opacity:1},{offset:o(T.reset),opacity:1},
+  {offset:o(T.reset+.24),opacity:0},{offset:1,opacity:0},
+]);
+const timerWindows = [
+  ['#time1',3.30,4.45],['#time2',4.45,5.75],['#time3',5.75,7.05],
+  ['#time4',7.05,8.40],['#time5',8.40,T.stop+.04],['#timeStop',T.stop-.02,T.reset],
+];
+timerWindows.forEach(([node,start,end]) => run($(node), [
+  {offset:0,opacity:0},{offset:o(start),opacity:0},
+  {offset:o(start+.10),opacity:1},{offset:o(end-.10),opacity:1},
+  {offset:o(end),opacity:0},{offset:1,opacity:0},
 ]));
 
-/* ── 右:逐行生成 ────────────────────────────────────────────────────────
-   兩層:外層 fade + rise(power3.out,精緻度),內層寬度展開(linear,機械感)。
-   分兩層是關鍵 —— 只有 wipe 會顯得乾,只有 fade 會失去「正在生成」的意思。 */
-linesB.forEach((el, i) => {
-  const s = T.stream + i * T.perLine, e = s + T.perLine;
-  run(el, [
-    { offset:0, opacity:0, transform:`translateY(${rise(RISE)})` },
-    { offset:o(s), opacity:0, transform:`translateY(${rise(RISE)})`, easing:E.out3 },
-    { offset:o(s+.22), opacity:1, transform:'translateY(0px)' },
-    { offset:1, opacity:1, transform:'translateY(0px)' },
-  ]);
-  run(el.firstChild, [
-    { offset:0, transform:'scaleX(0)' },
-    { offset:o(s), transform:'scaleX(0)', easing:E.lin },
-    { offset:o(e), transform:'scaleX(1)' },
-    { offset:1, transform:'scaleX(1)' },
-  ]);
-});
+/* 3 — A compact semantic key names the comparison without adding crossing
+   paths. Both behaviours then enter on the exact same centre column. */
+fadeWindow($('#timingKey'), T.connect+.08, T.reset-.04, 4);
+[$('#waitCard'),$('#liveCard')].forEach((card,index) => run(card, [
+  {offset:0,opacity:0,transform:'translateY(18px) scale(.985)'},
+  {offset:o(T.cards+index*.12),opacity:0,transform:'translateY(18px) scale(.985)',easing:E.enter},
+  {offset:o(T.cards+.38+index*.12),opacity:1,transform:'translateY(0) scale(1)'},
+  {offset:o(T.reset-.08),opacity:1,transform:'translateY(0) scale(1)',easing:E.exit},
+  {offset:o(T.reset+.26),opacity:0,transform:'translateY(-16px) scale(.985)'},
+  {offset:1,opacity:0,transform:'translateY(-16px) scale(.985)'},
+]));
 
-/* ── 右:游標騎在生成前緣 ─────────────────────────────────────────────── */
-if (!reduce) {
-  const kf = [{ offset:0, transform:'translate(0px,0px)', easing:E.lin }];
-  linesB.forEach((_, i) => {
-    const s = T.stream + i*T.perLine, e = s + T.perLine, y = i*PITCH;
-    if (i === 0) kf.push({ offset:o(s), transform:`translate(0px,${y}px)`, easing:E.lin });
-    kf.push({ offset:o(e), transform:`translate(${W[i]}px,${y}px)` });
-    // 換行瞬間跳回左邊。offset 必須嚴格遞增,否則 WAAPI 直接丟例外、整段停掉。
-    if (i < W.length-1) kf.push({ offset:o(e)+1e-4, easing:E.lin,
-      transform:`translate(0px,${(i+1)*PITCH}px)` });
-  });
-  kf.push({ offset:1, transform:kf[kf.length-1].transform });
-  run($('#caret'), kf);
-}
-run($('#caret'), [
-  { offset:0, opacity:0 },
-  { offset:o(T.stream-.06), opacity:0 },
-  { offset:o(T.stream+.04), opacity:reduce?0:1 },
-  { offset:o(T.done), opacity:reduce?0:1, easing:E.out2 },
-  { offset:o(T.done+.12), opacity:0 },
-  { offset:1, opacity:0 },
-]);
-
-/* ── 左:三點載入。800ms 整除 4000ms,所以整體仍是 4 秒週期。 ───────────── */
-$$('#loader i').forEach((d, i) => run(d,
-  [{opacity:.22},{opacity:1},{opacity:.22}],
-  { duration:800, delay:i*130, easing:'ease-in-out' }));
-run($('#loader'), [
-  { offset:0, opacity:1 },
-  { offset:o(T.done-.10), opacity:1, easing:E.out2 },
-  { offset:o(T.done+.04), opacity:0 },
-  { offset:1, opacity:0 },
-]);
-
-/* ── 左:等待結束,一次倒出。第一個標點,所以用最有重量的 out4,
-      並加 25ms 的細微 stagger,讓它是「一疊東西落下」而不是「圖層開燈」。 ── */
-linesA.forEach((el, i) => {
-  const s = T.done + i*.025;
-  run(el, [
-    { offset:0, opacity:0, transform:`translateY(${rise(14)})` },
-    { offset:o(s), opacity:0, transform:`translateY(${rise(14)})`, easing:E.out4 },
-    { offset:o(s+.30), opacity:1, transform:'translateY(0px)' },
-    { offset:1, opacity:1, transform:'translateY(0px)' },
+/* 4 — Interim words arrive as natural transcript text, not tags. Each new word
+   is briefly blue, then stabilises to normal text as the next word arrives. */
+WORDS.forEach(({node,at},index) => {
+  const word = $(node);
+  run(word, [
+    {offset:0,opacity:0,transform:'translateY(9px)',color:'var(--live-soft)'},
+    {offset:o(at),opacity:0,transform:'translateY(9px)',color:'var(--live-soft)',easing:E.settle},
+    {offset:o(at+.20),opacity:1,transform:'translateY(-1px)',color:'var(--live-soft)',easing:E.out},
+    {offset:o(at+.38),opacity:1,transform:'translateY(0)',color:index===4?'var(--interim)':'var(--text)'},
+    {offset:o(T.reset-.12),opacity:1,transform:'translateY(0)',color:index===4?'var(--interim)':'var(--text)'},
+    {offset:o(T.reset+.18),opacity:0,transform:'translateY(-7px)',color:'var(--text)'},
+    {offset:1,opacity:0,transform:'translateY(-7px)',color:'var(--text)'},
   ]);
 });
 
-/* ── 兩條量條:linear。量條代表時間,時間本來就等速 —— 這裡加 ease 反而不誠實。 */
-const spanB = T.mEnd - T.mB, spanA = T.mEnd - T.mA;
-const ratio = (spanA / spanB);
-run($('#meterB'), [
-  { offset:0, transform:'scaleX(0)' },
-  { offset:o(T.mB), transform:'scaleX(0)', easing:E.lin },
-  { offset:o(T.mEnd), transform:'scaleX(1)' },
-  { offset:1, transform:'scaleX(1)' },
-]);
-run($('#meterA'), [
-  { offset:0, transform:'scaleX(0)' },
-  { offset:o(T.mA), transform:'scaleX(0)', easing:E.lin },
-  { offset:o(T.mEnd), transform:`scaleX(${ratio.toFixed(4)})` },
-  { offset:1, transform:`scaleX(${ratio.toFixed(4)})` },
+/* The corrected word is shorter than the interim hypothesis. Let the sentence
+   close that space so it remains natural prose, then keep the caret attached. */
+const correctedChoiceWidth = Math.ceil($('#liveTwo').getBoundingClientRect().width);
+const correctedChoiceDelta = $('#liveChoice').offsetWidth - correctedChoiceWidth;
+run($('#liveChoice'), [
+  {offset:0,width:'54px'},
+  {offset:o(T.correction),width:'54px',easing:E.move},
+  {offset:o(T.correction+.30),width:`${correctedChoiceWidth}px`},
+  {offset:o(T.close),width:`${correctedChoiceWidth}px`,easing:E.out},
+  {offset:o(T.closeEnd),width:'54px'},
+  {offset:1,width:'54px'},
 ]);
 
-/* ── 揭示:全片唯一一次 overshoot,所以它會是視線的落點。
-      這裡刻意不用「快 N 倍」。倍數等於 (量條長度比),而量條長度取決於我把
-      T.mEnd 訂在哪 —— 把它改成 10 秒,倍數就會趨近 1。那個數字看起來很權威,
-      其實是我挑的測量窗口製造出來的。
-      「早幾秒」是兩個可讀時刻的差,不管量到哪都一樣,所以才站得住。 ────── */
-$('#mult').textContent = '早 ' + (T.mA - T.mB).toFixed(1) + ' 秒';
-run($('#mult'), [
-  { offset:0, opacity:0, transform:'scale(.8)' },
-  { offset:o(T.reveal), opacity:0, transform:'scale(.8)', easing:E.back },
-  { offset:o(T.reveal+.28), opacity:1, transform:'scale(1)' },
-  { offset:1, opacity:1, transform:'scale(1)' },
+const caretFrames = [{offset:0,transform:'translateX(0)'}];
+const liveTranscriptLeft = $('#liveTranscript').getBoundingClientRect().left;
+const correctedAnchorShift = correctedChoiceDelta / 2;
+let lastRight = 0;
+WORDS.forEach(({node,at}) => {
+  const target = $(node);
+  const afterCorrection = node === '#liveTonight';
+  const initialRight = target.getBoundingClientRect().right - liveTranscriptLeft + 7;
+  const nextRight = initialRight - (afterCorrection ? correctedAnchorShift : 0);
+  caretFrames.push({offset:o(at),transform:`translateX(${lastRight}px)`,easing:E.out});
+  caretFrames.push({offset:o(at+.22),transform:`translateX(${nextRight}px)`});
+  lastRight = nextRight;
+  if (node === '#liveChoice') {
+    const correctedRight = nextRight - correctedAnchorShift;
+    caretFrames.push({offset:o(T.correction),transform:`translateX(${nextRight}px)`,easing:E.move});
+    caretFrames.push({offset:o(T.correction+.30),transform:`translateX(${correctedRight}px)`});
+    lastRight = correctedRight;
+  }
+});
+caretFrames.push({offset:1,transform:caretFrames.at(-1).transform});
+run($('#liveCaret'), caretFrames);
+run($('#liveCaret'), [
+  {offset:0,opacity:0},{offset:o(WORDS[0].at-.08),opacity:0},
+  {offset:o(WORDS[0].at+.10),opacity:1},{offset:o(T.stop-.10),opacity:1},
+  {offset:o(T.stop+.14),opacity:0},{offset:1,opacity:0},
 ]);
 
-/* ── 說明文字最後才出現(hero → supporting 的閱讀順序) ─────────────────── */
-run($('#legend'), [
-  { offset:0, opacity:0 },
-  { offset:o(T.done+.15), opacity:0, easing:E.out2 },
-  { offset:o(T.done+.55), opacity:1 },
-  { offset:1, opacity:1 },
+/* 5 — The benefit is made literal: the interim hypothesis “four” is visible,
+   then changes to “two” while capture is still active. */
+run($('#liveFour'), [
+  {offset:0,opacity:1,transform:'translateY(0)'},
+  {offset:o(T.correction),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.correction+.22),opacity:0,transform:'translateY(-8px)'},
+  {offset:1,opacity:0,transform:'translateY(-8px)'},
+]);
+run($('#liveTwo'), [
+  {offset:0,opacity:0,transform:'translateY(8px)'},
+  {offset:o(T.correction+.04),opacity:0,transform:'translateY(8px)',easing:E.settle},
+  {offset:o(T.correction+.28),opacity:1,transform:'translateY(-1px)',easing:E.out},
+  {offset:o(T.correction+.46),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset-.12),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset+.18),opacity:0,transform:'translateY(-7px)'},
+  {offset:1,opacity:0,transform:'translateY(-7px)'},
+]);
+run($('#liveStatus'), [
+  {offset:0,color:'#9cc5ff',backgroundColor:'rgba(47,124,255,.14)'},
+  {offset:o(T.correction),color:'#9cc5ff',backgroundColor:'rgba(47,124,255,.14)',easing:E.out},
+  {offset:o(T.correction+.30),color:'#8ce3c7',backgroundColor:'rgba(53,200,155,.14)'},
+  {offset:o(T.stop),color:'#8ce3c7',backgroundColor:'rgba(53,200,155,.14)',easing:E.out},
+  {offset:o(T.stop+.30),color:'#c5d5dd',backgroundColor:'rgba(145,162,170,.14)'},
+  {offset:1,color:'#c5d5dd',backgroundColor:'rgba(145,162,170,.14)'},
+]);
+run($('#liveInterim'), [
+  {offset:0,opacity:1,transform:'translateY(0)'},
+  {offset:o(T.correction-.12),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.correction+.12),opacity:0,transform:'translateY(-5px)'},
+  {offset:1,opacity:0,transform:'translateY(-5px)'},
+]);
+run($('#liveCorrected'), [
+  {offset:0,opacity:0,transform:'translateY(5px)'},
+  {offset:o(T.correction-.02),opacity:0,transform:'translateY(5px)',easing:E.out},
+  {offset:o(T.correction+.20),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.stop-.12),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.stop+.12),opacity:0,transform:'translateY(-5px)'},
+  {offset:1,opacity:0,transform:'translateY(-5px)'},
+]);
+run($('#liveFinal'), [
+  {offset:0,opacity:0,transform:'translateY(5px)'},
+  {offset:o(T.stop-.02),opacity:0,transform:'translateY(5px)',easing:E.out},
+  {offset:o(T.stop+.20),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset+.20),opacity:0,transform:'translateY(-5px)'},
+  {offset:1,opacity:0,transform:'translateY(-5px)'},
+]);
+fadeWindow($('#liveNote'), T.correction+.18, T.reset-.10, 6);
+
+/* 6 — Stop finalises the live result. Only now does the delayed path reveal its
+   transcript, making the difference understandable without an invented metric. */
+run($('#stopSquare'), [
+  {offset:0,opacity:1,transform:'scale(1)'},
+  {offset:o(T.stop),opacity:1,transform:'scale(1)',easing:E.exit},
+  {offset:o(T.stop+.20),opacity:0,transform:'scale(.72)'},
+  {offset:1,opacity:0,transform:'scale(.72)'},
+]);
+run($('#doneCheck'), [
+  {offset:0,opacity:0,transform:'rotate(-45deg) scale(.82)'},
+  {offset:o(T.stop+.04),opacity:0,transform:'rotate(-45deg) scale(.82)',easing:E.settle},
+  {offset:o(T.stop+.30),opacity:1,transform:'rotate(-45deg) scale(1)'},
+  {offset:o(T.reset),opacity:1,transform:'rotate(-45deg) scale(1)'},
+  {offset:o(T.reset+.20),opacity:0,transform:'rotate(-45deg) scale(.86)'},
+  {offset:1,opacity:0,transform:'rotate(-45deg) scale(.86)'},
+]);
+run($('#listeningLabel'), [
+  {offset:0,opacity:1,transform:'translateY(0)'},
+  {offset:o(T.stop-.12),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.stop+.16),opacity:0,transform:'translateY(-7px)'},
+  {offset:1,opacity:0,transform:'translateY(-7px)'},
+]);
+run($('#capturedLabel'), [
+  {offset:0,opacity:0,transform:'translateY(7px)'},
+  {offset:o(T.stop-.02),opacity:0,transform:'translateY(7px)',easing:E.out},
+  {offset:o(T.stop+.24),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset-.10),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.reset+.16),opacity:0,transform:'translateY(-7px)'},
+  {offset:1,opacity:0,transform:'translateY(-7px)'},
+]);
+run($('#waitEmpty'), [
+  {offset:0,opacity:1,transform:'translateY(0)'},
+  {offset:o(T.delayed-.12),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.delayed+.18),opacity:0,transform:'translateY(-7px)'},
+  {offset:1,opacity:0,transform:'translateY(-7px)'},
+]);
+run($('#waitTranscript'), [
+  {offset:0,opacity:0,transform:'translateY(10px)'},
+  {offset:o(T.delayed),opacity:0,transform:'translateY(10px)',easing:E.enter},
+  {offset:o(T.delayed+.30),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset-.12),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.reset+.18),opacity:0,transform:'translateY(-7px)'},
+  {offset:1,opacity:0,transform:'translateY(-7px)'},
+]);
+run($('#waitStatus'), [
+  {offset:0,color:'#9aa9b0',backgroundColor:'#2a3b43'},
+  {offset:o(T.delayed),color:'#9aa9b0',backgroundColor:'#2a3b43',easing:E.out},
+  {offset:o(T.delayed+.28),color:'#c2cdd2',backgroundColor:'#344750'},
+  {offset:1,color:'#c2cdd2',backgroundColor:'#344750'},
+]);
+run($('#waitWaiting'), [
+  {offset:0,opacity:1,transform:'translateY(0)'},
+  {offset:o(T.delayed-.12),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.delayed+.12),opacity:0,transform:'translateY(-5px)'},
+  {offset:1,opacity:0,transform:'translateY(-5px)'},
+]);
+run($('#waitAvailable'), [
+  {offset:0,opacity:0,transform:'translateY(5px)'},
+  {offset:o(T.delayed-.02),opacity:0,transform:'translateY(5px)',easing:E.out},
+  {offset:o(T.delayed+.20),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.reset+.20),opacity:0,transform:'translateY(-5px)'},
+  {offset:1,opacity:0,transform:'translateY(-5px)'},
+]);
+fadeWindow($('#waitNote'), T.payoff, T.reset-.10, 6);
+
+/* 7 — The outcome stays inside the product cards. A calm hold lets viewers
+   compare “while speaking” with “after stop”; no selection frame is needed. */
+run($('#liveCard'), [
+  {offset:0,borderColor:'#315f86',boxShadow:'0 18px 42px rgba(2,15,22,.18)'},
+  {offset:o(T.payoff),borderColor:'#315f86',boxShadow:'0 18px 42px rgba(2,15,22,.18)',easing:E.settle},
+  {offset:o(T.payoff+.34),borderColor:'var(--corrected)',boxShadow:'0 18px 48px rgba(47,124,255,.22)'},
+  {offset:o(T.reset),borderColor:'var(--corrected)',boxShadow:'0 18px 48px rgba(47,124,255,.22)'},
+  {offset:o(T.reset+.24),borderColor:'#315f86',boxShadow:'0 18px 42px rgba(2,15,22,.18)'},
+  {offset:1,borderColor:'#315f86',boxShadow:'0 18px 42px rgba(2,15,22,.18)'},
 ]);
 
-const t0 = anims[0]?.timeline?.currentTime ?? 0;
-anims.forEach((a) => { a.startTime = t0; });
+/* 8 — “Ready for next message” names the reset. Cards and the timing key leave first;
+   then the recorder contracts back into the same microphone control. */
+run($('#nextLabel'), [
+  {offset:0,opacity:0,transform:'translateY(7px)'},
+  {offset:o(T.reset-.02),opacity:0,transform:'translateY(7px)',easing:E.out},
+  {offset:o(T.reset+.22),opacity:1,transform:'translateY(0)'},
+  {offset:o(T.close-.18),opacity:1,transform:'translateY(0)',easing:E.exit},
+  {offset:o(T.close+.08),opacity:0,transform:'translateY(-7px)'},
+  {offset:1,opacity:0,transform:'translateY(-7px)'},
+]);
+fadeWindow($('#sessionReset'), T.reset+.12, T.close-.04, 5);
+
+/* Deterministic seek contract for review and export. */
+const timelineNow = document.timeline.currentTime ?? 0;
+anims.forEach((animation) => { animation.startTime = timelineNow; });
+const seek = (seconds) => {
+  const ms = ((Number(seconds)*1000 % CYCLE) + CYCLE) % CYCLE;
+  anims.forEach((animation) => { animation.pause(); animation.currentTime = ms; });
+};
+const requested = new URLSearchParams(location.search).get('t');
+const reduceQuery = matchMedia('(prefers-reduced-motion: reduce)');
+const play = () => anims.forEach((animation) => animation.play());
+const pause = () => anims.forEach((animation) => animation.pause());
+const hasPinnedTime = requested !== null && Number.isFinite(Number(requested));
+if (hasPinnedTime) seek(Number(requested));
+else if (reduceQuery.matches) seek(12.72);
+reduceQuery.addEventListener('change', (event) => {
+  if (hasPinnedTime) return;
+  if (event.matches) seek(12.72);
+  else play();
+});
+document.addEventListener('visibilitychange', () => {
+  if (hasPinnedTime || reduceQuery.matches) return;
+  if (document.hidden) pause(); else play();
+});
 window.__anims = anims;
+window.__seek = seek;
+window.__setPlaying = (shouldPlay) => shouldPlay ? play() : pause();
+window.__cycle = CYCLE/1000;
+window.__ready = true;
 </script>
 </body>
 </html>

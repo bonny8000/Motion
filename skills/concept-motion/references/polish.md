@@ -1,9 +1,8 @@
 # Polish and drama
 
-Three failures show up again and again in a first draft, and all three were
-present in a scene this skill produced before this file existed:
+Three failures show up again and again in a reference-free first draft:
 
-1. **Geometry left at defaults** — 2px radii, no depth, colliding elements.
+1. **Geometry left unresolved** — arbitrary radii, depth and spacing.
 2. **Everything eased `linear`** — informationally correct, visually dead.
 3. **No dramatic structure** — beats happen, but nothing builds or lands.
 
@@ -14,6 +13,7 @@ prototype, so check them before delivering.
 ## Contents
 
 - [Geometry tokens](#geometry-tokens)
+- [Fidelity overrides polish](#fidelity-overrides-polish)
 - [Easing: the expressive set](#easing-the-expressive-set)
 - [Two-layer entrances](#two-layer-entrances)
 - [Choreography — making it dramatic](#choreography--making-it-dramatic)
@@ -23,29 +23,60 @@ prototype, so check them before delivering.
 
 ## Geometry tokens
 
-Define these once per scene. Leaving radii at 2px is the fastest way to make
-output look cheap.
+Define geometry once per scene. Pick a material profile deliberately; neither is
+more "finished" than the other:
 
 ```css
---r-bar:   999px;   /* text/content placeholder bars: ALWAYS fully round */
---r-panel: 14px;    /* panels, cards, windows */
---r-chip:  10px;    /* labels, badges, pills */
+/* flat diagram / reference footage */
+--r-bar: 2px; --r-panel: 2px; --panel-shadow: none;
+
+/* soft product UI, only when the brief calls for it */
+--r-bar: 999px; --r-panel: 14px;
+--panel-shadow: 0 18px 44px rgba(12,20,26,.30),
+                0 2px 0 rgba(255,255,255,.07) inset;
 ```
 
-- **Placeholder bars are fully round, without exception.** A 15px-tall bar with a
-  2px radius reads as an unfinished wireframe. `999px` clamps to a perfect
-  semicircle at any height, so it survives resizing.
-- **Panels want 12–16px.** 4px reads as a 2015 dialog.
-- **Give panels depth.** A soft shadow plus a barely-there top highlight turns a
-  flat rectangle into a material:
-  ```css
-  box-shadow: 0 18px 44px rgba(12,20,26,.30),
-              0 2px 0 rgba(255,255,255,.07) inset;
-  ```
-  Keep it subtle. Two stacked large shadows on a dark panel is plenty.
+- **Flat diagram bars use 1–3px radii.** They should read as abstract code, not as
+  a loading skeleton. Fully round bars belong to the softer UI profile.
+- **Panel radius and bar radius move together.** A square panel full of pill bars,
+  or a soft panel full of hard rectangles, mixes two material languages.
+- **Depth must have evidence.** Add the soft shadow and top highlight only when
+  the reference or brand world contains elevation. A flat reference with a new
+  shadow is lower fidelity, not higher craft.
 - **Standard offsets: 8 / 16 / 24px.** Pick spacing from a scale, not per element.
-- **Check for collisions at the final frame.** A badge overlapping a panel edge by
-  a few pixels is invisible while building and unmistakable in a screenshot.
+- **Declare an alignment contract.** Name the shared column, edges and centreline
+  before placing content. Components explaining the same comparison should not
+  invent independent coordinate systems.
+- **Use concentric radii for nested surfaces.** Start with
+  `inner radius = outer radius - inset`, then adjust optically. Arbitrary radii
+  make related layers look assembled from different systems.
+- **Match handoff geometry.** A shared element must keep the same centerline or
+  edge contact at the transition boundary. Connectors meet the actual source and
+  destination surfaces; they do not stop in nearby empty space.
+- **Reserve separate lanes for text and paths.** Connector labels need a clear
+  gutter; when a route crosses its explanation, simplify or remove the route.
+- **Check collisions at full resolution across keyframes.** A reduced contact
+  sheet proves sequence, not spacing. Inspect opening, midpoint and payoff at the
+  delivery resolution and use `scripts/layout-audit.mjs` when the scene declares
+  audit attributes.
+
+`lib/kit.js` defaults to `material: 'reference'`. Opt into the other profile:
+
+```js
+createScene({ material: 'soft' });
+```
+
+## Fidelity overrides polish
+
+When a goal clip or screenshots exist, their observable decisions are the style
+specification. Do not round, shade, bounce, blur or overshoot an element merely
+because a generic craft rule recommends it. Preserve the reference's material,
+motion topology and density first; apply polish only inside the degrees of
+freedom the reference leaves open.
+
+The common failure is to make every component locally nicer while making the
+whole result globally less similar. A 14px radius can be well executed and still
+be wrong.
 
 ## Easing: the expressive set
 
@@ -147,9 +178,10 @@ the product, and it does not belong on screen.
 
 Run alongside the review pass in `motion-craft.md`:
 
-- [ ] Placeholder bars fully round; panels 12–16px
-- [ ] Panels have a soft shadow — not flat rectangles
-- [ ] Nothing collides at any frame, especially the final one
+- [ ] Geometry matches the chosen material profile or supplied reference
+- [ ] Radius, shadow and bar-end treatment form one material language
+- [ ] Related surfaces share the declared edges and centreline
+- [ ] Full-resolution keyframes show no text, path or component collisions
 - [ ] Entrances are two-layer (fade + rise, plus the meaningful transform)
 - [ ] Every `linear` is genuinely mechanical progress
 - [ ] Entrances `out`, exits `in` and faster
