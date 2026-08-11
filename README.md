@@ -156,12 +156,14 @@ rendered, nothing animated, and no error was visible anywhere.
 
 It also demonstrates reference adaptation: the speed comparison stays inside one
 centered hero with the goal clip's frame draw, flat material and closing collapse.
-The opening point becomes the frame anchor, the streaming caret becomes the
+The opening point becomes the frame anchor, the live-transcript caret becomes the
 comparison box, and the closing collapse returns to the opening point, preserving
-object continuity across beats. The better path remains colourful while the
-blocking path stays grey. The earlier side-by-side four-second version explained
-the claim, but changed the composition, cycle, focal path and material at once, so
-it could never resemble a single-hero reference.
+object continuity across beats. The example turns a spoken request into readable
+word chips while audio is still being captured; the better path remains colourful
+while the after-recording path stays grey. Rounded geometry is repeated across the
+hero, audio control, word chips and comparison outline. The earlier side-by-side
+four-second version explained the claim, but changed the composition, cycle, focal
+path and material at once, so it could never resemble a single-hero reference.
 
 If a scene must survive an unknown network, prefer WAAPI. Each element gets one
 animation covering the full cycle, so the loop resets itself and no reset block is

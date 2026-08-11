@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Streaming vs Blocking</title>
+<title>Live Audio Feedback</title>
 <style>
   :root{
     --bg:#657689; --card:#1a2931; --accent:#0061de;
@@ -26,15 +26,19 @@
   .stage{position:relative;width:1600px;height:900px;background:var(--bg);overflow:hidden}
   #unit{position:absolute;inset:0;transform-origin:center center}
   #panel{position:absolute;left:155px;top:155px;width:1290px;height:590px;
-         background:var(--card);border-radius:2px;opacity:0}
+         background:var(--card);border-radius:36px;opacity:0}
 
-  #frame{position:absolute;left:155px;top:155px;width:1290px;height:590px}
+  #frame,#roundFrame{position:absolute;left:155px;top:155px;width:1290px;height:590px}
+  #roundFrame{overflow:visible;pointer-events:none}
+  #roundFrame rect{fill:none;stroke:var(--frame);stroke-width:1;path-length:1;
+                   stroke-dasharray:1;stroke-dashoffset:1;vector-effect:non-scaling-stroke}
   #frame .edge{position:absolute;background:var(--frame)}
   #frame .top,#frame .bottom{left:0;width:100%;height:1px;transform:scaleX(0);transform-origin:left}
   #frame .left,#frame .right{top:0;width:1px;height:100%;transform:scaleY(0);transform-origin:top}
   #frame .top{top:0} #frame .bottom{bottom:0}
   #frame .left{left:0} #frame .right{right:0}
-  #frame .handle{position:absolute;width:7px;height:7px;background:var(--frame);opacity:0}
+  #frame .handle{position:absolute;width:7px;height:7px;background:var(--frame);
+                 border-radius:50%;opacity:0}
   #frame .tl{left:-3px;top:-3px} #frame .tr{right:-3px;top:-3px}
   #frame .bl{left:-3px;bottom:-3px} #frame .br{right:-3px;bottom:-3px}
 
@@ -42,43 +46,58 @@
          color:var(--label);font-size:27px;font-weight:450;letter-spacing:-.01em;
          white-space:nowrap;opacity:0}
 
+  #voice{position:absolute;left:199px;top:240px;width:1160px;height:72px;
+         display:flex;align-items:center;padding:0 22px;gap:16px;
+         color:var(--label);background:#22343e;border:1px solid rgba(255,255,255,.08);
+         border-radius:22px;opacity:0}
+  #mic{position:relative;width:42px;height:42px;flex:0 0 auto;border-radius:50%;
+       background:rgba(47,124,255,.18);border:1px solid rgba(56,189,248,.42)}
+  #mic::before{content:"";position:absolute;left:16px;top:9px;width:8px;height:15px;
+               border:2px solid #8edcff;border-radius:8px}
+  #mic::after{content:"";position:absolute;left:12px;top:20px;width:16px;height:10px;
+              border:2px solid #8edcff;border-top:0;border-radius:0 0 10px 10px}
+  .voice-copy{position:relative;width:220px;height:40px;flex:0 0 auto}
+  .voice-copy strong{display:block;font-size:14px;font-weight:520;color:#96a6ae;
+                     letter-spacing:.02em;text-transform:uppercase}
+  .voice-copy span{position:absolute;left:0;bottom:0;font-size:21px;font-weight:500;white-space:nowrap}
+  #voiceCaptured{opacity:0}
+  #wave{height:38px;display:flex;align-items:center;gap:7px;margin-left:auto;opacity:0}
+  #wave i{display:block;width:4px;height:28px;border-radius:4px;
+          background:var(--good-b);transform:scaleY(.18)}
+
   .lane{position:absolute;left:199px;width:1160px;opacity:0}
-  #laneA{top:255px} #laneB{top:478px}
+  #laneA{top:350px} #laneB{top:530px}
   .lane-title{display:flex;align-items:center;gap:12px;color:var(--label);
-              font-size:25px;font-weight:450;letter-spacing:-.01em}
-  .lane-title::before{content:"";display:block;width:5px;height:5px;background:var(--bar-b)}
+              font-size:22px;font-weight:500;letter-spacing:-.01em}
+  .lane-title::before{content:"";display:block;width:7px;height:7px;
+                      border-radius:50%;background:var(--bar-b)}
   #laneA .lane-title{color:#aeb9be}
   #laneB .lane-title::before{background:var(--accent)}
-  .lines{position:absolute;left:0;top:56px}
-  .ln{position:relative;height:16px;margin-bottom:24px;opacity:0;
-      transform:translateY(8px)}
-  .ln i{position:absolute;inset:0;display:block;border-radius:2px;transform-origin:left center}
-  .ln .base{background:var(--bar-a);transform:scaleX(0)}
-  .ln.b .base{background:var(--bar-b)}
-  .ln.c .base{background:var(--bar-c)}
-  .ln .accent{background:var(--accent);transform:scaleX(0)}
-  #laneA .ln .base{transform:scaleX(1)}
-  #laneB .ln:nth-child(1) .base{background:var(--good-a)}
-  #laneB .ln:nth-child(2) .base{background:var(--good-b)}
-  #laneB .ln:nth-child(3) .base{background:var(--good-c)}
-  #laneB .ln:nth-child(4) .base{background:var(--good-d)}
-  #laneB .ln .accent{background:rgba(255,255,255,.18)}
+  .words{position:absolute;left:0;top:46px;display:flex;align-items:center;gap:12px}
+  .word{padding:12px 17px;border-radius:15px;font-size:25px;font-weight:520;
+        line-height:1.15;white-space:nowrap;opacity:0;transform:translateY(10px) scale(.96)}
+  #wordsA .word{color:#b1bcc1;background:#35444c;border:1px solid #46545c}
+  #wordsB .word{color:#f8fbff;border:1px solid rgba(255,255,255,.16)}
+  #wordsB .word:nth-child(1),#wordsB .word:nth-child(5){background:var(--good-a)}
+  #wordsB .word:nth-child(2),#wordsB .word:nth-child(6){background:var(--good-b);color:#102a36}
+  #wordsB .word:nth-child(3){background:var(--good-c)}
+  #wordsB .word:nth-child(4){background:var(--good-d);color:#102f29}
 
-  #loader{position:absolute;left:0;top:61px;display:flex;gap:10px;opacity:0}
+  #loader{position:absolute;left:0;top:63px;display:flex;gap:10px;opacity:0}
   #loader i{width:10px;height:10px;border-radius:50%;background:var(--bar-b);opacity:.22}
-  #caret{position:absolute;left:199px;top:559px;width:3px;height:16px;
-         background:var(--accent);opacity:0;box-shadow:0 0 10px rgba(0,97,222,.55)}
+  #caret{position:absolute;left:199px;top:581px;width:3px;height:31px;border-radius:3px;
+         background:var(--good-b);opacity:0;box-shadow:0 0 12px rgba(56,189,248,.58)}
 
-  #selection{position:absolute;left:191px;top:526px;height:32px;width:0;
-             border:1px solid var(--accent);opacity:0}
-  #selection i{position:absolute;width:5px;height:5px;background:var(--accent)}
+  #selection{position:absolute;left:191px;top:386px;height:70px;width:0;
+             border:2px solid var(--accent);border-radius:18px;opacity:0}
+  #selection i{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--accent)}
   #selection i:nth-child(1){left:-3px;top:-3px}
   #selection i:nth-child(2){right:-3px;top:-3px}
   #selection i:nth-child(3){left:-3px;bottom:-3px}
   #selection i:nth-child(4){right:-3px;bottom:-3px}
 
-  #dot{position:absolute;left:797px;top:448px;width:5px;height:5px;
-       background:var(--label);opacity:0}
+  #dot{position:absolute;left:797px;top:448px;width:6px;height:6px;
+       border-radius:50%;background:var(--label);opacity:0}
 </style>
 </head>
 <body>
@@ -86,25 +105,36 @@
   <div id="dot"></div>
   <div id="unit">
     <div id="panel"></div>
+    <svg id="roundFrame" viewBox="0 0 1290 590" aria-hidden="true">
+      <rect x=".5" y=".5" width="1289" height="589" rx="35.5" pathLength="1"></rect>
+    </svg>
     <div id="frame">
-      <i class="edge top"></i><i class="edge right"></i>
-      <i class="edge bottom"></i><i class="edge left"></i>
       <i class="handle tl"></i><i class="handle tr"></i>
       <i class="handle bl"></i><i class="handle br"></i>
     </div>
 
-    <div class="state" id="stateStart">Same start</div>
-    <div class="state" id="stateReadable">Readable immediately</div>
-    <div class="state" id="stateProof">Readable 0.0s earlier</div>
+    <div class="state" id="stateStart">Start speaking</div>
+    <div class="state" id="stateReadable">Words appear as you speak</div>
+    <div class="state" id="stateProof">Feedback 0.0s sooner</div>
+
+    <div id="voice">
+      <div id="mic"></div>
+      <div class="voice-copy">
+        <strong>Audio input</strong>
+        <span id="voiceListening">Listening…</span>
+        <span id="voiceCaptured">Audio captured</span>
+      </div>
+      <div id="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
 
     <section class="lane" id="laneA">
-      <div class="lane-title">Blocking</div>
+      <div class="lane-title">After recording</div>
       <div id="loader"><i></i><i></i><i></i></div>
-      <div class="lines" id="linesA"></div>
+      <div class="words" id="wordsA"></div>
     </section>
     <section class="lane" id="laneB">
-      <div class="lane-title">Streaming</div>
-      <div class="lines" id="linesB"></div>
+      <div class="lane-title">Live transcript</div>
+      <div class="words" id="wordsB"></div>
     </section>
 
     <div id="caret"></div>
@@ -126,18 +156,18 @@ const E = {
 };
 const T = {
   dotEnd:.95, draw:.95, drawHalf:1.85, fill:3.05, ready:3.55,
-  stream:4.30, block:9.05, proof:9.55, scan:9.80,
+  stream:4.30, block:9.05, proof:9.55, scan:10.15,
   build:14.25, collapse:14.85, collapseEnd:16.25,
 };
 const STREAM = [
-  {start:4.30, duration:.82},
-  {start:5.50, duration:.66},
-  {start:6.42, duration:.98},
-  {start:7.85, duration:.78},
+  {start:4.30, duration:.52},
+  {start:5.05, duration:.38},
+  {start:5.62, duration:.62},
+  {start:6.50, duration:.44},
+  {start:7.18, duration:.46},
+  {start:7.90, duration:.68},
 ];
-const SCAN_DELAYS = [0, .54, .96, 1.56, 2.34, 2.82, 3.28, 3.88];
-const W = [790, 930, 680, 845];
-const PITCH = 40;
+const PHRASE = ['Book', 'a', 'table', 'for', 'two', 'tonight'];
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const anims = [];
@@ -150,16 +180,15 @@ const run = (target, frames, options = {}) => {
   return animation;
 };
 
-const buildLines = (host) => W.map((width, index) => {
-  const line = document.createElement('div');
-  line.className = 'ln' + (index % 3 === 1 ? ' b' : index % 3 === 2 ? ' c' : '');
-  line.style.width = width + 'px';
-  line.innerHTML = '<i class="base"></i><i class="accent"></i>';
-  host.appendChild(line);
-  return line;
+const buildWords = (host) => PHRASE.map((text) => {
+  const word = document.createElement('span');
+  word.className = 'word';
+  word.textContent = text;
+  host.appendChild(word);
+  return word;
 });
-const linesA = buildLines($('#linesA'));
-const linesB = buildLines($('#linesB'));
+const wordsA = buildWords($('#wordsA'));
+const wordsB = buildWords($('#wordsB'));
 
 /* The opening point becomes the top-left anchor instead of disappearing as a
    disconnected ornament. The frame grows directly from that same object. */
@@ -167,23 +196,18 @@ run($('#dot'), [
   {offset:0,opacity:0,transform:'translate(-34px,16px) scale(.6)'},
   {offset:o(.14),opacity:1,transform:'translate(0,0) scale(1)',easing:E.out},
   {offset:o(.52),opacity:1,transform:'translate(0,0) scale(1)',easing:E.move},
-  {offset:o(T.dotEnd),opacity:1,transform:'translate(-642px,-293px) scale(1.4)'},
-  {offset:o(T.fill-.10),opacity:1,transform:'translate(-642px,-293px) scale(1.4)',easing:E.out},
-  {offset:o(T.fill+.14),opacity:0,transform:'translate(-642px,-293px) scale(1)'},
-  {offset:1,opacity:0,transform:'translate(-642px,-293px) scale(1)'},
+  {offset:o(T.dotEnd),opacity:1,transform:'translate(-606px,-293px) scale(1.4)'},
+  {offset:o(T.fill-.10),opacity:1,transform:'translate(-606px,-293px) scale(1.4)',easing:E.out},
+  {offset:o(T.fill+.14),opacity:0,transform:'translate(-606px,-293px) scale(1)'},
+  {offset:1,opacity:0,transform:'translate(-606px,-293px) scale(1)'},
 ]);
-$$('#frame .top, #frame .left').forEach((edge) => run(edge, [
-  {offset:0,transform:edge.classList.contains('left')?'scaleY(0)':'scaleX(0)'},
-  {offset:o(T.draw),transform:edge.classList.contains('left')?'scaleY(0)':'scaleX(0)',easing:E.out},
-  {offset:o(T.drawHalf),transform:edge.classList.contains('left')?'scaleY(1)':'scaleX(1)'},
-  {offset:1,transform:edge.classList.contains('left')?'scaleY(1)':'scaleX(1)'},
-]));
-$$('#frame .right, #frame .bottom').forEach((edge) => run(edge, [
-  {offset:0,transform:edge.classList.contains('right')?'scaleY(0)':'scaleX(0)'},
-  {offset:o(T.drawHalf),transform:edge.classList.contains('right')?'scaleY(0)':'scaleX(0)',easing:E.out},
-  {offset:o(T.fill),transform:edge.classList.contains('right')?'scaleY(1)':'scaleX(1)'},
-  {offset:1,transform:edge.classList.contains('right')?'scaleY(1)':'scaleX(1)'},
-]));
+const roundedOutline = $('#roundFrame rect');
+run(roundedOutline, [
+  {offset:0,strokeDashoffset:1},
+  {offset:o(T.draw),strokeDashoffset:1,easing:E.out},
+  {offset:o(T.fill),strokeDashoffset:0},
+  {offset:1,strokeDashoffset:0},
+]);
 run($('#panel'), [
   {offset:0,opacity:0,transform:'scale(.994)'},
   {offset:o(T.fill),opacity:0,transform:'scale(.994)',easing:E.out},
@@ -198,9 +222,55 @@ $$('#frame .handle').forEach((handle) => run(handle, [
   {offset:1,opacity:1,transform:'scale(1)'},
 ]));
 
-/* Both tracks enter together inside the ONE reference hero. */
+/* The rounded input control bridges abstract frame construction to a concrete
+   user action: speaking. It remains visible while both feedback models run. */
+run($('#voice'), [
+  {offset:0,opacity:0,transform:'translateY(12px) scale(.985)'},
+  {offset:o(T.ready+.08),opacity:0,transform:'translateY(12px) scale(.985)',easing:E.snap},
+  {offset:o(T.ready+.38),opacity:1,transform:'translateY(-2px) scale(1)',easing:E.out},
+  {offset:o(T.ready+.56),opacity:1,transform:'translateY(0) scale(1)'},
+  {offset:1,opacity:1,transform:'translateY(0) scale(1)'},
+]);
+run($('#wave'), [
+  {offset:0,opacity:0},{offset:o(T.stream-.10),opacity:0,easing:E.out},
+  {offset:o(T.stream+.08),opacity:1},{offset:o(T.block-.12),opacity:1},
+  {offset:o(T.block+.18),opacity:.22},{offset:1,opacity:.22},
+]);
+$$('#wave i').forEach((bar, index) => {
+  const animation = bar.animate([
+    {transform:'scaleY(.18)',opacity:.45},
+    {transform:`scaleY(${.58 + (index%4)*.14})`,opacity:1},
+    {transform:'scaleY(.26)',opacity:.58},
+  ], {
+    duration:620 + (index%3)*170, delay:index*54, iterations:Infinity,
+    easing:'cubic-bezier(.45,0,.55,1)', fill:'both',
+  });
+  anims.push(animation);
+});
+run($('#mic'), [
+  {offset:0,boxShadow:'0 0 0 0 rgba(56,189,248,0)'},
+  {offset:o(T.stream),boxShadow:'0 0 0 0 rgba(56,189,248,0)',easing:E.out},
+  {offset:o(T.stream+.36),boxShadow:'0 0 0 9px rgba(56,189,248,.12)'},
+  {offset:o(T.stream+.72),boxShadow:'0 0 0 0 rgba(56,189,248,0)'},
+  {offset:o(T.block),boxShadow:'0 0 0 0 rgba(56,189,248,0)'},
+  {offset:1,boxShadow:'0 0 0 0 rgba(56,189,248,0)'},
+]);
+run($('#voiceListening'), [
+  {offset:0,opacity:1,transform:'translateY(0)'},
+  {offset:o(T.block-.14),opacity:1,transform:'translateY(0)',easing:E.out},
+  {offset:o(T.block+.14),opacity:0,transform:'translateY(-6px)'},
+  {offset:1,opacity:0,transform:'translateY(-6px)'},
+]);
+run($('#voiceCaptured'), [
+  {offset:0,opacity:0,transform:'translateY(7px)'},
+  {offset:o(T.block-.05),opacity:0,transform:'translateY(7px)',easing:E.out},
+  {offset:o(T.block+.20),opacity:1,transform:'translateY(0)'},
+  {offset:1,opacity:1,transform:'translateY(0)'},
+]);
+
+/* The two feedback models enter within the same rounded hero. */
 [$('#laneA'), $('#laneB')].forEach((lane, index) => {
-  const start = T.ready + index*.08;
+  const start = T.ready + .28 + index*.10;
   run(lane, [
     {offset:0,opacity:0,transform:'translateY(14px)'},
     {offset:o(start),opacity:0,transform:'translateY(14px)',easing:E.snap},
@@ -222,35 +292,28 @@ $$('#loader i').forEach((dot, index) => {
   anims.push(animation);
 });
 
-/* Streaming breathes in phrases: unequal starts and durations create a
-   fast/slow cadence while the caret remains locked to each growing edge. */
-linesB.forEach((line, index) => {
-  const {start, duration} = STREAM[index];
-  run(line, [
-    {offset:0,opacity:0,transform:'translateY(10px)'},
-    {offset:o(start),opacity:0,transform:'translateY(10px)',easing:E.snap},
-    {offset:o(start+.18),opacity:1,transform:'translateY(-1px)',easing:E.out},
-    {offset:o(start+.34),opacity:1,transform:'translateY(0)'},
-    {offset:1,opacity:1,transform:'translateY(0)'},
-  ]);
-  run(line.querySelector('.base'), [
-    {offset:0,transform:'scaleX(0)'},
-    {offset:o(start),transform:'scaleX(0)',easing:E.wipe},
-    {offset:o(start+duration),transform:'scaleX(1)'},
-    {offset:1,transform:'scaleX(1)'},
+/* Live transcript: the words appear at the moment they are heard, so the user
+   can read back the request while still speaking. */
+wordsB.forEach((word, index) => {
+  const reveal = STREAM[index].start + .18;
+  run(word, [
+    {offset:0,opacity:0,transform:'translateY(10px) scale(.96)'},
+    {offset:o(reveal),opacity:0,transform:'translateY(10px) scale(.96)',easing:E.snap},
+    {offset:o(reveal+.20),opacity:1,transform:'translateY(-2px) scale(1.03)',easing:E.out},
+    {offset:o(reveal+.38),opacity:1,transform:'translateY(0) scale(1)'},
+    {offset:1,opacity:1,transform:'translateY(0) scale(1)'},
   ]);
 });
 
-/* The caret rides the growing edge, then jumps to the next line. */
+/* The caret advances word by word, then becomes the comparison outline. */
 const caretFrames = [{offset:0,transform:'translate(0,0)'}];
-linesB.forEach((line, index) => {
-  const {start, duration} = STREAM[index];
-  caretFrames.push({offset:o(start),transform:`translate(0,${index*PITCH}px)`,easing:E.wipe});
-  caretFrames.push({offset:o(start+duration),transform:`translate(${W[index]}px,${index*PITCH}px)`});
-  if (index < linesB.length-1) caretFrames.push({
-    offset:o(start+duration)+1e-5,easing:'steps(1,end)',
-    transform:`translate(0,${(index+1)*PITCH}px)`,
-  });
+let caretRight = 0;
+wordsB.forEach((word, index) => {
+  const reveal = STREAM[index].start + .18;
+  const nextRight = word.offsetLeft + word.offsetWidth + 8;
+  caretFrames.push({offset:o(reveal),transform:`translate(${caretRight}px,0)`,easing:E.snap});
+  caretFrames.push({offset:o(reveal+.22),transform:`translate(${nextRight}px,0)`});
+  caretRight = nextRight;
 });
 caretFrames.push({offset:1,transform:caretFrames.at(-1).transform});
 run($('#caret'), caretFrames);
@@ -260,62 +323,38 @@ run($('#caret'), [
   {offset:o(T.scan-.12),opacity:0},{offset:1,opacity:0},
 ]);
 
-/* Blocking: the content arrives as one weighted batch, but the stagger and
-   small overshoot give the batch physical weight instead of a flat fade. */
-linesA.forEach((line, index) => {
+/* Delayed transcript: no text feedback is available until recording ends. */
+wordsA.forEach((word, index) => {
   const start = T.block + index*.055;
-  run(line, [
-    {offset:0,opacity:0,transform:'translateY(16px)'},
-    {offset:o(start),opacity:0,transform:'translateY(16px)',easing:E.snap},
-    {offset:o(start+.20),opacity:1,transform:'translateY(-3px)',easing:E.out},
-    {offset:o(start+.40),opacity:1,transform:'translateY(0)'},
-    {offset:1,opacity:1,transform:'translateY(0)'},
+  run(word, [
+    {offset:0,opacity:0,transform:'translateY(14px) scale(.97)'},
+    {offset:o(start),opacity:0,transform:'translateY(14px) scale(.97)',easing:E.snap},
+    {offset:o(start+.20),opacity:1,transform:'translateY(-2px) scale(1.02)',easing:E.out},
+    {offset:o(start+.38),opacity:1,transform:'translateY(0) scale(1)'},
+    {offset:1,opacity:1,transform:'translateY(0) scale(1)'},
   ]);
 });
 
-/* The completed caret hands off into the comparison box. It reviews the muted
-   blocking result first, then moves to the already-colourful streaming result. */
-const scanOrder = [...linesA, ...linesB];
-const position = (line) => {
-  const inA = linesA.includes(line);
-  const index = (inA ? linesA : linesB).indexOf(line);
-  return { x:0, y:(inA ? -223 : 0) + index*PITCH, w:W[index] };
-};
-const first = position(scanOrder[0]);
-const caretJoin = {x:W.at(-1)+8, y:3*PITCH+33};
+/* The completed caret expands into one rounded comparison outline: muted row
+   first, live colourful row second. No new unrelated object is introduced. */
+const rowWidth = Math.max(
+  wordsA.at(-1).offsetLeft + wordsA.at(-1).offsetWidth,
+  wordsB.at(-1).offsetLeft + wordsB.at(-1).offsetWidth,
+) + 16;
+const caretJoin = {x:caretRight+8, y:195};
 const selectionFrames = [
   {offset:0,opacity:0,transform:`translate(${caretJoin.x}px,${caretJoin.y}px) scaleY(.5)`,width:'0px'},
-  {offset:o(T.scan-.38),opacity:0,transform:`translate(${caretJoin.x}px,${caretJoin.y}px) scaleY(.5)`,width:'0px'},
-  {offset:o(T.scan-.18),opacity:1,transform:`translate(${caretJoin.x}px,${caretJoin.y}px) scaleY(.5)`,width:'0px',easing:E.move},
-  {offset:o(T.scan+.10),opacity:1,transform:`translate(${first.x}px,${first.y}px) scaleY(1)`,width:first.w+16+'px'},
+  {offset:o(T.scan-.36),opacity:0,transform:`translate(${caretJoin.x}px,${caretJoin.y}px) scaleY(.5)`,width:'0px'},
+  {offset:o(T.scan-.16),opacity:1,transform:`translate(${caretJoin.x}px,${caretJoin.y}px) scaleY(.5)`,width:'0px',easing:E.move},
+  {offset:o(T.scan+.22),opacity:1,transform:'translate(0,0) scaleY(1)',width:rowWidth+'px'},
+  {offset:o(T.scan+1.52),opacity:1,transform:'translate(0,0) scaleY(1)',width:rowWidth+'px',easing:E.move},
+  {offset:o(T.scan+2.02),opacity:1,transform:'translate(0,180px) scaleY(1)',width:rowWidth+'px'},
+  {offset:o(T.scan+3.28),opacity:1,transform:'translate(0,180px) scaleY(1)',width:rowWidth+'px',easing:E.out},
+  {offset:o(T.scan+3.55),opacity:0,transform:'translate(0,180px) scaleY(.94)',width:rowWidth+'px'},
+  {offset:1,opacity:0,transform:'translate(0,180px) scaleY(.94)',width:rowWidth+'px'},
 ];
-scanOrder.forEach((line,index) => {
-  const current = position(line);
-  const at = T.scan + SCAN_DELAYS[index];
-  if (index > 0) {
-    const previous = position(scanOrder[index-1]);
-    selectionFrames.push({offset:o(at),opacity:1,
-      transform:`translate(${previous.x}px,${previous.y}px)`,width:previous.w+16+'px',easing:E.move});
-    selectionFrames.push({offset:o(at+.26),opacity:1,
-      transform:`translate(${current.x}px,${current.y}px)`,width:current.w+16+'px'});
-  }
-  if (linesB.includes(line)) {
-    run(line.querySelector('.accent'), [
-      {offset:0,transform:'scaleX(0)'},
-      {offset:o(at+.10),transform:'scaleX(0)',easing:E.wipe},
-      {offset:o(at+.38),transform:'scaleX(1)'},{offset:1,transform:'scaleX(1)'},
-    ]);
-  }
-});
-const scanEnd = T.scan + SCAN_DELAYS.at(-1) + .42;
-selectionFrames.push({offset:o(scanEnd),opacity:1,
-  transform:selectionFrames.at(-1).transform,width:selectionFrames.at(-1).width});
-selectionFrames.push({offset:o(scanEnd+.16),opacity:0,
-  transform:selectionFrames.at(-1).transform,width:selectionFrames.at(-1).width});
-selectionFrames.push({offset:1,opacity:0,
-  transform:selectionFrames.at(-1).transform,width:selectionFrames.at(-1).width});
 run($('#selection'), selectionFrames);
-const colourHandoff = T.scan + SCAN_DELAYS[linesA.length];
+const colourHandoff = T.scan + 1.60;
 run($('#selection'), [
   {offset:0,borderColor:'var(--bar-a)'},
   {offset:o(colourHandoff-.12),borderColor:'var(--bar-a)',easing:E.out},
@@ -338,9 +377,9 @@ const label = (node, start, end) => run(node, [
   {offset:o(end),opacity:0,transform:'translateY(-6px)'},
   {offset:1,opacity:0,transform:'translateY(-6px)'},
 ]);
-const firstStreamReadable = STREAM[0].start + STREAM[0].duration;
+const firstStreamReadable = STREAM[0].start + .38;
 const firstBlockReadable = T.block + .40;
-$('#stateProof').textContent = `Readable ${(firstBlockReadable-firstStreamReadable).toFixed(1)}s earlier`;
+$('#stateProof').textContent = `Feedback ${(firstBlockReadable-firstStreamReadable).toFixed(1)}s sooner`;
 label($('#stateStart'), T.ready+.05, firstStreamReadable-.04);
 label($('#stateReadable'), firstStreamReadable, T.proof-.04);
 label($('#stateProof'), T.proof, T.collapse+.35);
@@ -356,6 +395,12 @@ $$('#frame .edge, #frame .handle').forEach((chrome, index) => {
   {offset:1,backgroundColor:'var(--accent)'},
   ]);
 });
+run(roundedOutline, [
+  {offset:0,stroke:'var(--frame)'},
+  {offset:o(T.build),stroke:'var(--frame)',easing:E.out},
+  {offset:o(T.build+.34),stroke:'var(--accent)'},
+  {offset:1,stroke:'var(--accent)'},
+]);
 run($('#unit'), [
   {offset:0,transform:'scale(1)',opacity:1},
   {offset:o(T.collapse),transform:'scale(1)',opacity:1,easing:E.out},
