@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Field collapse — thousands to three</title>
+</head>
+<body>
+<script type="module">
+/**
+ * MECHANISM: field collapse — many candidates, most recede, a few resolve.
+ * CLAIM:     "it narrows thousands of options to the ones that fit."
+ *
+ * Fits search, ranking, recommendation, matching, filtering, triage, dedupe —
+ * any feature whose value is *choosing*. Written against the same kit as
+ * scene-phase-spine.html, which is the demonstration: a completely different
+ * mechanism, same primitives, ~40 lines of scene code.
+ *
+ * The one rule that makes this mechanism work: rejected candidates must DIM,
+ * never disappear. Vanishing reads as deletion; dimming reads as
+ * considered-and-rejected, which is the actual claim.
+ */
+import { createScene, shapes, beats } from '../lib/kit.js';
+
+/* ── beat sheet ──────────────────────────────────────────────────────────────
+   | Beat | at   | Changes                              | Says                   |
+   |------|------|--------------------------------------|------------------------|
+   | 1    | 0.0  | dot, frame traces, `Corpus`          | "a space of options"   |
+   | 2    | 1.9  | grid pops in, all inert              | "thousands of them"    |
+   | 3    | 4.0  | box sweeps bands, `Matching`         | "it reads all of them" |
+   | 4    | 5.9  | most dim away, `Ranking`             | "almost none fit"      |
+   | 5    | 7.0  | three survivors → accent, `Matched`  | "these three do"       |
+   | 6    | 8.5  | chrome → accent, collapse            | "answer delivered"     |
+   ──────────────────────────────────────────────────────────────────────────── */
+const T = {
+  draw: 0.7, drawDur: 1.2, fill: 1.9,
+  grid: 2.15, gridPer: 0.055,
+  match: 4.0, matchPer: 0.42,
+  rank: 5.9,
+  pick: 7.0,
+  build: 8.45, collapse: 8.8, collDur: 1.6,
+  cycle: 10.9,
+};
+
+const scene = createScene({ card: { w: 1290, h: 590 } });
+const panel = scene.panel();
+const body  = shapes.cardGrid(scene, { cols: 6, rows: 4, cw: 176, ch: 96, gap: 18 });
+
+// which candidates survive — the "fit" ones. Scattered, not adjacent: a
+// contiguous block reads as a slice rather than as a selection on merit.
+const WINNERS = [2, 11, 19].map((i) => body.items[i]);
+const LOSERS  = body.items.filter((it) => !WINNERS.includes(it));
+
+scene.setLabels(['Corpus', 'Matching', 'Ranking', 'Matched']);
+
+beats.reset(scene, { panel, body });
+beats.dot(scene, { at: 0, until: T.draw });
+beats.drawFrame(scene, panel, { at: T.draw, duration: T.drawDur });
+beats.fillPanel(scene, panel, { at: T.fill });
+
+// the whole field appears at once — the scale IS the claim's setup
+beats.enter(scene, body, { at: T.grid, per: T.gridPer });
+
+// the box sweeps every band: "it actually reads all of them", which is what
+// earns the narrowing that follows
+beats.scan(scene, body, { at: T.match, per: T.matchPer, count: 4, until: T.rank - .1 });
+
+// drop the scan's accent from the losers, then dim them back
+beats.unconvert(scene, body, LOSERS, { at: T.rank });
+beats.recede(scene, LOSERS, { at: T.rank + .1, to: .16, duration: .7 });
+
+beats.promote(scene, body, WINNERS, { at: T.pick, scale: 1.08 });
+beats.accentChrome(scene, panel, { at: T.build });
+beats.collapse(scene, { at: T.collapse, duration: T.collDur });
+
+beats.labelCues(scene, [
+  ['Corpus',   T.draw + .3],
+  ['Matching', T.match],
+  ['Ranking',  T.rank],
+  ['Matched',  T.pick],
+], { end: T.collapse + .5 });
+
+scene.run({ cycle: T.cycle, still: T.pick + .8 });
+</script>
+</body>
+</html>

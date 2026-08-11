@@ -1,0 +1,9 @@
+{
+  "name": "concept-motion-export",
+  "private": true,
+  "type": "module",
+  "description": "Frame-exact capture and encode for concept-motion scenes.",
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}

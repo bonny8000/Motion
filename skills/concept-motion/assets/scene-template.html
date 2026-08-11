@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Concept loop — agent work cycle</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE CLOCK
+   Two registered custom properties are the entire animation. --p is narrative
+   progress (0→1), --s is scale. Everything else is calc() derived from them.
+   Registering them with @property is what makes them animatable at all.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@property --p { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --s { syntax: '<number>'; inherits: true; initial-value: 1; }
+
+:root{
+  /* ── palette ─────────────────────────────────────────────────────────── */
+  --bg:     #7c8797;
+  --card:   #29333c;
+  --accent: #2c6fdf;
+  --bar-a:  #aeb4b9;
+  --bar-b:  #878f96;
+  --bar-c:  #6b747c;
+  --label:  #e9eef3;
+  --frame:  #ffffff;
+
+  /* ── geometry, in unscaled design units ──────────────────────────────── */
+  --card-w: 1120;
+  --card-h: 600;
+  --handle: 7px;
+
+  /* ── timing ──────────────────────────────────────────────────────────────
+     --loop MUST match the --seconds passed to export.mjs, or the exported
+     seam will not match the seam you verified in the browser.              */
+  --loop: 14s;
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ height:100%; background:var(--bg); }
+body{
+  display:grid; place-items:center;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STAGE — 16:9. Holds the clock animation; nothing else animates.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.stage{
+  position:relative;
+  width:1600px; height:900px;
+  background:var(--bg);
+  overflow:hidden;
+  animation:clock var(--loop) linear infinite;
+}
+
+/* --p ramps linearly. --s is spaced GEOMETRICALLY — across the narrative each
+   12% of the loop multiplies scale by ~0.923, so equal time reads as equal
+   size change. A linear ramp instead spends most of the loop crawling through
+   sizes the eye cannot tell apart.
+
+   Two-part ramp, and the split is the whole trick:
+     0–72%   gentle self-similar zoom, 1.0 → 0.62. The card stays large enough
+             for its content and its state label to stay legible, so all three
+             narrative beats play at a readable size.
+     72–100% fast collapse to a point. This is the payoff move AND the seam
+             cover — by 96% the card is a ~17px dot, so the reset is invisible.
+
+   Collapsing gradually across the whole loop instead is the most common way
+   this style goes wrong: the beats end up playing at unreadable sizes. */
+@keyframes clock{
+  0%   { --p:0;    --s:1;     }
+  12%  { --p:.12;  --s:.923;  }
+  24%  { --p:.24;  --s:.852;  }
+  36%  { --p:.36;  --s:.787;  }
+  48%  { --p:.48;  --s:.726;  }
+  60%  { --p:.60;  --s:.670;  }
+  72%  { --p:.72;  --s:.620;  }
+  80%  { --p:.80;  --s:.420;  }
+  87%  { --p:.87;  --s:.240;  }
+  93%  { --p:.93;  --s:.100;  }
+  100% { --p:1;    --s:.015;  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARD — size comes from calc(), NOT transform: scale().
+   That is what keeps the 1px border 1px and the corner handles a fixed size
+   while the card shrinks to a dot. Chrome must never live inside a scaled
+   subtree. (No `contain: paint` here — the handles deliberately overflow.)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.card{
+  position:absolute; left:50%; top:50%;
+  width:  calc(var(--card-w) * 1px * var(--s));
+  height: calc(var(--card-h) * 1px * var(--s));
+  translate:-50% -50%;
+  border:1px solid var(--chrome);
+
+  /* The panel shifts to accent during the final collapse, so the last thing on
+     screen is a single accent dot rather than a grey speck. Worth the two lines:
+     the closing frame is what the eye rests on before the loop restarts. */
+  background: color-mix(in srgb,
+    var(--card) calc(clamp(0, (.93 - var(--p)) / .06, 1) * 100%), var(--accent));
+
+  /* white chrome for the first two beats, accent for the last — one number
+     drives the crossfade, so there is no second element to keep in sync. */
+  --fmix:   clamp(0, (0.56 - var(--p)) / 0.06, 1);
+  --chrome: color-mix(in srgb, var(--frame) calc(var(--fmix) * 100%), var(--accent));
+
+  /* Seam cover: the card is already a ~22px dot by 96%, so fading it out
+     there and back in over the first 3% makes the reset invisible. Verify by
+     comparing t=13.9s against t=0. */
+  opacity: calc(
+    clamp(0, var(--p) / .03, 1) *
+    clamp(0, (1 - var(--p)) / .04, 1)
+  );
+}
+
+/* Corner handles — fixed pixel size at every scale, like a design-tool
+   selection. Placed on .card (unscaled space), never on .inner. */
+.handle{
+  position:absolute; width:var(--handle); height:var(--handle);
+  background:var(--chrome);
+}
+.handle.tl{ left:calc(var(--handle) / -2); top:calc(var(--handle) / -2); }
+.handle.tr{ right:calc(var(--handle) / -2); top:calc(var(--handle) / -2); }
+.handle.bl{ left:calc(var(--handle) / -2); bottom:calc(var(--handle) / -2); }
+.handle.br{ right:calc(var(--handle) / -2); bottom:calc(var(--handle) / -2); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INNER — the only scaled subtree. Content scales; chrome outside does not.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.inner{
+  position:absolute; left:0; top:0;
+  width:  calc(var(--card-w) * 1px);
+  height: calc(var(--card-h) * 1px);
+  transform:scale(var(--s));
+  transform-origin:0 0;
+}
+
+.rows{ position:absolute; left:60px; top:120px; right:60px; }
+.row{ display:flex; gap:16px; height:15px; margin-bottom:22px; }
+.row[data-indent="1"]{ margin-left:48px; }
+.row[data-indent="2"]{ margin-left:96px; }
+
+/* ── the fill mechanism ───────────────────────────────────────────────────
+   Each bar declares its own window against the shared clock. A bar caught
+   between --from and --to is PARTIALLY filled, which is what makes the
+   progression read as generation-in-progress rather than a colour snap.
+   Adding a beat = editing two numbers.                                     */
+.bar{
+  position:relative; height:15px; border-radius:2px;
+  background:var(--bar-a);
+  overflow:hidden;
+}
+.bar.b{ background:var(--bar-b); }
+.bar.c{ background:var(--bar-c); }
+
+.bar > i{
+  position:absolute; inset:0 auto 0 0;
+  background:var(--accent);
+  width: calc(100% * clamp(0, (var(--p) - var(--from)) / (var(--to) - var(--from)), 1));
+}
+
+/* ── row selection (beat 1) ───────────────────────────────────────────────
+   Lives in unscaled space and is positioned with calc(... * --s) so its
+   border stays 1px, same reason as the card frame. */
+.sel{
+  position:absolute;
+  left:   calc((var(--sel-x) * 1px - 6px) * var(--s));
+  top:    calc((var(--sel-y) * 1px - 6px) * var(--s));
+  width:  calc((var(--sel-w) * 1px + 12px) * var(--s));
+  height: calc((var(--sel-h) * 1px + 12px) * var(--s));
+  border:1px solid var(--accent);
+  opacity: calc(clamp(0, (.16 - var(--p)) / .05, 1));
+}
+.sel .handle{ background:var(--accent); }
+
+/* ── state label ──────────────────────────────────────────────────────────
+   One or two words, one fixed position. The motion shows THAT something is
+   happening; the word says WHAT. Cheapest clarity win available.
+
+   Font size is FIXED while the inset offsets scale, so the label tracks the
+   card's top-right corner without ever shrinking — matching how reference
+   loops keep their state text legible at every zoom level. Each label must
+   fade out before the card gets narrower than the word (~190px here). */
+.label{
+  position:absolute;
+  right:calc(56px * var(--s)); top:calc(40px * var(--s));
+  font-size:28px; font-weight:450; letter-spacing:-.01em;
+  color:var(--label); white-space:nowrap;
+  /* fades in over --i0..--i1, out over --o0..--o1 */
+  opacity: calc(
+    clamp(0, (var(--p) - var(--i0)) / (var(--i1) - var(--i0)), 1) *
+    clamp(0, (var(--o1) - var(--p)) / (var(--o1) - var(--o0)), 1)
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Land on the most information-rich beat rather than freezing at t=0, which
+   here is the emptiest frame. export.mjs forces reduced-motion off, so this
+   never affects captures.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce){
+  .stage{ animation:none; --p:.42; --s:.75; }
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="card">
+
+    <!-- BEAT SHEET
+         | Beat | Window  | Changes                          | Says                     |
+         |------|---------|----------------------------------|--------------------------|
+         | 1    | 0–16%   | full card, one row selected      | "here is a unit of work" |
+         | 2    | 16–50%  | zoom out, rows fill top-down     | "it is being worked on"  |
+         | 3    | 50–72%  | chrome → accent, fill completes  | "now it is verified"     |
+         | 4    | 72–100% | silent zoom out to a point       | "and it scales"          |
+    -->
+
+    <div class="inner">
+      <div class="rows">
+        <div class="row"                ><span class="bar"   style="--from:.05;--to:.09; width:135px"><i></i></span></div>
+        <div class="row" data-indent="1"><span class="bar b" style="--from:.12;--to:.16; width:235px"><i></i></span><span class="bar" style="--from:.16;--to:.21; width:355px"><i></i></span></div>
+        <div class="row" data-indent="1"><span class="bar"   style="--from:.22;--to:.26; width:275px"><i></i></span><span class="bar b" style="--from:.26;--to:.32; width:480px"><i></i></span></div>
+
+        <!-- pre-filled: this is the row selected in beat 1, so it is already
+             accent at p=0. Clamping keeps it filled for the rest of the loop. -->
+        <div class="row" data-indent="1"><span class="bar" style="--from:-.02;--to:-.01; width:70px"><i></i></span><span class="bar" style="--from:-.02;--to:-.01; width:155px"><i></i></span><span class="bar" style="--from:-.02;--to:-.01; width:230px"><i></i></span><span class="bar" style="--from:-.02;--to:-.01; width:240px"><i></i></span></div>
+
+        <div class="row" data-indent="1"><span class="bar b" style="--from:.34;--to:.38; width:100px"><i></i></span><span class="bar" style="--from:.38;--to:.44; width:205px"><i></i></span></div>
+        <div class="row" data-indent="2"><span class="bar"   style="--from:.46;--to:.50; width:200px"><i></i></span><span class="bar b" style="--from:.50;--to:.56; width:235px"><i></i></span></div>
+        <div class="row"                ><span class="bar"   style="--from:.58;--to:.64; width:135px"><i></i></span></div>
+      </div>
+    </div>
+
+    <!-- selection box around row 4 — outside .inner so its border never scales.
+         Row pitch is 37px from top:120, so row 4 sits at y=231. -->
+    <div class="sel" style="--sel-x:108; --sel-y:231; --sel-w:743; --sel-h:15">
+      <span class="handle tl"></span><span class="handle tr"></span>
+      <span class="handle bl"></span><span class="handle br"></span>
+    </div>
+
+    <span class="label" style="--i0:-.02;--i1:-.01;--o0:.20;--o1:.24">Reviewing</span>
+    <span class="label" style="--i0:.26;--i1:.30;--o0:.44;--o1:.48">Testing</span>
+    <span class="label" style="--i0:.50;--i1:.54;--o0:.68;--o1:.72">Building</span>
+
+    <span class="handle tl"></span><span class="handle tr"></span>
+    <span class="handle bl"></span><span class="handle br"></span>
+  </div>
+</div>
+
+</body>
+</html>

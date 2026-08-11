@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Phase spine — write / review / test / build</title>
+</head>
+<body>
+<script type="module">
+/**
+ * MECHANISM: phase spine — one unit of work advances through named states.
+ * CLAIM:     "it does the job for you, end to end."
+ *
+ * Transferring a different feature onto this mechanism means changing three
+ * things and nothing else:
+ *   1. CONTENT — swap the shape (codeRows → listRows → cardGrid) and its data
+ *   2. LABELS  — rename the phases to the domain's own vocabulary
+ *   3. TIMING  — the T block below
+ * The beats stay as they are; that's the point of the kit.
+ */
+import { createScene, shapes, beats } from '../lib/kit.js';
+
+/* ── beat sheet ──────────────────────────────────────────────────────────────
+   | Beat | at    | Changes                            | Says                    |
+   |------|-------|------------------------------------|-------------------------|
+   | 1    | 0.0   | a dot drifts in                    | "something is starting" |
+   | 2    | 0.7   | frame traces itself, `Status`       | "a unit of work exists" |
+   | 3    | 1.95  | panel fills, caret appears         | "it's being opened"     |
+   | 4    | 2.25  | rows type in grey, `Writing`        | "it's authoring"        |
+   | 5    | 5.15  | box scans rows, `Reviewing`         | "it's checking itself"  |
+   | 6    | 7.05  | remaining rows convert, `Testing`   | "everything passes"     |
+   | 7    | 8.15  | chrome → accent, collapse, `Building`| "done, and it scales"  |
+   ──────────────────────────────────────────────────────────────────────────── */
+const T = {
+  draw: 0.7, drawDur: 1.2, fill: 1.95,
+  write: 2.25, writeDur: 0.34,
+  review: 5.15, reviewDur: 0.42,
+  test: 7.05, build: 8.15,
+  collapse: 8.60, collDur: 1.75,
+  cycle: 10.8,
+};
+
+// 1. CONTENT — vary widths irregularly; even bars read as a loading skeleton
+const ROWS = [
+  { indent: 0, bars: [133],               tints: ['a'] },
+  { indent: 1, bars: [205, 351],          tints: ['b', 'a'] },
+  { indent: 1, bars: [271, 475],          tints: ['a', 'b'] },
+  { indent: 1, bars: [72, 148, 228, 232], tints: ['a', 'c', 'b', 'c'] },
+  { indent: 1, bars: [101, 207],          tints: ['b', 'a'] },
+  { indent: 2, bars: [202, 234],          tints: ['a', 'b'] },
+  { indent: 0, bars: [132],               tints: ['a'] },
+];
+
+const scene = createScene({ card: { w: 1290, h: 590 } });
+const panel = scene.panel();
+const body  = shapes.codeRows(scene, ROWS);
+
+// 2. LABELS
+scene.setLabels(['Status', 'Writing', 'Reviewing', 'Testing', 'Building']);
+
+// 3. BEATS
+beats.reset(scene, { panel, body });
+beats.dot(scene, { at: 0, until: T.draw });
+beats.drawFrame(scene, panel, { at: T.draw, duration: T.drawDur });
+beats.fillPanel(scene, panel, { at: T.fill });
+beats.enter(scene, body, { at: T.write, per: T.writeDur, caret: true });
+beats.scan(scene, body, { at: T.review, per: T.reviewDur, count: 4, until: T.test - .1 });
+beats.convertFrom(scene, body, { at: T.test + .1, group: 4 });
+beats.accentChrome(scene, panel, { at: T.build });
+beats.collapse(scene, { at: T.collapse, duration: T.collDur });
+
+beats.labelCues(scene, [
+  ['Status',    T.draw + .3],
+  ['Writing',   T.write + .1],
+  ['Reviewing', T.review],
+  ['Testing',   T.test],
+  ['Building',  T.build],
+], { end: T.collapse + .55 });
+
+scene.run({ cycle: T.cycle, still: T.review + .6 });
+</script>
+</body>
+</html>
