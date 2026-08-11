@@ -4,7 +4,8 @@
  *
  * Mark shared-column surfaces with `data-audit-column`, contained controls with
  * `data-audit-parent="#parent"`, mutually exclusive space with
- * `data-audit-no-overlap="group"`, and centred content with `data-audit-center`.
+ * `data-audit-no-overlap="group"`, centred containers with `data-audit-center`,
+ * and exact focal words or controls with `data-audit-anchor`.
  *
  *   node layout-audit.mjs scene.html --times 4.9,8.5,12.6 --out dist/layout-audit
  */
@@ -124,14 +125,25 @@ for (const time of times) {
     }
 
     const stage = document.querySelector('.stage')?.getBoundingClientRect();
+    const anchors = [...document.querySelectorAll('[data-audit-anchor]')].filter(visible);
     if (stage) {
       const stageCenter = stage.left + stage.width / 2;
       for (const element of [...document.querySelectorAll('[data-audit-center]')].filter(visible)) {
         const rect = box(element);
         if (Math.abs(rect.cx-stageCenter) > tolerance) failures.push(`${element.id} is not centred on the stage column`);
       }
+      for (const element of anchors) {
+        const rect = box(element);
+        if (Math.abs(rect.cx-stageCenter) > tolerance) {
+          failures.push(`${element.id || element.textContent.trim()} is not the centre-column anchor`);
+        }
+      }
     }
-    return { failures, columns:columns.map((element) => ({ id:element.id, ...box(element) })) };
+    return {
+      failures,
+      columns:columns.map((element) => ({ id:element.id, ...box(element) })),
+      anchors:anchors.map((element) => ({ id:element.id, text:element.textContent.trim(), ...box(element) })),
+    };
   });
 
   const filename = `layout-${String(time).replace('.', '_')}s.png`;

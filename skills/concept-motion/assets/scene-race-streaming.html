@@ -99,13 +99,20 @@
   #liveStatus{color:#9cc5ff;background:rgba(47,124,255,.14)}
 
   .transcript{position:absolute;left:28px;right:28px;top:65px;height:55px;
-              display:flex;align-items:baseline;justify-content:center;gap:8px;color:var(--text);
+              display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+              align-items:baseline;column-gap:8px;color:var(--text);
               font-size:29px;font-weight:540;letter-spacing:-.025em;white-space:nowrap}
   #waitTranscript{opacity:0;color:#b6c1c6}
+  .sentencePrefix{justify-self:end}
+  .sentenceAnchor{justify-self:center}
+  .sentenceSuffix{justify-self:start}
+  #livePrefix{display:flex;align-items:baseline;justify-self:end;gap:8px}
   #liveTranscript .word{opacity:0;transform:translateY(9px);display:inline-block}
-  #liveTranscript .choice{position:relative;display:inline-block;width:54px;height:38px}
-  #liveFour,#liveTwo{position:absolute;left:0;top:0}
+  #liveTranscript .choice{display:inline-grid;grid-template-areas:"swap";align-self:baseline;
+                          justify-self:center;width:54px;line-height:normal}
+  #liveFour,#liveTwo{position:static;grid-area:swap;align-self:baseline;justify-self:start}
   #liveTwo{opacity:0;color:var(--corrected)}
+  #liveTonight{justify-self:start}
   #liveCaret{position:absolute;left:0;top:5px;width:3px;height:34px;border-radius:3px;
              background:var(--live-soft);opacity:0;box-shadow:0 0 10px rgba(112,207,255,.45)}
 
@@ -158,7 +165,11 @@
         <span class="status" id="waitStatus"><i id="waitWaiting">Waiting</i><i id="waitAvailable">Available</i></span>
       </header>
       <div id="waitEmpty" data-audit-center><i id="clockIcon"></i><span>Transcript unavailable while speaking</span></div>
-      <div class="transcript" id="waitTranscript" data-audit-center>Book a table for two tonight</div>
+      <div class="transcript" id="waitTranscript" data-audit-center>
+        <span class="sentencePrefix">Book a table for</span>
+        <span class="sentenceAnchor" id="waitAnchor" data-audit-anchor>two</span>
+        <span class="sentenceSuffix">tonight</span>
+      </div>
       <div class="cardNote" id="waitNote">Visible only after recording stops</div>
     </article>
 
@@ -168,11 +179,13 @@
         <span class="status" id="liveStatus"><i id="liveInterim">Interim</i><i id="liveCorrected">Corrected</i><i id="liveFinal">Final</i></span>
       </header>
       <div class="transcript" id="liveTranscript" data-audit-center>
-        <span class="word" id="liveBook">Book</span>
-        <span class="word" id="liveA">a</span>
-        <span class="word" id="liveTable">table</span>
-        <span class="word" id="liveFor">for</span>
-        <span class="word choice" id="liveChoice"><span id="liveFour">four</span><span id="liveTwo">two</span></span>
+        <span id="livePrefix">
+          <span class="word" id="liveBook">Book</span>
+          <span class="word" id="liveA">a</span>
+          <span class="word" id="liveTable">table</span>
+          <span class="word" id="liveFor">for</span>
+        </span>
+        <span class="word choice" id="liveChoice"><span id="liveFour">four</span><span id="liveTwo" data-audit-anchor>two</span></span>
         <span class="word" id="liveTonight">tonight</span>
         <i id="liveCaret"></i>
       </div>
@@ -341,16 +354,19 @@ run($('#liveChoice'), [
 ]);
 
 const caretFrames = [{offset:0,transform:'translateX(0)'}];
+const liveTranscriptLeft = $('#liveTranscript').getBoundingClientRect().left;
+const correctedAnchorShift = correctedChoiceDelta / 2;
 let lastRight = 0;
 WORDS.forEach(({node,at}) => {
   const target = $(node);
   const afterCorrection = node === '#liveTonight';
-  const nextRight = target.offsetLeft + target.offsetWidth + 7 - (afterCorrection ? correctedChoiceDelta : 0);
+  const initialRight = target.getBoundingClientRect().right - liveTranscriptLeft + 7;
+  const nextRight = initialRight - (afterCorrection ? correctedAnchorShift : 0);
   caretFrames.push({offset:o(at),transform:`translateX(${lastRight}px)`,easing:E.out});
   caretFrames.push({offset:o(at+.22),transform:`translateX(${nextRight}px)`});
   lastRight = nextRight;
   if (node === '#liveChoice') {
-    const correctedRight = nextRight - correctedChoiceDelta;
+    const correctedRight = nextRight - correctedAnchorShift;
     caretFrames.push({offset:o(T.correction),transform:`translateX(${nextRight}px)`,easing:E.move});
     caretFrames.push({offset:o(T.correction+.30),transform:`translateX(${correctedRight}px)`});
     lastRight = correctedRight;
