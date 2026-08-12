@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Motion system showcase — foundations to patterns</title>
+</head>
+<body>
+<script type="module">
+/**
+ * SYSTEM SHOWCASE
+ *
+ * Demonstrates role-based visual tokens, a complete theme, a motion profile,
+ * semantic status color, and reusable components assembled into one pattern.
+ * The claim is intentionally about the system itself: foundations become
+ * components, components become patterns, and the strongest patterns resolve.
+ */
+import { createScene, shapes, beats } from '../lib/kit.js';
+
+const T = {
+  panel: .45,
+  field: .8,
+  inspect: 2.7,
+  curate: 4.7,
+  resolve: 5.85,
+  hold: 7.15,
+  exit: 7.85,
+  cycle: 9.5,
+};
+
+const scene = createScene({
+  theme: 'studioLight',
+  motion: 'calm',
+  card: { w: 1240, h: 610 },
+  labelTop: 38,
+  tokens: {
+    fontSizeLabel: '29px',
+    strokeFrame: '2px',
+  },
+});
+
+const panel = scene.panel();
+const body = shapes.cardGrid(scene, {
+  cols: 4,
+  rows: 3,
+  cw: 252,
+  ch: 112,
+  gap: 28,
+  pad: { left: 74, top: 132 },
+});
+
+const KEEP = [0, 5, 7, 10].map((index) => body.items[index]);
+const REST = body.items.filter((item) => !KEEP.includes(item));
+
+scene.setLabels(['Foundations', 'Components', 'Patterns', 'System']);
+
+beats.reset(scene, { panel, body });
+beats.fillPanel(scene, panel, { at: T.panel, duration: scene.motion.enterPrimary });
+beats.enter(scene, body, { at: T.field, per: scene.motion.stagger * 1.4 });
+beats.scan(scene, body, {
+  at: T.inspect,
+  per: scene.motion.transform,
+  count: body.groups.length,
+  until: T.curate - .12,
+});
+beats.unconvert(scene, body, REST, { at: T.curate, duration: scene.motion.exit });
+beats.recede(scene, REST, {
+  at: T.curate + .08,
+  to: .13,
+  duration: scene.motion.transform,
+  stagger: scene.motion.stagger,
+});
+beats.promote(scene, body, KEEP, {
+  at: T.resolve,
+  duration: scene.motion.enterPrimary,
+  scale: 1.045,
+});
+
+beats.labelCues(scene, [
+  ['Foundations', T.panel],
+  ['Components', T.field + .6],
+  ['Patterns', T.inspect],
+  ['System', T.resolve],
+], { end: T.exit + .35 });
+
+beats.collapse(scene, { at: T.exit, duration: 1.25, to: .02 });
+scene.run({ cycle: T.cycle, still: T.hold, reduced: 'still' });
+</script>
+</body>
+</html>

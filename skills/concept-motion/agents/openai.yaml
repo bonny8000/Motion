@@ -1,0 +1,4 @@
+interface:
+  display_name: "Concept Motion System"
+  short_description: "Design polished, reusable motion-graphic systems"
+  default_prompt: "Use $concept-motion to design a polished, accessible motion system and build a verified explanatory scene."

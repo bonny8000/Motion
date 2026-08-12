@@ -48,19 +48,160 @@ export const EXPO  = [.19, 1, .22, 1];            // expo.out   — most dramati
 export const BACK  = [.34, 1.56, .64, 1];         // back.out   — overshoot, ONCE per scene
 export const IN2   = [.55, .085, .68, .53];       // power2.in  — exits only
 
-export const TOKENS = {
-  bg:     '#657689',
-  card:   '#1a2931',
-  accent: '#0061de',
-  barA:   '#78868e',
-  barB:   '#5e6c74',
-  barC:   '#46545c',
-  label:  '#e8eef0',
-  frame:  '#ffffff',
-  panelRadius: '2px',
-  panelShadow: 'none',
-  barRadius:   '2px',
+/* Tokens follow the same four-tier pattern used by mature design systems:
+   primitives and roles live here, themes override roles, component aliases are
+   consumed by the CSS, and legacy aliases keep shipped scenes compatible.
+
+   Scene code should override semantic names (`colorAccent`, `radiusPanel`) rather
+   than literal/legacy names (`accent`, `panelRadius`). */
+export const FOUNDATION_TOKENS = {
+  colorCanvas:        '#657689',
+  colorSurface:       '#1a2931',
+  colorSurfaceRaised: '#22343e',
+  colorFgPrimary:     '#e8eef0',
+  colorFgMuted:       '#78868e',
+  colorFgSubtle:      '#5e6c74',
+  colorFgDisabled:    '#46545c',
+  colorAccent:        '#0061de',
+  colorAccentSoft:    'rgba(0,97,222,.16)',
+  colorStroke:        '#ffffff',
+  colorStrokeSubtle:  'rgba(255,255,255,.18)',
+
+  fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif",
+  fontSizeLabel: '27px',
+  fontWeightLabel: '450',
+  fontTrackingLabel: '-.01em',
+
+  space1: '4px',
+  space2: '8px',
+  space3: '16px',
+  space4: '24px',
+  space5: '32px',
+  space6: '48px',
+
+  radiusXs:   '2px',
+  radiusSm:   '6px',
+  radiusMd:   '14px',
+  radiusLg:   '24px',
+  radiusFull: '999px',
+
+  radiusPanel:  '2px',
+  radiusBar:    '2px',
+  radiusCode:   '2px',
+  radiusRow:    '3px',
+  radiusTile:   '3px',
+  shadowPanel:  'none',
+  strokeFrame:  '1px',
+  sizeHandle:   '7px',
+  sizeDot:      '5px',
+  sizeCaret:    '2px',
+
+  durationFeedback:        '140ms',
+  durationEnterSupporting: '220ms',
+  durationEnterPrimary:    '360ms',
+  durationExit:            '220ms',
+  durationTransform:       '560ms',
+  durationEmphasis:        '800ms',
+  easeEnter:    'cubic-bezier(.16,1,.3,1)',
+  easeExit:     'cubic-bezier(.7,0,.84,0)',
+  easeStandard: 'cubic-bezier(.65,0,.35,1)',
 };
+
+/* A theme is a complete role map, not a loose palette. `reference` preserves
+   the shipped footage. The studio themes add the warm accent, restrained depth,
+   concentric radii, and role-based foreground/background/stroke hierarchy that
+   make the system useful beyond a single reference style. */
+export const THEMES = {
+  reference: {},
+  studioLight: {
+    colorCanvas:        '#f2f5f3',
+    colorSurface:       '#ffffff',
+    colorSurfaceRaised: '#f8faf9',
+    colorFgPrimary:     '#17201c',
+    colorFgMuted:       '#65716b',
+    colorFgSubtle:      '#98a39d',
+    colorFgDisabled:    '#c7ceca',
+    colorAccent:        '#f25f3a',
+    colorAccentSoft:    'rgba(242,95,58,.14)',
+    colorStroke:        '#cad3ce',
+    colorStrokeSubtle:  '#e2e8e5',
+    radiusPanel:        '24px',
+    radiusBar:          '8px',
+    radiusCode:         '6px',
+    radiusRow:          '10px',
+    radiusTile:         '16px',
+    shadowPanel:        '0 28px 70px rgba(30,48,40,.12), 0 2px 10px rgba(30,48,40,.06)',
+  },
+  studioDark: {
+    colorCanvas:        '#111613',
+    colorSurface:       '#1c2420',
+    colorSurfaceRaised: '#26302b',
+    colorFgPrimary:     '#f1f5f2',
+    colorFgMuted:       '#aeb9b3',
+    colorFgSubtle:      '#77827c',
+    colorFgDisabled:    '#4f5a54',
+    colorAccent:        '#ff7652',
+    colorAccentSoft:    'rgba(255,118,82,.16)',
+    colorStroke:        '#d8e1dc',
+    colorStrokeSubtle:  'rgba(216,225,220,.2)',
+    radiusPanel:        '24px',
+    radiusBar:          '8px',
+    radiusCode:         '6px',
+    radiusRow:          '10px',
+    radiusTile:         '16px',
+    shadowPanel:        '0 30px 76px rgba(0,0,0,.34), 0 1px 0 rgba(255,255,255,.05) inset',
+  },
+};
+
+export const MOTION_PROFILES = {
+  calm: {
+    feedback: .14, enterSupporting: .22, enterPrimary: .36,
+    exit: .22, transform: .56, emphasis: .8, stagger: .05,
+    enterEase: OUT2, moveEase: EASE_IN_OUT, exitEase: IN2,
+  },
+  precise: {
+    feedback: .1, enterSupporting: .18, enterPrimary: .28,
+    exit: .18, transform: .42, emphasis: .62, stagger: .035,
+    enterEase: EASE_OUT, moveEase: EASE_IN_OUT, exitEase: EASE_IN,
+  },
+  expressive: {
+    feedback: .16, enterSupporting: .28, enterPrimary: .48,
+    exit: .28, transform: .72, emphasis: 1.05, stagger: .075,
+    enterEase: OUT3, moveEase: EXPO, exitEase: IN2,
+  },
+};
+
+const LEGACY_TOKEN_MAP = {
+  bg: 'colorCanvas',
+  card: 'colorSurface',
+  accent: 'colorAccent',
+  barA: 'colorFgMuted',
+  barB: 'colorFgSubtle',
+  barC: 'colorFgDisabled',
+  label: 'colorFgPrimary',
+  frame: 'colorStroke',
+  panelRadius: 'radiusPanel',
+  panelShadow: 'shadowPanel',
+  barRadius: 'radiusBar',
+};
+
+const normalizeTokenOverrides = (overrides = {}) => {
+  const normalized = { ...overrides };
+  Object.entries(LEGACY_TOKEN_MAP).forEach(([legacy, semantic]) => {
+    if (legacy in normalized && !(semantic in normalized)) normalized[semantic] = normalized[legacy];
+  });
+  return normalized;
+};
+
+const withLegacyAliases = (tokens) => {
+  const resolved = { ...tokens };
+  Object.entries(LEGACY_TOKEN_MAP).forEach(([legacy, semantic]) => {
+    resolved[legacy] = resolved[semantic];
+  });
+  return resolved;
+};
+
+export const TOKENS = withLegacyAliases({ ...FOUNDATION_TOKENS, ...THEMES.reference });
 
 /* Material is a style decision, not a quality ladder. `reference` preserves the
    flat, diagrammatic grammar of the source footage. `soft` is available for a
@@ -69,50 +210,55 @@ export const TOKENS = {
 export const MATERIALS = {
   reference: {},
   soft: {
-    panelRadius: '14px',
-    panelShadow: '0 18px 44px rgba(12,20,26,.30), 0 2px 0 rgba(255,255,255,.07) inset',
-    barRadius: '999px',
+    radiusPanel: '14px',
+    shadowPanel: '0 18px 44px rgba(12,20,26,.30), 0 2px 0 rgba(255,255,255,.07) inset',
+    radiusBar: '999px',
   },
 };
 
 const CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg)}
+html,body{height:100%;background:var(--color-canvas)}
 body{display:grid;place-items:center;
-  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  font-family:var(--font-family);
   -webkit-font-smoothing:antialiased}
-.cm-stage{position:relative;background:var(--bg);overflow:hidden}
+.cm-stage{position:relative;background:var(--color-canvas);overflow:hidden;isolation:isolate}
 .cm-unit{position:absolute;inset:0;transform-origin:center center}
-.cm-panel{position:absolute;background:var(--card);opacity:0;
-  border-radius:var(--panel-radius);box-shadow:var(--panel-shadow)}
+.cm-panel{position:absolute;background:var(--color-surface);opacity:0;
+  border-radius:var(--radius-panel);box-shadow:var(--shadow-panel)}
 /* Frame as four 1px divs, not an SVG dash animation: Motion's pathLength lives
    in its React SVG renderer and silently does nothing from vanilla animate().
    Per-edge timing is also what makes the two-pen trace possible. */
 .cm-frame{position:absolute}
-.cm-frame .e{position:absolute;background:var(--frame)}
-.cm-frame .top,.cm-frame .bottom{left:0;width:100%;height:1px;transform-origin:left center;transform:scaleX(0)}
-.cm-frame .left,.cm-frame .right{top:0;width:1px;height:100%;transform-origin:center top;transform:scaleY(0)}
+.cm-frame .e{position:absolute;background:var(--color-stroke)}
+.cm-frame .top,.cm-frame .bottom{left:0;width:100%;height:var(--stroke-frame);transform-origin:left center;transform:scaleX(0)}
+.cm-frame .left,.cm-frame .right{top:0;width:var(--stroke-frame);height:100%;transform-origin:center top;transform:scaleY(0)}
 .cm-frame .top{top:0}.cm-frame .bottom{bottom:0}
 .cm-frame .left{left:0}.cm-frame .right{right:0}
-.cm-frame .hd{position:absolute;width:7px;height:7px;background:var(--frame);opacity:0}
+.cm-frame .hd{position:absolute;width:var(--size-handle);height:var(--size-handle);background:var(--color-stroke);opacity:0}
 .cm-frame .hd.tl{left:-3px;top:-3px}.cm-frame .hd.tr{right:-3px;top:-3px}
 .cm-frame .hd.bl{left:-3px;bottom:-3px}.cm-frame .hd.br{right:-3px;bottom:-3px}
 .cm-body{position:absolute}
-.cm-item{position:absolute;border-radius:var(--bar-radius);transform-origin:left center;transform:scaleX(0)}
-.cm-item>span{position:absolute;inset:0;background:var(--accent);border-radius:var(--bar-radius);
+.cm-item{position:absolute;border-radius:var(--radius-bar);transform-origin:left center;transform:scaleX(0)}
+.cm-item>span{position:absolute;inset:0;background:var(--color-accent);border-radius:var(--radius-bar);
   transform-origin:left center;transform:scaleX(0)}
+.cm-code{border-radius:var(--radius-code)}
+.cm-row{border-radius:var(--radius-row)}
+.cm-card{border-radius:var(--radius-tile)}
+.cm-code>span,.cm-row>span,.cm-card>span{border-radius:inherit}
 /* Never scale(0). Nothing in the physical world appears from literally nothing,
    and the eye reads it as a glitch rather than an entrance. Start near full size
    and let opacity do the appearing. */
 .cm-pop{transform-origin:center center;transform:scale(.92);opacity:0}
-.cm-caret{position:absolute;width:2px;background:var(--accent);opacity:0}
-.cm-sel{position:absolute;border:1px solid var(--accent);opacity:0}
-.cm-sel i{position:absolute;width:5px;height:5px;background:var(--accent)}
+.cm-caret{position:absolute;width:var(--size-caret);background:var(--color-accent);opacity:0}
+.cm-sel{position:absolute;border:var(--stroke-frame) solid var(--color-accent);opacity:0}
+.cm-sel i{position:absolute;width:var(--size-dot);height:var(--size-dot);background:var(--color-accent)}
 .cm-sel i:nth-child(1){left:-3px;top:-3px}.cm-sel i:nth-child(2){right:-3px;top:-3px}
 .cm-sel i:nth-child(3){left:-3px;bottom:-3px}.cm-sel i:nth-child(4){right:-3px;bottom:-3px}
 .cm-label{position:absolute;text-align:right;white-space:nowrap;opacity:0;
-  font-size:27px;font-weight:450;letter-spacing:-.01em;color:var(--label)}
-.cm-dot{position:absolute;width:5px;height:5px;background:var(--label);opacity:0}
+  font-size:var(--font-size-label);font-weight:var(--font-weight-label);
+  letter-spacing:var(--font-tracking-label);color:var(--color-fg-primary)}
+.cm-dot{position:absolute;width:var(--size-dot);height:var(--size-dot);background:var(--color-fg-primary);opacity:0}
 `;
 
 /* How a unit converts to accent depends on what it represents, and getting this
@@ -137,10 +283,21 @@ const el = (cls, parent, style) => {
 export function createScene(opts = {}) {
   const w = opts.w ?? 1600, h = opts.h ?? 900;
   const card = opts.card ?? { w: 1290, h: 590 };
+  const theme = typeof opts.theme === 'string'
+    ? (THEMES[opts.theme] ?? THEMES.reference)
+    : (opts.theme ?? THEMES.reference);
   const material = typeof opts.material === 'string'
     ? (MATERIALS[opts.material] ?? MATERIALS.reference)
     : (opts.material ?? MATERIALS.reference);
-  const tokens = { ...TOKENS, ...material, ...(opts.tokens ?? {}) };
+  const tokens = withLegacyAliases({
+    ...FOUNDATION_TOKENS,
+    ...theme,
+    ...normalizeTokenOverrides(material),
+    ...normalizeTokenOverrides(opts.tokens),
+  });
+  const motion = typeof opts.motion === 'string'
+    ? (MOTION_PROFILES[opts.motion] ?? MOTION_PROFILES.calm)
+    : { ...MOTION_PROFILES.calm, ...(opts.motion ?? {}) };
 
   const style = document.createElement('style');
   style.textContent = `:root{${Object.entries(tokens)
@@ -153,7 +310,7 @@ export function createScene(opts = {}) {
 
   const x0 = (w - card.w) / 2, y0 = (h - card.h) / 2;
   const scene = {
-    w, h, card, x0, y0, tokens, unit, stage,
+    w, h, card, x0, y0, tokens, motion, unit, stage,
     seq: [], labels: [], _dot: null,
   };
 
@@ -269,7 +426,7 @@ export const shapes = {
       const y = r * g.pitch, start = (row.indent ?? 0) * g.indent;
       let x = start;
       const items = (row.bars ?? []).map((wid, i) => {
-        const n = el('cm-item', body, {
+        const n = el('cm-item cm-code', body, {
           left: `${x}px`, top: `${y}px`, width: `${wid}px`, height: `${g.h}px`,
           background: `var(--bar-${row.tints?.[i] ?? 'a'})`,
         });
@@ -300,9 +457,8 @@ export const shapes = {
       const y = r * (ch + gap), items = [];
       for (let c = 0; c < cols; c++) {
         const x = c * (cw + gap);
-        const n = el('cm-item cm-pop', body, {
+        const n = el('cm-item cm-pop cm-card', body, {
           left: `${x}px`, top: `${y}px`, width: `${cw}px`, height: `${ch}px`,
-          borderRadius: '3px',
           background: `var(--bar-${['a', 'b', 'c'][(r + c) % 3]})`,
         });
         n.appendChild(document.createElement('span'));
@@ -330,8 +486,8 @@ export const shapes = {
     const groups = Array.from({ length: n }, (_, r) => {
       const y = r * (rowH + gap);
       const w = Math.round(width * (o.jitter === false ? 1 : .72 + .28 * ((r * 37) % 11) / 10));
-      const node = el('cm-item', body, {
-        left: '0px', top: `${y}px`, width: `${w}px`, height: `${rowH}px`, borderRadius: '3px',
+      const node = el('cm-item cm-row', body, {
+        left: '0px', top: `${y}px`, width: `${w}px`, height: `${rowH}px`,
         background: `var(--bar-${['a', 'b', 'c'][r % 3]})`,
       });
       node.appendChild(document.createElement('span'));

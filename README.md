@@ -1,8 +1,9 @@
 # Motion
 
-An agent skill for building **short looping motion graphics that explain a product
-concept** — the kind of 10–20 second abstract animation that sits at the top of a
-product or model landing page, in a pitch deck, or in a design review.
+An agent skill for designing **motion-graphic systems and short explanatory
+animations** — from foundations, semantic tokens, reusable components, brand motion,
+and governance to the 10–20 second concept loops used on product pages, in decks, and
+in design reviews.
 
 The animation is authored as a seekable HTML scene, then either shipped as a
 verified standalone page or exported frame-exact to MP4 / WebM / GIF.
@@ -11,10 +12,11 @@ verified standalone page or exported frame-exact to MP4 / WebM / GIF.
 
 The craft half of a concept loop — a seekable timeline, loop-safety, frame-exact
 export, correct easing — is a solved problem that shouldn't be re-solved each
-time. The hard half is deciding **what should move**, and that isn't a code
-problem. So the skill is intent-first and reference-aware: isolate the goal
-clip's visual grammar, work out the claim, combine them in a fidelity contract,
-agree a beat sheet, and only then open a scaffold.
+time. The harder half is deciding **what should move, what it means, and which parts
+belong to a reusable system**. The skill is intent-first, reference-aware, and
+system-oriented: define the claim and motion profile, isolate the goal clip's visual
+grammar, specify component contracts and a causal beat sheet, and only then open a
+scaffold.
 
 ## Install
 
@@ -68,8 +70,15 @@ skills/concept-motion/
 │   ├── scene-phase-spine.html        working scene: work advancing through states
 │   ├── scene-field-collapse.html     working scene: many candidates narrow to a few
 │   ├── scene-race-streaming.html     working scene: A/B comparison, zero-dependency WAAPI
+│   ├── scene-system-showcase.html    studio theme + tokens + component registry showcase
 │   └── scene-template.html           standalone CSS-clock scaffold, zero deps
 ├── references/
+│   ├── system-foundations.md         principles, profiles, semantic motion tokens
+│   ├── visual-foundations.md         color, type, spacing, radius, elevation, themes
+│   ├── component-patterns.md         reusable component contracts + pattern catalog
+│   ├── art-direction-and-layout.md   composition, type, color, material, responsive
+│   ├── accessibility-delivery-qa.md  reduced motion, formats, performance, QA gates
+│   ├── adoption-and-governance.md    inventory, migration, versioning, ownership
 │   ├── reference-fidelity.md         goal clip → evidence → fidelity contract
 │   ├── intent-to-mechanism.md        interview → claim → mechanism
 │   ├── mechanisms.md                 build recipe per mechanism

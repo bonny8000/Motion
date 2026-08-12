@@ -40,18 +40,33 @@ if (!times.length || times.some((time) => !Number.isFinite(time) || time < 0)) {
 const outDir = path.resolve(flag('out', 'dist/layout-audit'));
 await mkdir(outDir, { recursive: true });
 
-const root = path.dirname(scenePath);
+const sceneDir = path.dirname(scenePath);
+// Keep the scene inside its directory in the URL so sibling imports such as
+// `../lib/kit.js` resolve exactly as they do in the export server. Serving the
+// scene directory at `/` made those imports point outside the server root.
+const root = path.resolve(sceneDir, '..');
 const server = http.createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://local').pathname);
-    const target = path.join(root, pathname);
-    if (!target.startsWith(root)) { response.writeHead(403).end(); return; }
-    response.writeHead(200, { 'content-type': target.endsWith('.html') ? 'text/html' : 'application/octet-stream' });
-    response.end(await readFile(target));
-  } catch { response.writeHead(404).end('not found'); }
+    const target = path.resolve(root, `.${pathname}`);
+    if (target !== root && !target.startsWith(`${root}${path.sep}`)) {
+      response.writeHead(403).end();
+      return;
+    }
+    const body = await readFile(target);
+    const type = target.endsWith('.html') ? 'text/html'
+      : target.endsWith('.js') || target.endsWith('.mjs') ? 'text/javascript'
+      : 'application/octet-stream';
+    response.writeHead(200, { 'content-type': type });
+    response.end(body);
+  } catch {
+    if (!response.headersSent) response.writeHead(404);
+    response.end('not found');
+  }
 });
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-const url = `http://127.0.0.1:${server.address().port}/${path.basename(scenePath)}`;
+const relativeScene = path.relative(root, scenePath).split(path.sep).map(encodeURIComponent).join('/');
+const url = `http://127.0.0.1:${server.address().port}/${relativeScene}`;
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width:1600, height:900 }, deviceScaleFactor:1, reducedMotion:'no-preference' });
@@ -124,7 +139,7 @@ for (const time of times) {
       }
     }
 
-    const stage = document.querySelector('.stage')?.getBoundingClientRect();
+    const stage = document.querySelector('.stage, .cm-stage')?.getBoundingClientRect();
     const anchors = [...document.querySelectorAll('[data-audit-anchor]')].filter(visible);
     if (stage) {
       const stageCenter = stage.left + stage.width / 2;
@@ -147,7 +162,7 @@ for (const time of times) {
   });
 
   const filename = `layout-${String(time).replace('.', '_')}s.png`;
-  await page.locator('.stage').screenshot({ path:path.join(outDir, filename) });
+  await page.locator('.stage, .cm-stage').first().screenshot({ path:path.join(outDir, filename) });
   reports.push({ time, screenshot:filename, ...result });
 }
 
