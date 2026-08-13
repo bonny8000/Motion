@@ -76,6 +76,7 @@ diagram because it exists, when the claim was about something else entirely.
 | Structure — architecture, layers, stack | **Exploded stack.** Layers separate along depth, each labelled | anatomy |
 | Scale — "handles millions of…" | **Multiplication.** One unit tiles into a field, then the field acts as one | mass |
 | Breadth — "it does all of this" | **Guided sequence.** Successive capabilities inside one persistent interface | a tour of one surface |
+| Oversight — review, approval, human-in-the-loop | **Actor circuit.** Two named parties; judgment returns on a second edge | a loop closing through a person |
 | Change — before/after, migration | **Wipe or split.** Identical layout, two treatments | contrast |
 
 Notes that save rework:
@@ -110,6 +111,12 @@ Abstract geometry is the default for a reason: no real text means nothing to
 localize, nothing to go stale at the next redesign, and nothing that turns to
 mush under H.264. It also directs attention — viewers can't read fake content, so
 they watch the change, which is the actual subject.
+
+One thing it cannot do: **name an actor.** This vocabulary describes what happens
+to content, not who did it. If the claim involves two parties — a person and a
+system, two agents, a hand-off — the parties must be legible even when the work
+they pass around stays abstract. A selection box or a cursor is a machine
+affordance and will never read as a human. See `actors-and-loops.md`.
 
 Use stylized UI instead when the claim depends on a familiar interaction state:
 input acknowledged, interim text, correction, validation, error recovery or a

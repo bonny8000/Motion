@@ -973,6 +973,11 @@ export const beats = {
    * All labels share one slot, so overlapping fades render two words at once
    * ("ReTesting"). Deriving each fade-out from the NEXT cue's start guarantees
    * the outgoing word is gone first, and retiming a beat can't reintroduce it.
+   *
+   * The cost of that guarantee: a cue placed close behind another silently
+   * steals the earlier word's reading time, and nothing errors. A state word
+   * needs roughly 0.7s at full opacity to be read, so space the BEATS to fit
+   * the words rather than packing them as tight as the motion allows.
    */
   labelCues(scene, cues, { fade = .2, end }) {
     cues.forEach(([name, at], i) => {

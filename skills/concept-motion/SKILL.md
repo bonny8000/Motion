@@ -18,6 +18,8 @@ Inspect the supplied brief, files, reference media, and destination. Establish:
 - whether this is a one-off scene, a reusable pattern, or a full motion system;
 - the destination: controlled web, embedded video, slide, social, mobile, or review;
 - the representation register: interface, abstract system, data, spatial object, or type;
+- whether the viewer must know **who** acted — if more than one party is involved,
+  actor identity has to be legible regardless of register (`references/actors-and-loops.md`);
 - the available brand system: palette, type, geometry, iconography, tone, and sound;
 - whether a goal clip defines visual grammar or merely mood;
 - accessibility, runtime, file-size, network, and authoring constraints.
@@ -42,6 +44,7 @@ only when the viewer must reproduce the steps, not merely because it has steps.
 | Set composition, typography, color, material, or brand character | `references/art-direction-and-layout.md` | art-direction frame and layout rules |
 | Translate an idea into an explanatory mechanism | `references/intent-to-mechanism.md` | claim, representation, mechanism |
 | Tour several capabilities inside one legible interface | `references/ui-walkthrough.md` | stylized-UI walkthrough, persistent chrome |
+| Show who acts, or a loop that closes through a person | `references/actors-and-loops.md` | actor circuit with a return edge |
 | Match supplied motion evidence | `references/reference-fidelity.md` | fidelity contract and comparison board |
 | Preserve object meaning across beats | `references/semantic-continuity.md` | object ledger and causal beat sheet |
 | Implement with the reusable kit | `references/mechanisms.md` | scene assembled from shapes and beats |
@@ -161,6 +164,7 @@ Generic polish never overrides observed evidence or product meaning.
 - `references/visual-foundations.md` — role-based color, type, spacing, radius, elevation, and themes.
 - `references/component-patterns.md` — reusable component contract and pattern catalog.
 - `references/ui-walkthrough.md` — the stylized-UI register: legible interface tours, persistent chrome, step choreography.
+- `references/actors-and-loops.md` — claims about who acts, and loops that close through a person.
 - `references/art-direction-and-layout.md` — composition, typography, color, material, camera.
 - `references/accessibility-delivery-qa.md` — comfort, responsive behavior, performance, export, QA.
 - `references/adoption-and-governance.md` — inventory, migration, contribution, versioning, ownership.
@@ -169,6 +173,7 @@ Generic polish never overrides observed evidence or product meaning.
 - `assets/` — known-working kit, WAAPI, and CSS-clock scenes.
 - `assets/scene-system-showcase.html` — role-token, studio-theme, and component-registry example.
 - `assets/scene-ui-walkthrough.html` — stylized-UI walkthrough: four capabilities, one persistent frame.
+- `assets/scene-actor-loop.html` — actor circuit, zero dependencies: a loop that closes through a person.
 - `scripts/reference-board.mjs` — normalized evidence board from goal media.
 - `scripts/export.mjs` — serve, seek, capture, review sheet, and encode.
 - `scripts/layout-audit.mjs` — keyframe layout and collision gate.

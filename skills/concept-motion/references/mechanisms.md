@@ -77,6 +77,12 @@ Shapes declare `enterMode` (`growX` / `popIn`) and `convertMode` (`wipeX` /
   through named states. The reference reproduction.
 - **`assets/scene-field-collapse.html`** — field collapse. Many candidates, most
   recede, a few resolve. Search, ranking, matching, filtering, triage.
+- **`assets/scene-actor-loop.html`** — actor circuit. Two named parties and a
+  return edge carrying judgment back; human-in-the-loop, review, oversight,
+  hand-offs. Zero dependencies (CSS clock, not the kit) because the mechanism is
+  about parties and edges, which the shape contract does not model. Read
+  `actors-and-loops.md` first — the return edge is the concept, and a gate
+  without one reads as the machine checking itself.
 - **`assets/scene-ui-walkthrough.html`** — guided sequence, in the stylized-UI
   register. Four capabilities inside one persistent frame. Uses the `ui*` shapes
   and beats rather than the abstract vocabulary above; read `ui-walkthrough.md`

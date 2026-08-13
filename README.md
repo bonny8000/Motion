@@ -72,6 +72,7 @@ skills/concept-motion/
 │   ├── scene-race-streaming.html     working scene: A/B comparison, zero-dependency WAAPI
 │   ├── scene-system-showcase.html    studio theme + tokens + component registry showcase
 │   ├── scene-ui-walkthrough.html     working scene: capability tour in a legible UI
+│   ├── scene-actor-loop.html         working scene: a loop that closes through a person, zero deps
 │   └── scene-template.html           standalone CSS-clock scaffold, zero deps
 ├── references/
 │   ├── system-foundations.md         principles, profiles, semantic motion tokens
@@ -87,6 +88,7 @@ skills/concept-motion/
 │   ├── motion-craft.md               easing, physicality, vocabulary, review pass
 │   ├── house-style.md                palette, curves, visual vocabulary
 │   ├── ui-walkthrough.md             stylized-UI register: legible interface tours
+│   ├── actors-and-loops.md           who acts, and loops that close through a person
 │   └── motion-track.md               Motion API guidance + silent failure modes
 └── scripts/
     ├── reference-board.mjs            probe and sample goal footage
