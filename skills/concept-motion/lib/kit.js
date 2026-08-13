@@ -48,6 +48,52 @@ export const EXPO  = [.19, 1, .22, 1];            // expo.out   — most dramati
 export const BACK  = [.34, 1.56, .64, 1];         // back.out   — overshoot, ONCE per scene
 export const IN2   = [.55, .085, .68, .53];       // power2.in  — exits only
 
+/* ── Sampled springs ────────────────────────────────────────────────────────
+   Apple parameterises springs as damping ratio + response rather than
+   mass/stiffness/damping, because those two are the ones a designer can
+   actually reason about (see references/ui-walkthrough.md).
+
+   A real spring is the wrong tool here: its settle time is emergent and
+   velocity-dependent, which breaks the absolute-`at` contract every beat
+   relies on and makes frame-exact export impossible. So we sample the
+   spring's step response ONCE into a plain easing function with a fixed
+   duration. You get the spring's shape — the weighted approach, the
+   overshoot — on a deterministic clock.
+
+   This is the honest half of the trade. The half that does not survive is
+   interruption: a sampled spring cannot absorb a new target mid-flight,
+   because there is no input to absorb. Non-interactive motion never needs it. */
+export const SPRINGS = {
+  move:   { damping: 1.0, response: .40 },   // reposition — no overshoot
+  rotate: { damping: 0.8, response: .40 },
+  sheet:  { damping: 0.8, response: .30 },   // drawer / panel arriving
+};
+
+/**
+ * Normalised step response of a damped spring, sampled into `{ ease, duration }`.
+ * `ease` takes and returns 0..1, so it drops straight into a beat's `ease`.
+ */
+export function spring({ damping = 1, response = .4, epsilon = .002, max = 4 } = {}) {
+  const w0 = (2 * Math.PI) / response, z = damping;
+  let x;
+  if (Math.abs(z - 1) < 1e-6) {
+    x = (t) => 1 - Math.exp(-w0 * t) * (1 + w0 * t);
+  } else if (z < 1) {
+    const wd = w0 * Math.sqrt(1 - z * z);
+    x = (t) => 1 - Math.exp(-z * w0 * t) * (Math.cos(wd * t) + ((z * w0) / wd) * Math.sin(wd * t));
+  } else {
+    const s = w0 * Math.sqrt(z * z - 1), r1 = -w0 * z + s, r2 = -w0 * z - s;
+    x = (t) => 1 - (r2 * Math.exp(r1 * t) - r1 * Math.exp(r2 * t)) / (r2 - r1);
+  }
+  // Settle time: the last moment the curve is still outside the epsilon band.
+  let duration = 0;
+  for (let t = 0; t <= max; t += 1 / 240) if (Math.abs(x(t) - 1) > epsilon) duration = t;
+  duration = Math.max(duration + 1 / 60, .12);
+  // Pin the endpoints so the beat lands exactly on its keyframe value.
+  const ease = (p) => (p <= 0 ? 0 : p >= 1 ? 1 : x(p * duration));
+  return { ease, duration };
+}
+
 /* Tokens follow the same four-tier pattern used by mature design systems:
    primitives and roles live here, themes override roles, component aliases are
    consumed by the CSS, and legacy aliases keep shipped scenes compatible.
@@ -105,6 +151,23 @@ export const FOUNDATION_TOKENS = {
   easeEnter:    'cubic-bezier(.16,1,.3,1)',
   easeExit:     'cubic-bezier(.7,0,.84,0)',
   easeStandard: 'cubic-bezier(.65,0,.35,1)',
+
+  /* Stylized-UI register — the ONLY tokens that carry legible type. The
+     abstract-skeleton vocabulary above stays the default for concept work;
+     these exist for walkthroughs where the interface itself is the claim.
+     See references/ui-walkthrough.md before reaching for them. */
+  fontMono:       "ui-monospace,'SF Mono','JetBrains Mono','Cascadia Code',Menlo,Consolas,monospace",
+  fontSizeUi:     '15px',
+  fontSizeUiSm:   '13px',
+  lineHeightUi:   '28px',
+  colorDiffAdd:   'rgba(63,185,80,.15)',
+  colorDiffDel:   'rgba(248,81,73,.14)',
+  colorSuccess:   '#3fb950',
+  colorDanger:    '#f85149',
+  colorLink:      '#58a6ff',
+  colorSyntax:    '#79c0ff',
+  colorGutter:    '#5e6c74',
+  radiusUi:       '6px',
 };
 
 /* A theme is a complete role map, not a loose palette. `reference` preserves
@@ -259,6 +322,61 @@ body{display:grid;place-items:center;
   font-size:var(--font-size-label);font-weight:var(--font-weight-label);
   letter-spacing:var(--font-tracking-label);color:var(--color-fg-primary)}
 .cm-dot{position:absolute;width:var(--size-dot);height:var(--size-dot);background:var(--color-fg-primary);opacity:0}
+
+/* ── Stylized-UI register ───────────────────────────────────────────────────
+   Legible interface mocks, for walkthroughs where the interface IS the claim.
+   Everything here opts out of the abstract-skeleton grammar deliberately, so
+   it is namespaced .cm-u* and never inherits the bar/scaleX machinery. */
+.cm-u{position:absolute;font-family:var(--font-mono);font-size:var(--font-size-ui);
+  color:var(--color-fg-primary);white-space:pre}
+.cm-u-chrome{left:0;right:0;top:0;display:flex;align-items:center;gap:var(--space3);
+  padding:0 var(--space4);height:60px}
+.cm-u-lights{display:flex;gap:8px;flex:none}
+.cm-u-lights>div{width:12px;height:12px;border-radius:999px}
+.cm-u-path{color:var(--color-fg-muted);flex:1}
+.cm-u-meter{display:flex;align-items:center;gap:var(--space2);color:var(--color-fg-muted);
+  font-size:var(--font-size-ui)}
+.cm-u-meter .track{width:58px;height:10px;background:var(--color-fg-disabled);border-radius:2px;overflow:hidden}
+.cm-u-meter .fill{height:100%;width:100%;background:var(--color-fg-primary);
+  transform-origin:left center;transform:scaleX(0)}
+.cm-u-scene{position:absolute;opacity:0}
+.cm-u-echo{left:0;right:0;display:flex;gap:var(--space2);align-items:baseline;
+  background:var(--color-surface-raised);border-radius:var(--radius-ui);padding:14px var(--space3)}
+.cm-u-echo .mark{color:var(--color-link);flex:none}
+.cm-u-line{position:absolute;left:0;display:flex;align-items:center;gap:var(--space3);
+  border-radius:2px;opacity:0}
+.cm-u-line .gut{color:var(--color-gutter);text-align:right;flex:none;font-size:var(--font-size-ui-sm)}
+.cm-u-line.add{background:var(--color-diff-add)}
+.cm-u-line.add .gut{color:var(--color-success)}
+.cm-u-line.del{background:var(--color-diff-del)}
+.cm-u-line.del .gut{color:var(--color-danger)}
+.cm-u-opt{position:absolute;left:0;display:flex;gap:var(--space3);align-items:flex-start;
+  padding:10px var(--space3);border-radius:var(--radius-ui);opacity:0}
+.cm-u-opt .key{color:var(--color-fg-subtle);flex:none;width:18px}
+.cm-u-opt .radio{width:15px;height:15px;border-radius:999px;flex:none;margin-top:3px;
+  border:1px solid var(--color-fg-subtle)}
+.cm-u-opt .ttl{display:block}
+.cm-u-opt .sub{display:block;color:var(--color-fg-muted);font-size:var(--font-size-ui-sm);margin-top:3px}
+.cm-u-hi{position:absolute;left:0;background:var(--color-surface-raised);
+  border-radius:var(--radius-ui);opacity:0}
+.cm-u-tabs{position:absolute;left:0;display:flex;gap:var(--space1)}
+.cm-u-tabs .tab{padding:6px 12px;border-radius:var(--radius-ui);color:var(--color-fg-muted)}
+.cm-u-tabs .tab.on{background:var(--color-surface-raised);color:var(--color-fg-primary)}
+.cm-u-rec{position:absolute;left:0;right:0;display:flex;align-items:center;gap:var(--space2);
+  padding:6px 0;opacity:0}
+.cm-u-rec .nm{color:var(--color-fg-primary)}
+.cm-u-rec .meta{color:var(--color-fg-muted);font-size:var(--font-size-ui-sm);flex:1}
+.cm-u-rec .act{color:var(--color-link)}
+.cm-u-rec .act.done{color:var(--color-success)}
+.cm-u-prompt{position:absolute;left:0;right:0;display:flex;align-items:center;gap:var(--space2);
+  background:var(--color-surface-raised);border-radius:var(--radius-ui);padding:16px var(--space3)}
+.cm-u-prompt .mark{color:var(--color-link);flex:none}
+.cm-u-prompt .txt{flex:1}
+.cm-u-prompt .mode{color:var(--color-fg-muted)}
+/* The caret is an inline block on the growing edge, not the absolute .cm-caret:
+   real type advances by character, so the caret has to sit in the text flow. */
+.cm-u-car{display:inline-block;width:9px;height:19px;background:var(--color-fg-primary);
+  vertical-align:-4px}
 `;
 
 /* How a unit converts to accent depends on what it represents, and getting this
@@ -312,7 +430,13 @@ export function createScene(opts = {}) {
   const scene = {
     w, h, card, x0, y0, tokens, motion, unit, stage,
     seq: [], labels: [], _dot: null,
+    /* Stylized-UI elements register themselves here with the properties they
+       animate, so `beats.reset` restores them without every scene having to
+       remember. Same discipline as panel/body, just self-declaring. */
+    _ui: [],
   };
+  /** Register a UI element + the reset keyframe that returns it to frame 0. */
+  scene.uiReset = (target, kf) => { scene._ui.push([target, kf]); return target; };
 
   /** Dark panel + traceable frame + corner handles. */
   scene.panel = () => {
@@ -343,6 +467,81 @@ export function createScene(opts = {}) {
   };
   scene.dot = () => (scene._dot ??= el('cm-dot', stage,
     { left: `${x0 + card.w / 2}px`, top: `${y0 + card.h / 2}px` }));
+
+  /* ── Stylized-UI chrome ───────────────────────────────────────────────────
+     Persistent furniture that survives every step of a walkthrough. It is
+     deliberately NOT part of any step: the whole point of a walkthrough is
+     that the frame stays put while the content inside it changes, which is
+     what tells the viewer these steps happen in one place. */
+
+  /** Window bar: traffic lights, path, and a context meter that only grows. */
+  scene.chrome = ({ path = '', percents = [], meterFrom = 0 } = {}) => {
+    const bar = el('cm-u cm-u-chrome', unit, { left: `${x0}px`, top: `${y0}px`, width: `${card.w}px` });
+    const lights = el('cm-u-lights', bar);
+    for (const c of ['#ff5f57', '#febc2e', '#28c840']) el('', lights).style.background = c;
+    const pathEl = el('cm-u-path', bar);
+    pathEl.textContent = path;
+    const meter = el('cm-u-meter', bar);
+    const track = el('track', meter);
+    const fill = el('fill', track);
+    // Percentages crossfade between discrete values rather than counting up:
+    // a seekable timeline cannot interpolate textContent, and a number that
+    // only moves at beat boundaries is honest about when work happened.
+    const slot = el('', meter, { position: 'relative', width: '76px', height: '20px' });
+    const pcts = percents.map((p) => {
+      const n = el('', slot, { position: 'absolute', right: '0', top: '0', opacity: '0' });
+      n.textContent = p;
+      return n;
+    });
+    scene.uiReset(fill, { scaleX: meterFrom });
+    if (pcts.length) scene.uiReset(pcts, { opacity: 0 });
+    return { el: bar, fill, pcts };
+  };
+
+  /**
+   * The input line: prompt mark, typed text, caret, and a model/mode slot.
+   *
+   * `lines` are every string this bar will ever type. They are all built up
+   * front — one measured, clipped wrap each — because textContent cannot be
+   * interpolated, and a walkthrough that rewrites text at runtime stops being
+   * seekable, which breaks frame-exact export.
+   */
+  scene.promptBar = ({ top, model = '', modes = [], lines = [] } = {}) => {
+    const bar = el('cm-u cm-u-prompt', unit,
+      { left: `${x0 + 24}px`, top: `${y0 + top}px`, width: `${card.w - 48}px` });
+    el('mark', bar).textContent = '❯';
+    const txt = el('txt', bar, { position: 'relative', height: '20px' });
+    const wraps = lines.map((s) => {
+      const n = el('', txt, { position: 'absolute', left: '0', top: '0', overflow: 'hidden',
+                              whiteSpace: 'pre', width: 'auto' });
+      n.textContent = s;
+      n.dataset.w = String(n.offsetWidth);   // measure before clipping
+      n.style.width = '0px';
+      return n;
+    });
+    const caret = el('cm-u-car', txt, { position: 'absolute', left: '0', top: '0' });
+    const slot = el('mode', bar, { position: 'relative', minWidth: '190px', height: '20px' });
+    const modeEls = modes.map((m) => {
+      const n = el('', slot, { position: 'absolute', right: '0', top: '0', opacity: '0' });
+      n.textContent = model ? `${model} · ${m}` : m;
+      return n;
+    });
+    if (wraps.length) scene.uiReset(wraps, { width: 0 });
+    scene.uiReset(caret, { opacity: 1, x: 0 });
+    if (modeEls.length) scene.uiReset(modeEls, { opacity: 0 });
+    return { el: bar, txt, caret, wraps, modeEls };
+  };
+
+  /**
+   * One screen of a walkthrough. Steps stack in the same region and cross-fade,
+   * so only one is ever legible — the viewer reads a sequence, not a collage.
+   */
+  scene.step = ({ top = 92, left = 24 } = {}) => {
+    const box = el('cm-u cm-u-scene', unit,
+      { left: `${x0 + left}px`, top: `${y0 + top}px`, width: `${card.w - left * 2}px` });
+    scene.uiReset(box, { opacity: 0 });
+    return box;
+  };
 
   /** State labels, all sharing one right-aligned slot inside the panel. */
   scene.setLabels = (names) => {
@@ -497,6 +696,106 @@ export const shapes = {
     return { el: body, groups, items: groups.flatMap((r) => r.items),
              enterMode: 'growX', convertMode: 'wipeX', pad };
   },
+
+  /* ── Stylized-UI shapes ─────────────────────────────────────────────────
+     These carry REAL text, so they deliberately do not expose the
+     items/fill contract the abstract beats animate. Drive them with the
+     ui* beats below. Read references/ui-walkthrough.md before using them:
+     legible type is a considered exception to the house style, not an
+     upgrade to it. Every one takes a `parent` — normally a `scene.step()`. */
+
+  /** The user's instruction, echoed back above the result. */
+  uiEcho(scene, parent, text, { top = 0 } = {}) {
+    const box = el('cm-u-echo', parent, { position: 'absolute', top: `${top}px` });
+    el('mark', box).textContent = '❯';
+    const t = el('', box);
+    t.textContent = text;
+    scene.uiReset(box, { opacity: 1 });
+    return { el: box, textEl: t, h: 52 };
+  },
+
+  /**
+   * A quiet status line: "Thought for 2.5s", or a tool call plus its target.
+   * `accent` is the part that names a real thing (a path, a tool) and is the
+   * only part allowed to take colour — the rest is deliberately recessive so
+   * the eye lands on the content below, not on the machine narrating itself.
+   */
+  uiNote(scene, parent, text, { top = 0, accent = '', dim = true } = {}) {
+    const box = el('cm-u', parent,
+      { position: 'absolute', top: `${top}px`, left: '0', opacity: '0',
+        color: dim ? 'var(--color-fg-muted)' : 'var(--color-fg-primary)' });
+    const a = el('', box, { display: 'inline' });
+    a.textContent = text;
+    if (accent) {
+      const b = el('', box, { display: 'inline', color: 'var(--color-syntax)' });
+      b.textContent = ' ' + accent;
+    }
+    scene.uiReset(box, { opacity: 0 });
+    return { el: box, h: 26 };
+  },
+
+  /**
+   * Numbered lines with diff state. `rows`: [{ n, text, state }] where state
+   * is 'add' | 'del' | undefined. The tint is the claim — an unstated line is
+   * context, and context must stay visually quiet or the diff reads as noise.
+   */
+  diffRows(scene, parent, rows, { top = 0, pitch = 28, gutter = 34 } = {}) {
+    const out = rows.map((r, i) => {
+      const line = el(`cm-u-line${r.state ? ' ' + r.state : ''}`, parent, { top: `${top + i * pitch}px` });
+      const g = el('gut', line, { width: `${gutter}px` });
+      g.textContent = r.n ?? '';
+      const t = el('', line);
+      t.textContent = r.text ?? '';
+      return { el: line, state: r.state };
+    });
+    scene.uiReset(out.map((r) => r.el), { opacity: 0 });
+    return { el: parent, rows: out, h: rows.length * pitch };
+  },
+
+  /** Radio options with a moving highlight — a decision the viewer watches. */
+  optionList(scene, parent, options, { top = 0, pitch = 60 } = {}) {
+    const hi = el('cm-u-hi', parent,
+      { top: `${top}px`, width: '100%', height: `${pitch - 4}px` });
+    const rows = options.map((o, i) => {
+      const row = el('cm-u-opt', parent, { top: `${top + i * pitch}px`, width: '100%' });
+      el('key', row).textContent = o.key ?? String(i + 1);
+      el('radio', row);
+      const c = el('', row);
+      const t = el('ttl', c); t.textContent = o.title ?? '';
+      if (o.sub) { const s = el('sub', c); s.textContent = o.sub; }
+      return { el: row, y: top + i * pitch };
+    });
+    scene.uiReset(rows.map((r) => r.el), { opacity: 0 });
+    scene.uiReset(hi, { opacity: 0, y: 0 });
+    return { el: parent, rows, hi, pitch, top, h: options.length * pitch };
+  },
+
+  /** Name / meta / action rows — a registry, plugin list, or search result. */
+  recordRows(scene, parent, records, { top = 0, pitch = 30 } = {}) {
+    const rows = records.map((r, i) => {
+      const row = el('cm-u-rec', parent, { top: `${top + i * pitch}px` });
+      el('', row, { color: 'var(--color-fg-subtle)' }).textContent = '›';
+      el('nm', row).textContent = r.name ?? '';
+      el('meta', row).textContent = r.meta ?? '';
+      const a = el(`act${r.done ? ' done' : ''}`, row);
+      a.textContent = r.action ?? '';
+      return { el: row };
+    });
+    scene.uiReset(rows.map((r) => r.el), { opacity: 0 });
+    return { el: parent, rows, h: records.length * pitch };
+  },
+
+  /** A tab bar with one active tab — says "this lives inside a bigger surface". */
+  tabStrip(scene, parent, tabs, { top = 0, active = 0 } = {}) {
+    const strip = el('cm-u-tabs', parent, { top: `${top}px` });
+    const els = tabs.map((label, i) => {
+      const t = el(`tab${i === active ? ' on' : ''}`, strip);
+      t.textContent = label;
+      return t;
+    });
+    scene.uiReset(strip, { opacity: 0 });
+    return { el: strip, tabs: els, h: 40 };
+  },
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -533,6 +832,8 @@ export const beats = {
     if (scene.labels.length) scene.push([scene.labels, { opacity: 0 }, R]);
     if (scene._caret) scene.push([scene._caret, { opacity: 0, x: 0, y: 0 }, R]);
     if (scene._sel)   scene.push([scene._sel, { opacity: 0 }, R]);
+    // Stylized-UI elements declared their own reset when they were built.
+    for (const [target, kf] of scene._ui) scene.push([target, kf, R]);
     return scene;
   },
 
@@ -683,5 +984,108 @@ export const beats = {
       );
     });
     return scene;
+  },
+
+  /* ── Stylized-UI beats ──────────────────────────────────────────────────
+     For walkthroughs built from the ui* shapes. They follow the same two
+     rules as everything above: absolute `at` only, and anything animated
+     here was registered for reset when its element was built. */
+
+  /**
+   * Type a line into the prompt bar. The clip width grows linearly and the
+   * caret rides its right edge — that pairing is what reads as *someone is
+   * typing* rather than as a bar filling. `hold` blanks the line again so the
+   * next step starts from an empty prompt.
+   */
+  typeText(scene, prompt, { at, index = 0, duration = .9, hold }) {
+    const wrap = prompt.wraps[index];
+    if (!wrap) return at;
+    const w = Number(wrap.dataset.w || 0);
+    scene.push(
+      [wrap, { width: [0, w] }, { at, duration, ease: 'linear' }],
+      [prompt.caret, { x: [0, w] }, { at, duration, ease: 'linear' }],
+    );
+    if (hold != null) scene.push(
+      [wrap, { width: 0 }, { at: hold, duration: .18, ease: EASE }],
+      [prompt.caret, { x: 0 }, { at: hold, duration: .18, ease: EASE }],
+    );
+    return at + duration;
+  },
+
+  /** Crossfade the model/mode slot — "the tool is in a different mode now". */
+  setMode(scene, prompt, cues, { fade = .22 } = {}) {
+    cues.forEach(([index, at], i) => {
+      const next = cues[i + 1];
+      const n = prompt.modeEls[index];
+      if (!n) return;
+      scene.push([n, { opacity: 1 }, { at, duration: fade }]);
+      if (next) scene.push([n, { opacity: 0 }, { at: next[1] - fade - .02, duration: fade }]);
+    });
+    return scene;
+  },
+
+  /**
+   * Bring one step forward and take the previous one away.
+   *
+   * The outgoing step leaves BEFORE the incoming one arrives (a gap, not a
+   * dissolve) because two legible interfaces on screen at once is unreadable —
+   * the viewer tries to read both and reads neither. This is the one place a
+   * walkthrough deliberately shows nothing.
+   */
+  showStep(scene, step, { at, out, duration = .3, rise = 10, feel = SPRINGS.sheet }) {
+    // A panel arriving — Apple's sheet spring, sampled so the clock stays absolute.
+    const { ease } = spring(feel);
+    scene.push([step, { opacity: [0, 1], y: [rise, 0] }, { at, duration, ease }]);
+    // The outgoing step leaves the way the sequence is travelling (upward), not
+    // back the way it came. Apple's mirror-the-path rule governs *reversible*
+    // transitions — a sheet that opens up dismisses down. A walkthrough only
+    // moves forward, so continuing the direction of travel is what reads as
+    // progression; reversing it would read as undo.
+    if (out) scene.push([out, { opacity: 0, y: -rise * .6 },
+                         { at: at - duration - .08, duration, ease: IN2 }]);
+    return at + duration;
+  },
+
+  /** Rows appear in reading order — the stagger is what makes it a sequence. */
+  revealRows(scene, shape, { at, per = .09, duration = .28 }) {
+    shape.rows.forEach((r, i) =>
+      scene.push([r.el, { opacity: [0, 1] }, { at: at + i * per, duration, ease: EASE_OUT }]));
+    return at + shape.rows.length * per + duration;
+  },
+
+  /** Fade a single UI element in (tab strip, echoed instruction, panel). */
+  revealUi(scene, target, { at, duration = .28, to = 1 }) {
+    scene.push([target, { opacity: to }, { at, duration, ease: EASE_OUT }]);
+    return at + duration;
+  },
+
+  /** The highlight walks the options — a choice being considered, then made. */
+  selectRow(scene, list, cues, { duration = .26, feel = SPRINGS.move } = {}) {
+    // Repositioning, so `move` (critically damped): no overshoot. Bounce is
+    // earned by momentum — a flick or a throw — and a keyboard selection has
+    // none. An overshooting highlight here would be decoration pretending to
+    // be physics.
+    const { ease } = spring(feel);
+    cues.forEach(([index, at], i) => {
+      if (i === 0) scene.push([list.hi, { opacity: 1 }, { at, duration: .18 }]);
+      scene.push([list.hi, { y: index * list.pitch }, { at, duration, ease }]);
+    });
+    return scene;
+  },
+
+  /**
+   * Grow the context meter and crossfade to its new reading.
+   *
+   * It only ever moves one way. A meter that dips implies work was undone,
+   * which is a different claim than the one a walkthrough is making.
+   */
+  meterTo(scene, chrome, { at, to, index, duration = .8 }) {
+    scene.push([chrome.fill, { scaleX: to }, { at, duration, ease: EASE }]);
+    if (index != null && chrome.pcts[index]) {
+      const prev = chrome.pcts[index - 1];
+      if (prev) scene.push([prev, { opacity: 0 }, { at, duration: .18 }]);
+      scene.push([chrome.pcts[index], { opacity: 1 }, { at, duration: .18 }]);
+    }
+    return at + duration;
   },
 };

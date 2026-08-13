@@ -75,6 +75,7 @@ diagram because it exists, when the claim was about something else entirely.
 | Improvement — learning, iteration, refinement | **Feedback loop.** Output re-enters input, each pass tighter | circulation |
 | Structure — architecture, layers, stack | **Exploded stack.** Layers separate along depth, each labelled | anatomy |
 | Scale — "handles millions of…" | **Multiplication.** One unit tiles into a field, then the field acts as one | mass |
+| Breadth — "it does all of this" | **Guided sequence.** Successive capabilities inside one persistent interface | a tour of one surface |
 | Change — before/after, migration | **Wipe or split.** Identical layout, two treatments | contrast |
 
 Notes that save rework:
@@ -99,7 +100,7 @@ something.
 | Register | Use when | Cost |
 |---|---|---|
 | **Abstract geometry** — bars, panels, dots | the claim is about a *process*; default for product concepts | viewer can't see the actual product |
-| **Stylized UI** — recognisable but drawn layout | the layout itself is the point | dates when the UI is redesigned |
+| **Stylized UI** — recognisable but drawn layout | the layout itself is the point; capability tours — see `ui-walkthrough.md` | dates when the UI is redesigned |
 | **Real screenshots / recording** | you're teaching an actual flow someone must reproduce | not really an animation — see below |
 | **Node graph** — nodes and edges | topology or connection is the point | reads as an engineering diagram, not a product story |
 | **Device silhouette** | the claim spans physical hardware | needs the industrial design to be settled |
@@ -132,6 +133,9 @@ polished animation that can't carry the message.
   number says *how much*.
 - **The viewer must reproduce the steps.** A screen recording with real UI is
   better than a stylized abstraction. Abstraction is for concepts, not tutorials.
+  Note the boundary: *reproducing* steps needs a recording, but *showing what a
+  product can do*, step after step, is a walkthrough and animates well — build it
+  in the stylized-UI register per `ui-walkthrough.md`.
 - **The content is mostly words.** If every beat needs a caption to make sense,
   the animation is carrying nothing — write the paragraph.
 - **There are more than about five beats.** Split into several short loops, or use

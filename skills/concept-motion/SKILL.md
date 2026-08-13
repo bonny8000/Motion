@@ -23,8 +23,14 @@ Inspect the supplied brief, files, reference media, and destination. Establish:
 - accessibility, runtime, file-size, network, and authoring constraints.
 
 Do not choose a library or scaffold before these decisions. If the claim is
-quantitative, static, or must be followed step by step, recommend a chart, diagram,
-or interactive flow instead of forcing it into animation.
+quantitative or static, recommend a chart, diagram, or interactive flow instead of
+forcing it into animation. If the viewer must reproduce exact steps in the real
+product, recommend a screen recording.
+
+Sequential does not by itself mean "not animation". A tour of what a product can
+do, shown inside one interface, is a **walkthrough** — it is neither a chart nor a
+tutorial, and `references/ui-walkthrough.md` covers it. Refuse a step-by-step brief
+only when the viewer must reproduce the steps, not merely because it has steps.
 
 ## Route to the right system layer
 
@@ -35,6 +41,7 @@ or interactive flow instead of forcing it into animation.
 | Create or reuse a transition, behavior, or narrative pattern | `references/component-patterns.md` | component contract or beat pattern |
 | Set composition, typography, color, material, or brand character | `references/art-direction-and-layout.md` | art-direction frame and layout rules |
 | Translate an idea into an explanatory mechanism | `references/intent-to-mechanism.md` | claim, representation, mechanism |
+| Tour several capabilities inside one legible interface | `references/ui-walkthrough.md` | stylized-UI walkthrough, persistent chrome |
 | Match supplied motion evidence | `references/reference-fidelity.md` | fidelity contract and comparison board |
 | Preserve object meaning across beats | `references/semantic-continuity.md` | object ledger and causal beat sheet |
 | Implement with the reusable kit | `references/mechanisms.md` | scene assembled from shapes and beats |
@@ -88,6 +95,7 @@ timing polish cannot repair an incorrect story.
 | Constraint | Track |
 |---|---|
 | Reusable scene source and deterministic export | `lib/kit.js` + a copied kit scene |
+| Legible product or CLI walkthrough | `lib/kit.js` `ui*` shapes + `references/ui-walkthrough.md` |
 | Single offline HTML or unknown network/CSP | inline Web Animations API |
 | Simple continuous progression | `assets/scene-template.html` CSS clock |
 | Interactive React motion | Motion track in `references/motion-track.md` |
@@ -152,6 +160,7 @@ Generic polish never overrides observed evidence or product meaning.
 - `references/system-foundations.md` — system layers, principles, token model, motion profiles.
 - `references/visual-foundations.md` — role-based color, type, spacing, radius, elevation, and themes.
 - `references/component-patterns.md` — reusable component contract and pattern catalog.
+- `references/ui-walkthrough.md` — the stylized-UI register: legible interface tours, persistent chrome, step choreography.
 - `references/art-direction-and-layout.md` — composition, typography, color, material, camera.
 - `references/accessibility-delivery-qa.md` — comfort, responsive behavior, performance, export, QA.
 - `references/adoption-and-governance.md` — inventory, migration, contribution, versioning, ownership.
@@ -159,6 +168,7 @@ Generic polish never overrides observed evidence or product meaning.
 - `lib/kit.js` — reusable stage, shape, and beat implementation.
 - `assets/` — known-working kit, WAAPI, and CSS-clock scenes.
 - `assets/scene-system-showcase.html` — role-token, studio-theme, and component-registry example.
+- `assets/scene-ui-walkthrough.html` — stylized-UI walkthrough: four capabilities, one persistent frame.
 - `scripts/reference-board.mjs` — normalized evidence board from goal media.
 - `scripts/export.mjs` — serve, seek, capture, review sheet, and encode.
 - `scripts/layout-audit.mjs` — keyframe layout and collision gate.

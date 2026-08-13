@@ -59,6 +59,21 @@ Spatial-consistency and symmetric-path guidance derives from Apple's
 *Designing Fluid Interfaces* (WWDC 2018), by way of the `apple-design` skill in
 the repository above. Referenced as prior art, not reproduced.
 
+`skills/concept-motion/references/ui-walkthrough.md` and the `SPRINGS` presets in
+`lib/kit.js` additionally adapt, from that same `apple-design` skill: the
+damping-ratio / response spring parameterisation in place of
+mass/stiffness/damping, Apple's shipped values for move, rotation and
+drawer interactions, the "bounce is earned by momentum" rule, feedback-on-press,
+continuous-rather-than-terminal feedback, and anchor-to-source origins.
+Typography guidance (size-specific tracking, hierarchy from weight and leading)
+comes from *The Details of UI Typography* (WWDC 2020) by the same route.
+
+That material describes interactive, gesture-driven UI. This skill produces
+non-interactive explanatory motion, so the springs are **sampled** into fixed
+easing functions to preserve deterministic seeking, and `ui-walkthrough.md`
+records which principles — interruptibility, 1:1 tracking, velocity handoff,
+momentum projection, rubber-banding — deliberately do **not** transfer.
+
 ## Motion (motion.dev)
 
 Scenes load Motion at runtime from a CDN; it is not vendored here.

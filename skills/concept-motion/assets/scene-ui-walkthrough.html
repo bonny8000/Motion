@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UI walkthrough — four capabilities in one surface</title>
+</head>
+<body>
+<script type="module">
+/**
+ * MECHANISM: guided sequence — successive capabilities shown inside one
+ *            persistent interface.
+ * CLAIM:     "this one surface does all of these things, and here is each."
+ * REGISTER:  stylized UI (legible), NOT abstract geometry. See
+ *            references/ui-walkthrough.md for when that trade is correct.
+ *
+ * The frame never moves. Only the content inside it changes, and the context
+ * meter only ever grows — together those two facts are what say "one session,
+ * four things" rather than "four unrelated clips edited together."
+ *
+ * Transferring a different product onto this mechanism means changing:
+ *   1. CHROME  — the path and the meter readings
+ *   2. STEPS   — the instruction, the note, and the shape each step reveals
+ *   3. TIMING  — the T block
+ * The beats stay as they are.
+ */
+import { createScene, shapes, beats } from '../lib/kit.js';
+
+/* ── beat sheet ──────────────────────────────────────────────────────────────
+   | Beat | at    | Changes                              | Says                     |
+   |------|-------|--------------------------------------|--------------------------|
+   | 1    | 0.30  | chrome fades in                      | "a workspace exists"     |
+   | 2    | 0.80  | a slash command types                 | "the user asks"          |
+   | 3    | 2.15  | step A: note + added lines            | "it edited the code"     |
+   | 4    | 6.00  | a sentence types, mode → plan         | "plain language works"   |
+   | 5    | 7.50  | step B: added AND removed lines       | "it can remove things"   |
+   | 6    | 11.6  | a request types, mode → ask           | "it manages its own kit" |
+   | 7    | 13.0  | step C: tabs + registry rows          | "extensions live here"   |
+   | 8    | 17.6  | step D: options, highlight moves      | "it asks before acting"  |
+   | 9    | 22.4  | highlight lands on the chosen option  | "the user decides"       |
+   ──────────────────────────────────────────────────────────────────────────── */
+const T = {
+  chrome: 0.30,
+  a: { type: 0.80, dur: 1.15, hold: 2.05, show: 2.15, note: 2.45, rows: 2.95 },
+  b: { type: 6.00, dur: 1.30, hold: 7.40, show: 7.50, note: 7.80, rows: 8.30 },
+  c: { type: 11.60, dur: 1.20, hold: 12.90, show: 13.00, note: 13.30, rows: 13.80 },
+  d: { show: 17.60, note: 17.90, rows: 18.30 },
+  picks: [[1, 19.9], [2, 21.1], [1, 22.4]],
+  cycle: 26.60,
+};
+
+const scene = createScene({ w: 1600, h: 900, card: { w: 1300, h: 760 } });
+const panel = scene.panel();
+
+// 1. CHROME — persistent for the whole run
+const chrome = scene.chrome({
+  path: 'projects/main  jasong/folder',
+  percents: ['79.43%', '84.10%', '88.25%', '95.59%'],
+  meterFrom: .62,
+});
+const prompt = scene.promptBar({
+  top: 668,
+  model: 'grok-4.6',
+  modes: ['always-approve', 'plan', 'ask'],
+  lines: [
+    '/make-interfaces-feel-better',
+    'Migrate auth from sessions to JWT with token rotation.',
+    'install browser-review and open its skills',
+  ],
+});
+
+// 2. STEPS — each is one screen; only one is ever legible
+const stepA = scene.step({ top: 96 });
+const echoA = shapes.uiEcho(scene, stepA, '/make-interfaces-feel-better', { top: 0 });
+const noteA = shapes.uiNote(scene, stepA, 'Thought for 2.5s', { top: 74 });
+const editA = shapes.uiNote(scene, stepA, '◆ Edit', { top: 116, accent: 'src/api/checkout.ts' });
+const diffA = shapes.diffRows(scene, stepA, [
+  { n: 42, text: 'export async function checkout(cart: Cart) {' },
+  { n: 43, text: '  const total = calculateTotal(cart.items);' },
+  { n: 44, text: '  if (total <= 0) {', state: 'add' },
+  { n: 45, text: "    throw new ValidationError('Cart total must be positive');", state: 'add' },
+  { n: 46, text: '  }', state: 'add' },
+  { n: 47, text: '' },
+  { n: 48, text: '  const charge = await stripe.charges.create({' },
+  { n: 49, text: '    amount: total,' },
+], { top: 160 });
+
+const stepB = scene.step({ top: 96 });
+const echoB = shapes.uiEcho(scene, stepB, 'Migrate auth from sessions to JWT with token rotation.', { top: 0 });
+const noteB = shapes.uiNote(scene, stepB, 'Thought for 3.4s', { top: 74 });
+const editB = shapes.uiNote(scene, stepB, '◆ Edit', { top: 116, accent: 'src/middleware/auth.ts' });
+const diffB = shapes.diffRows(scene, stepB, [
+  { n: 42, text: 'export async function authMiddleware(req: Request) {' },
+  { n: 43, text: '  const token = req.headers.get("authorization")?.replace("Bearer ", "");', state: 'add' },
+  { n: 44, text: '  if (!token) return new Response("Unauthorized", { status: 401 });', state: 'add' },
+  { n: 45, text: '  try {' },
+  { n: 46, text: '    const { payload } = await jwtVerify(token, JWT_SECRET);', state: 'add' },
+  { n: 47, text: '    // legacy session check removed', state: 'del' },
+  { n: 48, text: '    req.user = payload;', state: 'add' },
+], { top: 160 });
+
+const stepC = scene.step({ top: 96 });
+const echoC = shapes.uiEcho(scene, stepC, 'install browser-review and open its skills', { top: 0 });
+const tabsC = shapes.tabStrip(scene, stepC,
+  ['Hooks', 'Plugins', 'Marketplace', 'Skills', 'MCP Servers'], { top: 74, active: 1 });
+const noteC = shapes.uiNote(scene, stepC, '/ to search', { top: 128 });
+const recsC = shapes.recordRows(scene, stepC, [
+  { name: 'team-tool',        meta: '(project)',   action: '[install]' },
+  { name: 'browser-review',   meta: 'v0.8.2  (workspace)', action: '[install]' },
+  { name: 'github-flow',      meta: 'v2.1.0  (workspace)', action: '[install]' },
+  { name: 'xai-code-review',  meta: 'v1.0.0  (workspace)', action: '[installed]', done: true },
+], { top: 172, pitch: 34 });
+
+const stepD = scene.step({ top: 96 });
+const noteD = shapes.uiNote(scene, stepD, '⋮ Waiting on answers for 3 questions', { top: 0, dim: false });
+const optsD = shapes.optionList(scene, stepD, [
+  { key: '1', title: 'Minimal & terminal-native', sub: 'Clean, keyboard-first, no excess chrome' },
+  { key: '2', title: 'Bold & expressive',         sub: 'Strong visuals, gradients, animations' },
+  { key: '3', title: 'Developer-focused',         sub: 'Code-first aesthetic, technical precision' },
+  { key: '4', title: 'Other',                     sub: 'Define custom principles' },
+], { top: 52, pitch: 62 });
+const hintD = shapes.uiNote(scene, stepD, '[1/3]  ↑/↓ navigate  ·  ←/→ question  ·  Enter: select', { top: 312 });
+
+// 3. BEATS
+beats.reset(scene, { panel });
+beats.fillPanel(scene, panel, { at: 0, duration: .01 });
+beats.revealUi(scene, chrome.el, { at: T.chrome });
+beats.revealUi(scene, prompt.el, { at: T.chrome });
+beats.meterTo(scene, chrome, { at: T.chrome, to: .62, index: 0, duration: .3 });
+
+// Step A
+beats.typeText(scene, prompt, { at: T.a.type, index: 0, duration: T.a.dur, hold: T.a.hold });
+beats.showStep(scene, stepA, { at: T.a.show });
+beats.revealUi(scene, echoA.el, { at: T.a.show });
+beats.revealUi(scene, noteA.el, { at: T.a.note });
+beats.revealUi(scene, editA.el, { at: T.a.note + .3 });
+beats.revealRows(scene, diffA, { at: T.a.rows });
+beats.meterTo(scene, chrome, { at: T.a.rows, to: .70, index: 1 });
+
+// Step B
+beats.typeText(scene, prompt, { at: T.b.type, index: 1, duration: T.b.dur, hold: T.b.hold });
+beats.showStep(scene, stepB, { at: T.b.show, out: stepA });
+beats.revealUi(scene, echoB.el, { at: T.b.show });
+beats.revealUi(scene, noteB.el, { at: T.b.note });
+beats.revealUi(scene, editB.el, { at: T.b.note + .3 });
+beats.revealRows(scene, diffB, { at: T.b.rows });
+beats.meterTo(scene, chrome, { at: T.b.rows, to: .78, index: 2 });
+
+// Step C
+beats.typeText(scene, prompt, { at: T.c.type, index: 2, duration: T.c.dur, hold: T.c.hold });
+beats.showStep(scene, stepC, { at: T.c.show, out: stepB });
+beats.revealUi(scene, echoC.el, { at: T.c.show });
+beats.revealUi(scene, tabsC.el, { at: T.c.note });
+beats.revealUi(scene, noteC.el, { at: T.c.note + .25 });
+beats.revealRows(scene, recsC, { at: T.c.rows, per: .12 });
+
+// Step D — the product asks, and waits
+beats.showStep(scene, stepD, { at: T.d.show, out: stepC });
+beats.revealUi(scene, noteD.el, { at: T.d.note });
+beats.revealRows(scene, optsD, { at: T.d.rows, per: .11 });
+beats.revealUi(scene, hintD.el, { at: T.d.rows + .7 });
+beats.selectRow(scene, optsD, T.picks);
+beats.meterTo(scene, chrome, { at: T.d.rows, to: .90, index: 3 });
+
+beats.setMode(scene, prompt, [[0, T.chrome], [1, T.b.type - .3], [2, T.c.type - .3]]);
+
+scene.run({ cycle: T.cycle, still: T.b.rows + .8 });
+</script>
+</body>
+</html>

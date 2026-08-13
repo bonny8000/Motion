@@ -43,6 +43,31 @@ the reset discipline, the label sequencing and the export path are already solve
 | `collapse` | the closing scale-to-a-point |
 | `labelCues` | state labels, sequenced so they never overlap |
 
+Stylized-UI register (legible mocks — see `ui-walkthrough.md` first):
+
+| Shapes | What it represents |
+|---|---|
+| `uiEcho` | the instruction, echoed back |
+| `uiNote` | a quiet status line, optionally naming a path or tool |
+| `diffRows` | numbered lines with added / removed tint |
+| `optionList` | radio options with a moving highlight |
+| `recordRows` | a registry, plugin list, or result set |
+| `tabStrip` | a tab bar with one active tab |
+
+| Beats | Does |
+|---|---|
+| `typeText` | a prompt line types, caret riding the growing edge |
+| `showStep` | cross-fade to the next step, with a gap so only one is legible |
+| `revealRows` | rows appear in reading order |
+| `revealUi` | fade one UI element in |
+| `selectRow` | the highlight walks the options |
+| `setMode` | crossfade the mode slot |
+| `meterTo` | grow the context meter and update its reading |
+
+Plus `scene.chrome()`, `scene.promptBar()` and `scene.step()` for the persistent
+frame. Every `ui*` element registers its own reset, so `beats.reset` restores
+them without the scene enumerating them.
+
 Shapes declare `enterMode` (`growX` / `popIn`) and `convertMode` (`wipeX` /
 `fade`); the beats respect both, so a new shape gets correct behaviour for free.
 
@@ -52,6 +77,10 @@ Shapes declare `enterMode` (`growX` / `popIn`) and `convertMode` (`wipeX` /
   through named states. The reference reproduction.
 - **`assets/scene-field-collapse.html`** — field collapse. Many candidates, most
   recede, a few resolve. Search, ranking, matching, filtering, triage.
+- **`assets/scene-ui-walkthrough.html`** — guided sequence, in the stylized-UI
+  register. Four capabilities inside one persistent frame. Uses the `ui*` shapes
+  and beats rather than the abstract vocabulary above; read `ui-walkthrough.md`
+  first, because legible type is a deliberate trade, not an upgrade.
 
 ## Recipes
 

@@ -71,6 +71,7 @@ skills/concept-motion/
 │   ├── scene-field-collapse.html     working scene: many candidates narrow to a few
 │   ├── scene-race-streaming.html     working scene: A/B comparison, zero-dependency WAAPI
 │   ├── scene-system-showcase.html    studio theme + tokens + component registry showcase
+│   ├── scene-ui-walkthrough.html     working scene: capability tour in a legible UI
 │   └── scene-template.html           standalone CSS-clock scaffold, zero deps
 ├── references/
 │   ├── system-foundations.md         principles, profiles, semantic motion tokens
@@ -85,6 +86,7 @@ skills/concept-motion/
 │   ├── polish.md                     material profiles, expressive easing, choreography
 │   ├── motion-craft.md               easing, physicality, vocabulary, review pass
 │   ├── house-style.md                palette, curves, visual vocabulary
+│   ├── ui-walkthrough.md             stylized-UI register: legible interface tours
 │   └── motion-track.md               Motion API guidance + silent failure modes
 └── scripts/
     ├── reference-board.mjs            probe and sample goal footage

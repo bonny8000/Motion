@@ -41,6 +41,13 @@ Element vocabulary:
 Vary bar widths and indentation irregularly. Evenly sized bars read as a loading
 skeleton (broken); irregular ones read as content.
 
+**The sanctioned exception.** When the interface itself is the claim — a
+capability tour, a launch clip, a changelog reel — legible UI is correct and this
+vocabulary is not. That register has its own component table, its own rules and
+its own costs (staleness, localization, a 720p floor); see
+`ui-walkthrough.md`. It is an exception, not a default: reach for it only when
+you can say which specific interface state carries the message.
+
 Keep the panel fill perfectly flat, with a 1–2px radius. Gradients, pill ends and
 shadows fight the flatness that makes this style read as diagrammatic rather than
 as a screenshot. If the brief calls for a softer product-UI material instead,
