@@ -190,5 +190,4 @@ needed.
 
 ## License
 
-Not yet chosen — add one before relying on this in other projects. The
-third-party obligations in [NOTICE.md](NOTICE.md) apply regardless.
+Not yet chosen — add one before relying on this in other projects.

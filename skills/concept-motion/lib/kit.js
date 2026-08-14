@@ -52,8 +52,7 @@ export const IN2   = [.55, .085, .68, .53];       // power2.in  — exits only
    above: separate curves for entering and leaving, plus expressive variants for
    the one move that should be felt. `UI_ENTER` is aggressively front-loaded —
    almost all of the distance is covered before the halfway point — which is why
-   arriving UI reads as immediate without feeling abrupt.
-   Third-party provenance for these values is recorded in NOTICE.md. */
+   arriving UI reads as immediate without feeling abrupt. */
 export const UI_EASING  = [.35, 0, .35, 1];       // functional micro-motion
 export const UI_ENTER   = [0, 0, .15, 1];         // something arriving
 export const UI_EXIT    = [.35, 0, 1, 1];         // something leaving
