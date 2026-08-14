@@ -263,6 +263,37 @@ kinetic-text pattern, and reduced-motion still. A palette preview alone is insuf
 - `productLight` / `productDark` — a complete light/dark pair on the layered-surface
   model, carrying the full intent set; the pair to reach for when a clip has to
   sit inside a shipped interface and look like the same hand made both.
+- `illustrationLight` — the flat tonal spot-illustration language. See below.
+
+### The flat tonal register
+
+The style used for marketing spot illustrations and docs diagrams: one hue
+family, flat fills, oversized radii, and a single high-contrast ink. It reads
+as *drawn* rather than as *captured*, which makes it the right choice when the
+subject is a concept rather than a product surface.
+
+Four rules, and the first one breaks a habit every other theme here teaches:
+
+- **The surface is darker than the canvas.** Cards are a deeper tint of the same
+  background hue, and content sits on them in white. Depth is a tonal step, not
+  elevation.
+- **No borders and no shadows. Ever.** A 1px stroke or a soft shadow instantly
+  collapses this into a generic UI mock. If two things need separating, change
+  the tone.
+- **Content placeholders are white pills** — full `999px` radius, irregular
+  widths. Never grey bars, never square ends.
+- **One ink, spent deliberately.** `color-stroke` is a near-black navy used only
+  for connectors, arrowheads and primary type. On a pale field it is the only
+  real contrast in the frame, so it belongs on whatever the eye should follow —
+  usually the line that shows the relationship.
+
+Identity is carried by a **saturated dot**, not by tinting the card. Two cards
+of the same tint holding different coloured dots read as two instances of one
+kind of thing, which is exactly what the style is good at saying.
+
+Connectors are the signature move: a generous curve with a solid triangular
+arrowhead, in the ink colour, crossing open space. Give them room — this style
+needs whitespace to work, and cramping the field is what makes it look cheap.
 
 `MOTION_PROFILES.product` carries the matching curves and durations. Take the
 curves freely; take the durations only for product-embedded work. That scale

@@ -82,6 +82,24 @@ For kinetic typography, animate semantic units—phrase, word, or number—rathe
 letters by default. Letter-level choreography is an expressive exception and must
 still preserve the complete message in the payoff frame.
 
+### No title unless it was asked for
+
+**Do not put the topic name on the artifact by default.** A clip almost always
+arrives somewhere that already names it — a slide with a heading, a doc section,
+a figure caption, a deck built around the term. Repeating it inside the frame
+duplicates what the surroundings say, spends the largest type in the composition
+on the one thing the viewer already knows, and shrinks the subject to make room.
+
+Set a title only when the request asks for one, or when the artifact genuinely
+travels alone with nothing around it to name it — a standalone social post, a
+looping screen with no caption. If in doubt, leave it out; adding one later is a
+single element, while a composition designed around a title has to be re-laid
+out to remove it.
+
+The same restraint applies to a subtitle or a caption track. Diegetic text is
+different and stays: labels *inside* the depicted thing (an axis, a target, a
+readout, a message in a chat) are content, not narration about content.
+
 ## Color and state
 
 Assign color roles before choosing values:

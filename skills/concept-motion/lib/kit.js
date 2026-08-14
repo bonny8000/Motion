@@ -297,6 +297,50 @@ export const THEMES = {
     radiusTile:         '10px',
     shadowPanel:        '0 12px 32px rgba(26,28,32,.10), 0 1px 3px rgba(26,28,32,.06)',
   },
+  /* ── Flat tonal illustration ─────────────────────────────────────────────
+     The spot-illustration language: one hue family, flat fills, NO borders and
+     NO shadows, oversized radii, and a single high-contrast ink for connectors.
+
+     One inversion to hold in your head, because it breaks the habit every other
+     theme here teaches: the SURFACE IS DARKER THAN THE CANVAS. Cards are a
+     deeper tint of the same background hue, and content sits on them in white.
+     Depth comes from tonal step, never from elevation — reaching for a shadow
+     or a 1px border is what makes this style collapse into a generic UI mock.
+
+     `colorStroke` is the ink: near-black navy, used only for connectors,
+     arrowheads and primary type. Against a pale field it is the only real
+     contrast in the frame, so spend it on the thing the eye should follow. */
+  illustrationLight: {
+    colorCanvas:        '#eef2fb',
+    colorSurface:       '#d4ddf7',
+    colorSurfaceRaised: '#ffffff',
+    colorFgPrimary:     '#2f3a4c',
+    colorFgMuted:       '#6b7a99',
+    colorFgSubtle:      '#93a2c0',
+    colorFgDisabled:    '#bcc8e4',
+    colorAccent:        '#3b7ae0',
+    colorAccentSoft:    'rgba(59,122,224,.16)',
+    colorStroke:        '#2f3a4c',
+    colorStrokeSubtle:  'rgba(47,58,76,.16)',
+    colorPositive:      '#12a37c',
+    colorPositiveWeak:  '#d6f0e6',
+    colorCritical:      '#f0707f',
+    colorCriticalWeak:  '#fbdfe3',
+    colorWarning:       '#e2a33c',
+    colorWarningWeak:   '#f9ecd6',
+    colorInformative:   '#3b7ae0',
+    colorInformativeWeak:'#dbe6fb',
+    colorMagic:         '#8e7bf0',
+    colorMagicWeak:     '#e5e0fc',
+    colorGutter:        '#93a2c0',
+    radiusPanel:        '22px',
+    radiusBar:          '999px',
+    radiusCode:         '999px',
+    radiusRow:          '999px',
+    radiusTile:         '18px',
+    shadowPanel:        'none',
+    strokeFrame:        '2px',
+  },
   productDark: {
     colorCanvas:        '#000000',
     colorSurface:       '#16171b',

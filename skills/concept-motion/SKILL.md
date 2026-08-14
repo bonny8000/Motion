@@ -140,6 +140,12 @@ For a system:
 
 ### 8. Show the result
 
+**No title on the artifact unless the request asked for one.** A clip nearly
+always lands somewhere that already names it, so a title card duplicates the
+surroundings and spends the largest type in the frame on the one thing the
+viewer already knows. Labels *inside* the depicted thing are content and stay;
+narration about the piece does not. See `references/art-direction-and-layout.md`.
+
 Deliver the actual scene, motion specification, token set, component contract, or
 review board. State what is reusable, what is scene-specific, and what remains a
 deliberate exception. Do not hand off only a prose description when an artifact was
