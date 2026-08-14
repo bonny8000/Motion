@@ -188,21 +188,6 @@ If a scene must survive an unknown network, prefer WAAPI. Each element gets one
 animation covering the full cycle, so the loop resets itself and no reset block is
 needed.
 
-## Credits
-
-Craft rules, easing curves, the motion vocabulary and the review discipline are
-adapted from [Emil Kowalski's skills](https://github.com/emilkowalski/skills)
-(MIT). His material targets interactive UI; `references/motion-craft.md` documents
-which of those rules deliberately do **not** apply to non-interactive explanatory
-motion.
-
-`references/polish.md` adapts the choreography model and motion defaults from
-[Meng To's animation-systems](https://github.com/MengTo/Skills), and the ease
-vocabulary from [GreenSock's official GSAP skills](https://github.com/greensock/gsap-skills)
-(MIT) — used as `cubic-bezier` equivalents, so no library dependency is added.
-
-Full notices in [NOTICE.md](NOTICE.md).
-
 ## License
 
 Not yet chosen — add one before relying on this in other projects. The
