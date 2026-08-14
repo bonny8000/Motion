@@ -15,7 +15,7 @@
  * The claim is intentionally about the system itself: foundations become
  * components, components become patterns, and review resolves each one.
  *
- * This is also the smoke test for the SEED-derived layer — `seedLight` theme
+ * This is also the smoke test for the role layer — the `productLight` theme
  * plus the intent roles. Two outcomes are shown, and they are two genuine
  * CLAIMS rather than two decorations: what passed review (`positive`) and what
  * was rejected (`critical`). That is the bar `visual-foundations.md` sets for
@@ -25,10 +25,10 @@
  * scale up and hold position; rejected items dim and stay put. Colour
  * reinforces the read — position, brightness and scale carry it.
  *
- * Note the profile: `calm`, not `seed`. SEED's durations top out at 300ms
- * because they are tuned for motion a user triggers. In a 9.5s narrative a
- * 150ms beat reads as a flicker. Take its curves; take its durations only for
- * product-embedded work.
+ * Note the profile: `calm`, not `product`. The product cadence tops out at
+ * 300ms because it is tuned for motion a user triggers. In a 9.5s narrative a
+ * 150ms beat reads as a flicker. Take those curves; take their durations only
+ * for product-embedded work.
  */
 import { createScene, shapes, beats } from '../lib/kit.js';
 
@@ -44,7 +44,7 @@ const T = {
 };
 
 const scene = createScene({
-  theme: 'seedLight',
+  theme: 'productLight',
   motion: 'calm',
   card: { w: 1240, h: 610 },
   labelTop: 38,

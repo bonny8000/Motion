@@ -41,18 +41,18 @@
  * applies to the segment starting at that stop.
  */
 :root{
-  /* seedLight roles — SEED Design (Apache-2.0), see NOTICE.md */
+  /* productLight roles — see references/visual-foundations.md */
   --canvas:#f3f4f5; --surface:#ffffff; --raised:#f4f5f7;
   --fg:#1a1c20; --muted:#555d6d; --subtle:#868b94; --disabled:#d9dbe0;
   --stroke:#e4e6ea;
   --accent:#217cf9;
   --positive:#079171; --positive-weak:#e9f7f2;
   --cycle:6s;
-  /* curve vocabulary, from lib/kit.js and SEED's timing-function tokens */
+  /* curve vocabulary, from lib/kit.js */
   --out:cubic-bezier(.23,1,.32,1);        /* EASE_OUT   — entering  */
   --inout:cubic-bezier(.77,0,.175,1);     /* EASE_IN_OUT— moving    */
-  --enterx:cubic-bezier(.03,.4,.1,1);     /* SEED enter-expressive  */
-  --soft:cubic-bezier(.35,0,.35,1);       /* SEED easing — idle     */
+  --enterx:cubic-bezier(.03,.4,.1,1);     /* expressive enter        */
+  --soft:cubic-bezier(.35,0,.35,1);       /* functional — idle       */
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;background:var(--canvas);

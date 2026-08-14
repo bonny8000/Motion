@@ -48,18 +48,17 @@ export const EXPO  = [.19, 1, .22, 1];            // expo.out   — most dramati
 export const BACK  = [.34, 1.56, .64, 1];         // back.out   — overshoot, ONCE per scene
 export const IN2   = [.55, .085, .68, .53];       // power2.in  — exits only
 
-/* SEED Design's timing functions, adopted from its `timing-function` tokens
-   (Apache-2.0, see NOTICE.md). A shipped product system rather than generic
-   craft advice, and its split is sharper than ours: separate curves for
-   entering and leaving, plus expressive variants for the one move that should
-   be felt. `enter` is aggressively front-loaded — almost all of the distance is
-   covered before the halfway point — which is why arriving UI feels immediate
-   without feeling abrupt. */
-export const SEED_EASING = [.35, 0, .35, 1];      // functional micro-motion
-export const SEED_ENTER  = [0, 0, .15, 1];        // something arriving
-export const SEED_EXIT   = [.35, 0, 1, 1];        // something leaving
-export const SEED_ENTER_X = [.03, .4, .1, 1];     // expressive arrival
-export const SEED_EXIT_X  = [.35, 0, .95, .55];   // expressive departure
+/* Product-UI timing functions — a sharper split than the general-purpose curves
+   above: separate curves for entering and leaving, plus expressive variants for
+   the one move that should be felt. `UI_ENTER` is aggressively front-loaded —
+   almost all of the distance is covered before the halfway point — which is why
+   arriving UI reads as immediate without feeling abrupt.
+   Third-party provenance for these values is recorded in NOTICE.md. */
+export const UI_EASING  = [.35, 0, .35, 1];       // functional micro-motion
+export const UI_ENTER   = [0, 0, .15, 1];         // something arriving
+export const UI_EXIT    = [.35, 0, 1, 1];         // something leaving
+export const UI_ENTER_X = [.03, .4, .1, 1];       // expressive arrival
+export const UI_EXIT_X  = [.35, 0, .95, .55];     // expressive departure
 
 /* ── Sampled springs ────────────────────────────────────────────────────────
    Apple parameterises springs as damping ratio + response rather than
@@ -184,17 +183,16 @@ export const FOUNDATION_TOKENS = {
 
   /* ── Intent roles ────────────────────────────────────────────────────────
      One accent forces every scene to say everything in one colour, which is
-     why a whole library of them ends up looking like a single style. These are
-     the functional roles from SEED Design's colour system (Apache-2.0, see
-     NOTICE.md), whose model is Property × Role × Variant: foreground /
-     background / stroke, crossed with brand, neutral, positive, critical,
-     warning and informative, in solid and weak variants.
+     why a whole library of them ends up looking like a single style. The model
+     is Property × Role × Variant: foreground / background / stroke, crossed
+     with brand, neutral, positive, critical, warning and informative, in solid
+     and weak variants.
 
      Adopt the ROLE, not the decoration. A scene earns a second colour when it
      is making a second *claim* — this failed, this succeeded, this is
      uncertain. See references/visual-foundations.md before reaching for one.
 
-     Values below are the dark-theme readings; `THEMES.seedLight` swaps them. */
+     Values below are the dark-theme readings; `THEMES.productLight` swaps them. */
   colorPositive:      '#22b27f',
   colorPositiveWeak:  '#202926',
   colorCritical:      '#ff6e60',
@@ -210,8 +208,8 @@ export const FOUNDATION_TOKENS = {
 /* Six categorical hues for the rare scene with genuinely peer series — lanes,
    tracks, competing candidates. Peer means *no ranking*: the moment one series
    matters more than the others, use emphasis (accent vs neutral) instead, or
-   load the `dataviz` skill if the claim is quantitative. Values are SEED's
-   palette at the 600 step, light and dark. */
+   load the `dataviz` skill if the claim is quantitative. Light and dark
+   readings of the same six hues. */
 export const HUES = {
   light: ['#5e98fe', '#10ab7d', '#fc6a66', '#c49725', '#9f84fb', '#b0b3ba'],
   dark:  ['#1e82eb', '#1b946d', '#f73526', '#b6720d', '#8e6bee', '#868b94'],
@@ -262,16 +260,15 @@ export const THEMES = {
     shadowPanel:        '0 30px 76px rgba(0,0,0,.34), 0 1px 0 rgba(255,255,255,.05) inset',
   },
 
-  /* ── SEED Design themes ──────────────────────────────────────────────────
-     Neutral and intent roles mapped from SEED's own tokens (Apache-2.0, see
-     NOTICE.md): canvas ← bg.layer-basement, surface ← bg.layer-default,
-     raised ← bg.layer-fill, foregrounds ← fg.neutral / -muted / -disabled.
+  /* ── Product themes ──────────────────────────────────────────────────────
+     A complete light/dark pair on the layered-surface model: canvas is the
+     basement, surface the default layer, raised the fill layer, with
+     foregrounds at neutral / muted / subtle / disabled.
 
-     `colorAccent` deliberately does NOT ship SEED's brand orange. That colour
-     is a Karrot brand resource under the trademark terms in their NOTICE, not
-     part of the Apache grant — set it yourself if you hold the rights. The
-     default here is the informative role, which is functional and unowned. */
-  seedLight: {
+     `colorAccent` deliberately carries no brand identity — it defaults to the
+     informative role, which is functional and unowned. Set it to your own
+     brand colour; never borrow one you do not hold the rights to. */
+  productLight: {
     colorCanvas:        '#f3f4f5',
     colorSurface:       '#ffffff',
     colorSurfaceRaised: '#f7f8f9',
@@ -301,7 +298,7 @@ export const THEMES = {
     radiusTile:         '10px',
     shadowPanel:        '0 12px 32px rgba(26,28,32,.10), 0 1px 3px rgba(26,28,32,.06)',
   },
-  seedDark: {
+  productDark: {
     colorCanvas:        '#000000',
     colorSurface:       '#16171b',
     colorSurfaceRaised: '#1d2025',
@@ -339,19 +336,18 @@ export const MOTION_PROFILES = {
     exit: .28, transform: .72, emphasis: 1.05, stagger: .075,
     enterEase: OUT3, moveEase: EXPO, exitEase: IN2,
   },
-  /* SEED's curves on SEED's duration scale (d1 50ms … d6 300ms), with its
-     macro/micro split: micro-motion sits at or under 200ms, macro above it.
-     Correct when the clip has to sit inside a product built on that system and
-     feel like the same hand made both.
+  /* Product-UI cadence: a 50–300ms scale with a macro/micro split — micro-motion
+     sits at or under 200ms, macro above it. Correct when the clip has to sit
+     inside a shipped interface and feel like the same hand made both.
 
-     Do not reach for it by default. Those durations are tuned for motion a
+     Do not reach for it by default. These durations are tuned for motion a
      user *triggers*, where waiting is the cost. An explainer the viewer only
      watches usually needs the slower `calm` profile — a 150ms beat in a
      6-second narrative reads as a flicker, not as snappiness. */
-  seed: {
+  product: {
     feedback: .10, enterSupporting: .15, enterPrimary: .25,
     exit: .20, transform: .30, emphasis: .30, stagger: .04,
-    enterEase: SEED_ENTER, moveEase: SEED_EASING, exitEase: SEED_EXIT,
+    enterEase: UI_ENTER, moveEase: UI_EASING, exitEase: UI_EXIT,
   },
 };
 

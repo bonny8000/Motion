@@ -66,9 +66,8 @@ across a library, that is exactly what makes a set of clips look like one style
 repeated rather than a system applied — every claim, whatever it is, arrives as
 the same blue.
 
-The fix is not more colours. It is colours that mean something. This is SEED
-Design's model (Apache-2.0, see `NOTICE.md`), which crosses three properties
-with a set of functional roles:
+The fix is not more colours. It is colours that mean something — a model that
+crosses three properties with a set of functional roles:
 
 **Property** — foreground, background, stroke
 **Role** — brand, neutral, positive, critical, warning, informative
@@ -261,20 +260,21 @@ kinetic-text pattern, and reduced-motion still. A palette preview alone is insuf
 - `studioLight` — light neutral canvas, warm accent, concentric rounded geometry,
   restrained elevation;
 - `studioDark` — deep neutral canvas, warm accent, soft structural depth.
-- `seedLight` / `seedDark` — neutral and intent roles mapped from SEED Design's
-  shipped tokens; the pair to reach for when a clip has to sit inside a product
-  built on that system and look like the same hand made both.
+- `productLight` / `productDark` — a complete light/dark pair on the layered-surface
+  model, carrying the full intent set; the pair to reach for when a clip has to
+  sit inside a shipped interface and look like the same hand made both.
 
-`MOTION_PROFILES.seed` carries the matching curves and durations. Take the
-curves freely; take the durations only for product-embedded work. SEED's scale
+`MOTION_PROFILES.product` carries the matching curves and durations. Take the
+curves freely; take the durations only for product-embedded work. That scale
 tops out at 300ms because it is tuned for motion a user *triggers*, where
 waiting is the cost. In an explainer the viewer only watches, a 150ms beat
 reads as a flicker — `calm` is almost always the right profile there.
 
-**On the brand colour.** `seedLight`/`seedDark` do not ship SEED's brand
-orange. It is a Karrot brand resource under the trademark terms in their
-NOTICE, outside the Apache grant, so `colorAccent` defaults to the informative
-role instead. Set it yourself if you hold the rights.
+**On the brand colour.** These themes ship no brand identity at all:
+`colorAccent` defaults to the informative role, which is functional and
+unowned. Set it to your own brand colour, and never borrow one you do not hold
+the rights to — a brand hue is usually a trademark even when the surrounding
+system is openly licensed.
 
 Use `assets/scene-system-showcase.html` as the visual smoke test for role tokens and
 component aliases. Treat these themes as starting systems. A real product or brand

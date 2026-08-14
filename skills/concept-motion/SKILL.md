@@ -171,7 +171,7 @@ Generic polish never overrides observed evidence or product meaning.
 - Existing craft references — intent, fidelity, continuity, mechanisms, polish, motion craft, and Motion implementation.
 - `lib/kit.js` — reusable stage, shape, and beat implementation.
 - `assets/` — known-working kit, WAAPI, and CSS-clock scenes.
-- `assets/scene-system-showcase.html` — role tokens, the `seedLight` theme, and intent colour carrying two outcomes.
+- `assets/scene-system-showcase.html` — role tokens, the `productLight` theme, and intent colour carrying two outcomes.
 - `assets/scene-ui-walkthrough.html` — stylized-UI walkthrough: four capabilities, one persistent frame.
 - `assets/scene-actor-loop.html` — actor circuit, zero dependencies: a loop that closes through a person.
 - `assets/scene-agentic-chat.html` — conversation register, zero dependencies: per-segment easing and a result delivered as the agent's next turn.
