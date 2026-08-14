@@ -59,6 +59,58 @@ Rules:
 - Treat palette colors as exceptions; record their semantic intent locally.
 - Verify roles in light, dark, high-contrast, compressed-video, and projector contexts.
 
+## Intent roles — earning a second colour
+
+A single accent forces every scene to say everything in one colour. Followed
+across a library, that is exactly what makes a set of clips look like one style
+repeated rather than a system applied — every claim, whatever it is, arrives as
+the same blue.
+
+The fix is not more colours. It is colours that mean something. This is SEED
+Design's model (Apache-2.0, see `NOTICE.md`), which crosses three properties
+with a set of functional roles:
+
+**Property** — foreground, background, stroke
+**Role** — brand, neutral, positive, critical, warning, informative
+**Variant** — `solid` (the mark itself) and `weak` (a field it sits on)
+
+| Token | Says | Reach for it when |
+|---|---|---|
+| `color-accent` | this is the subject | the default; resolved state, active path |
+| `color-positive` | this succeeded, passed, is safe | a check completes, a test passes |
+| `color-critical` | this failed, was rejected, is destructive | an error path, a removal, a blocked step |
+| `color-warning` | this is uncertain, degraded, needs a look | a soft failure, a limit approached |
+| `color-informative` | this is a system state, not a judgment | neutral status, a note, a hand-off |
+| `color-magic` | this was generated rather than authored | AI output, an inferred result |
+
+Each has a `-weak` companion for the surface behind it — a tinted band, a
+highlighted row — so a state can be shown without a saturated block dominating
+the frame.
+
+**The rule that keeps this from becoming decoration:** a scene earns a second
+colour when it is making a second **claim**, not when it has a second element.
+Two lanes racing are still one claim (*this one is faster*) and should differ by
+emphasis, not hue. A lane that *fails* while another *succeeds* is two claims,
+and that is what `critical` and `positive` are for.
+
+Consequences worth stating:
+
+- **Never encode a claim in hue alone.** Roughly 1 in 12 men cannot separate
+  the positive and critical roles. Pair colour with position, label, form, or
+  motion — the colour is reinforcement, never the carrier.
+- **`weak` variants are not "lighter accents".** They are surfaces. Putting a
+  `solid` role on a `weak` field of a *different* role produces a state nobody
+  can name.
+- **Brand is a slot, not a value.** `color-accent` defaults to the informative
+  role precisely so a borrowed brand colour never ships by accident.
+- **Two roles per scene is usually the ceiling.** Three is a diagram. If a
+  scene needs four, the claim is quantitative — load the `dataviz` skill.
+
+For the rare scene with genuinely peer series — lanes, tracks, candidates with
+no ranking between them — `HUES` in the kit gives six categorical values per
+theme. Peer means *no ranking*: the moment one series matters more, drop back
+to emphasis.
+
 ## Typography roles
 
 Define type by role and reading behavior:
@@ -209,6 +261,20 @@ kinetic-text pattern, and reduced-motion still. A palette preview alone is insuf
 - `studioLight` — light neutral canvas, warm accent, concentric rounded geometry,
   restrained elevation;
 - `studioDark` — deep neutral canvas, warm accent, soft structural depth.
+- `seedLight` / `seedDark` — neutral and intent roles mapped from SEED Design's
+  shipped tokens; the pair to reach for when a clip has to sit inside a product
+  built on that system and look like the same hand made both.
+
+`MOTION_PROFILES.seed` carries the matching curves and durations. Take the
+curves freely; take the durations only for product-embedded work. SEED's scale
+tops out at 300ms because it is tuned for motion a user *triggers*, where
+waiting is the cost. In an explainer the viewer only watches, a 150ms beat
+reads as a flicker — `calm` is almost always the right profile there.
+
+**On the brand colour.** `seedLight`/`seedDark` do not ship SEED's brand
+orange. It is a Karrot brand resource under the trademark terms in their
+NOTICE, outside the Apache grant, so `colorAccent` defaults to the informative
+role instead. Set it yourself if you hold the rights.
 
 Use `assets/scene-system-showcase.html` as the visual smoke test for role tokens and
 component aliases. Treat these themes as starting systems. A real product or brand

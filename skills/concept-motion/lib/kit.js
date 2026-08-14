@@ -48,6 +48,19 @@ export const EXPO  = [.19, 1, .22, 1];            // expo.out   — most dramati
 export const BACK  = [.34, 1.56, .64, 1];         // back.out   — overshoot, ONCE per scene
 export const IN2   = [.55, .085, .68, .53];       // power2.in  — exits only
 
+/* SEED Design's timing functions, adopted from its `timing-function` tokens
+   (Apache-2.0, see NOTICE.md). A shipped product system rather than generic
+   craft advice, and its split is sharper than ours: separate curves for
+   entering and leaving, plus expressive variants for the one move that should
+   be felt. `enter` is aggressively front-loaded — almost all of the distance is
+   covered before the halfway point — which is why arriving UI feels immediate
+   without feeling abrupt. */
+export const SEED_EASING = [.35, 0, .35, 1];      // functional micro-motion
+export const SEED_ENTER  = [0, 0, .15, 1];        // something arriving
+export const SEED_EXIT   = [.35, 0, 1, 1];        // something leaving
+export const SEED_ENTER_X = [.03, .4, .1, 1];     // expressive arrival
+export const SEED_EXIT_X  = [.35, 0, .95, .55];   // expressive departure
+
 /* ── Sampled springs ────────────────────────────────────────────────────────
    Apple parameterises springs as damping ratio + response rather than
    mass/stiffness/damping, because those two are the ones a designer can
@@ -168,6 +181,40 @@ export const FOUNDATION_TOKENS = {
   colorSyntax:    '#79c0ff',
   colorGutter:    '#5e6c74',
   radiusUi:       '6px',
+
+  /* ── Intent roles ────────────────────────────────────────────────────────
+     One accent forces every scene to say everything in one colour, which is
+     why a whole library of them ends up looking like a single style. These are
+     the functional roles from SEED Design's colour system (Apache-2.0, see
+     NOTICE.md), whose model is Property × Role × Variant: foreground /
+     background / stroke, crossed with brand, neutral, positive, critical,
+     warning and informative, in solid and weak variants.
+
+     Adopt the ROLE, not the decoration. A scene earns a second colour when it
+     is making a second *claim* — this failed, this succeeded, this is
+     uncertain. See references/visual-foundations.md before reaching for one.
+
+     Values below are the dark-theme readings; `THEMES.seedLight` swaps them. */
+  colorPositive:      '#22b27f',
+  colorPositiveWeak:  '#202926',
+  colorCritical:      '#ff6e60',
+  colorCriticalWeak:  '#322323',
+  colorWarning:       '#dab156',
+  colorWarningWeak:   '#2a2620',
+  colorInformative:   '#41a2f9',
+  colorInformativeWeak:'#1c2530',
+  colorMagic:         '#8e6bee',
+  colorMagicWeak:     '#201f1f',
+};
+
+/* Six categorical hues for the rare scene with genuinely peer series — lanes,
+   tracks, competing candidates. Peer means *no ranking*: the moment one series
+   matters more than the others, use emphasis (accent vs neutral) instead, or
+   load the `dataviz` skill if the claim is quantitative. Values are SEED's
+   palette at the 600 step, light and dark. */
+export const HUES = {
+  light: ['#5e98fe', '#10ab7d', '#fc6a66', '#c49725', '#9f84fb', '#b0b3ba'],
+  dark:  ['#1e82eb', '#1b946d', '#f73526', '#b6720d', '#8e6bee', '#868b94'],
 };
 
 /* A theme is a complete role map, not a loose palette. `reference` preserves
@@ -214,6 +261,66 @@ export const THEMES = {
     radiusTile:         '16px',
     shadowPanel:        '0 30px 76px rgba(0,0,0,.34), 0 1px 0 rgba(255,255,255,.05) inset',
   },
+
+  /* ── SEED Design themes ──────────────────────────────────────────────────
+     Neutral and intent roles mapped from SEED's own tokens (Apache-2.0, see
+     NOTICE.md): canvas ← bg.layer-basement, surface ← bg.layer-default,
+     raised ← bg.layer-fill, foregrounds ← fg.neutral / -muted / -disabled.
+
+     `colorAccent` deliberately does NOT ship SEED's brand orange. That colour
+     is a Karrot brand resource under the trademark terms in their NOTICE, not
+     part of the Apache grant — set it yourself if you hold the rights. The
+     default here is the informative role, which is functional and unowned. */
+  seedLight: {
+    colorCanvas:        '#f3f4f5',
+    colorSurface:       '#ffffff',
+    colorSurfaceRaised: '#f7f8f9',
+    colorFgPrimary:     '#1a1c20',
+    colorFgMuted:       '#555d6d',
+    colorFgSubtle:      '#868b94',
+    colorFgDisabled:    '#d1d3d8',
+    colorAccent:        '#217cf9',
+    colorAccentSoft:    'rgba(33,124,249,.12)',
+    colorStroke:        '#dcdee3',
+    colorStrokeSubtle:  'rgba(0,0,0,.06)',
+    colorPositive:      '#079171',
+    colorPositiveWeak:  '#edfaf6',
+    colorCritical:      '#fa342c',
+    colorCriticalWeak:  '#fdf0f0',
+    colorWarning:       '#c49725',
+    colorWarningWeak:   '#fdf7e7',
+    colorInformative:   '#217cf9',
+    colorInformativeWeak:'#eef4fe',
+    colorMagic:         '#9f84fb',
+    colorMagicWeak:     '#f9f2ee',
+    colorGutter:        '#b0b3ba',
+    radiusPanel:        '12px',
+    radiusBar:          '4px',
+    radiusCode:         '4px',
+    radiusRow:          '6px',
+    radiusTile:         '10px',
+    shadowPanel:        '0 12px 32px rgba(26,28,32,.10), 0 1px 3px rgba(26,28,32,.06)',
+  },
+  seedDark: {
+    colorCanvas:        '#000000',
+    colorSurface:       '#16171b',
+    colorSurfaceRaised: '#1d2025',
+    colorFgPrimary:     '#f3f4f5',
+    colorFgMuted:       '#b0b3ba',
+    colorFgSubtle:      '#868b94',
+    colorFgDisabled:    '#5b606a',
+    colorAccent:        '#41a2f9',
+    colorAccentSoft:    'rgba(65,162,249,.16)',
+    colorStroke:        '#393d46',
+    colorStrokeSubtle:  'rgba(255,255,255,.09)',
+    colorGutter:        '#5b606a',
+    radiusPanel:        '12px',
+    radiusBar:          '4px',
+    radiusCode:         '4px',
+    radiusRow:          '6px',
+    radiusTile:         '10px',
+    shadowPanel:        '0 16px 40px rgba(0,0,0,.45)',
+  },
 };
 
 export const MOTION_PROFILES = {
@@ -231,6 +338,20 @@ export const MOTION_PROFILES = {
     feedback: .16, enterSupporting: .28, enterPrimary: .48,
     exit: .28, transform: .72, emphasis: 1.05, stagger: .075,
     enterEase: OUT3, moveEase: EXPO, exitEase: IN2,
+  },
+  /* SEED's curves on SEED's duration scale (d1 50ms … d6 300ms), with its
+     macro/micro split: micro-motion sits at or under 200ms, macro above it.
+     Correct when the clip has to sit inside a product built on that system and
+     feel like the same hand made both.
+
+     Do not reach for it by default. Those durations are tuned for motion a
+     user *triggers*, where waiting is the cost. An explainer the viewer only
+     watches usually needs the slower `calm` profile — a 150ms beat in a
+     6-second narrative reads as a flicker, not as snappiness. */
+  seed: {
+    feedback: .10, enterSupporting: .15, enterPrimary: .25,
+    exit: .20, transform: .30, emphasis: .30, stagger: .04,
+    enterEase: SEED_ENTER, moveEase: SEED_EASING, exitEase: SEED_EXIT,
   },
 };
 

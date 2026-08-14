@@ -49,6 +49,17 @@ Two things from the frequency principle *do* transfer, in adapted form:
   body copy is a comprehension cost, not decoration. Give the loop its own band
   of the page, or make it play once.
 
+And one framing worth borrowing wholesale, from
+`kylezantos/design-motion-principles` (MIT): **weight the guidance by what is
+being made before applying any of it.** Restraint rules written for a
+productivity tool are wrong for a children's app; polish rules written for a
+consumer product are wrong for a technical diagram. That skill resolves this by
+asking which of several designers' lenses the project calls for. The equivalent
+question here is what the clip is *for* — a conference loop, a docs diagram, a
+launch hero and an onboarding explainer want different amounts of expression
+from the same mechanism. Decide that before quoting any duration from anywhere,
+including this file.
+
 ## Easing
 
 Built-in CSS keywords are too weak to read as deliberate. Use strong curves and

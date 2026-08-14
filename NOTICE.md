@@ -1,5 +1,46 @@
 # Third-party notices
 
+## SEED Design — 주식회사 당근마켓 (Karrot)
+
+`skills/concept-motion/lib/kit.js` adapts, and
+`skills/concept-motion/references/visual-foundations.md` documents, material
+from SEED Design (<https://github.com/daangn/seed-design>):
+
+- the role-based colour model — Property (foreground / background / stroke) ×
+  Role (brand, neutral, positive, critical, warning, informative) × Variant
+  (solid / weak) — as the `colorPositive` / `colorCritical` / `colorWarning` /
+  `colorInformative` / `colorMagic` intent tokens;
+- neutral and intent colour values for the `seedLight` and `seedDark` themes,
+  resolved from `packages/rootage/color.yaml`;
+- the categorical `HUES` set, from the palette's 600 step;
+- the `timing-function` curves as `SEED_EASING`, `SEED_ENTER`, `SEED_EXIT`,
+  `SEED_ENTER_X`, `SEED_EXIT_X`, and the `duration` scale plus the macro/micro
+  split as `MOTION_PROFILES.seed`.
+
+SEED Design is Copyright 2025 주식회사 당근마켓, licensed under the Apache
+License 2.0. A copy of that licence must accompany redistribution — see
+<https://www.apache.org/licenses/LICENSE-2.0> and the `LICENSE` and `NOTICE`
+files in the upstream repository.
+
+**Trademark.** SEED's NOTICE reserves "brand resources" — logos, trade names,
+characters, and any element identifiable as Karrot or its products — as
+trademarks outside the Apache grant, permitted for non-commercial use only
+absent prior agreement, and never in a way implying affiliation or
+endorsement. This project therefore adopts SEED's neutral and functional
+intent roles but **does not ship its brand colour**; `colorAccent` in the seed
+themes defaults to the informative role. Nothing here is affiliated with,
+sponsored by, or endorsed by Karrot.
+
+## Kyle Zantos — design-motion-principles
+
+`skills/concept-motion/references/visual-foundations.md` and
+`references/motion-craft.md` cross-reference the context-weighting idea — that
+motion guidance is conditional on what is being built rather than universal —
+and the frequency gate from
+<https://github.com/kylezantos/design-motion-principles> (MIT). That skill
+targets interactive UI motion; the frequency gate does not transfer to
+non-interactive explanatory motion, and this skill records why.
+
 ## Emil Kowalski — skills
 
 `skills/concept-motion/references/motion-craft.md` adapts craft rules, easing
