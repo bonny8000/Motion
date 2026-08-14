@@ -174,6 +174,7 @@ Generic polish never overrides observed evidence or product meaning.
 - `assets/scene-system-showcase.html` — role tokens, the `seedLight` theme, and intent colour carrying two outcomes.
 - `assets/scene-ui-walkthrough.html` — stylized-UI walkthrough: four capabilities, one persistent frame.
 - `assets/scene-actor-loop.html` — actor circuit, zero dependencies: a loop that closes through a person.
+- `assets/scene-agentic-chat.html` — conversation register, zero dependencies: per-segment easing and a result delivered as the agent's next turn.
 - `scripts/reference-board.mjs` — normalized evidence board from goal media.
 - `scripts/export.mjs` — serve, seek, capture, review sheet, and encode.
 - `scripts/layout-audit.mjs` — keyframe layout and collision gate.

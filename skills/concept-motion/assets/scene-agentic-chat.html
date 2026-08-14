@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agentic UX — 6s</title>
+<style>
+/*
+ * MECHANISM: conversational delegation — one turn of instruction becomes many
+ *            steps the agent runs, and reports back as its own next turn.
+ * CLAIM:     "you state the outcome in one turn; it plans, executes and comes
+ *             back — you never touch the steps."
+ * REGISTER:  stylized UI (a chat), NOT abstract geometry.
+ *
+ * An earlier cut framed this as a diagram — a person node, a pill, a plan
+ * panel — while the content inside it was a natural-language instruction and a
+ * result message. A pill containing a sentence IS a chat bubble, so the frame
+ * and its contents were in different idioms and the thing read as neither.
+ * Content chooses the register as much as the claim does; see
+ * references/intent-to-mechanism.md, "register drift".
+ *
+ * Committing to the conversation also fixes where the result belongs: it is the
+ * agent's next TURN, inside the thread, not a status chip floating underneath.
+ * The chat scrolls to accommodate it, which is what a real thread does.
+ *
+ * The claim still rests on what does NOT happen: the user sends exactly one
+ * message and then nothing. Every later turn is the agent's. Supervision is
+ * shown by silence.
+ *
+ * EASING — every segment is chosen by what the element is doing
+ * (references/motion-craft.md):
+ *   arriving bubbles      EASE_OUT / expressive enter  — they land with weight
+ *   typing dots           ease-in-out                  — a soft idle pulse
+ *   plan expanding        EASE_OUT from its own origin — grows from the typing
+ *   step fills            linear                       — mechanical progress,
+ *                                                        the ONE correct linear
+ *   completion marks      EASE_OUT                     — a snap, not a fade
+ *   thread scroll         EASE_IN_OUT                  — an on-screen move
+ * A CSS clock makes `animation: x 6s linear infinite` the boilerplate you type
+ * without thinking, and that single word flattens every curve in the file. The
+ * curves below live INSIDE the keyframes via animation-timing-function, which
+ * applies to the segment starting at that stop.
+ */
+:root{
+  /* seedLight roles — SEED Design (Apache-2.0), see NOTICE.md */
+  --canvas:#f3f4f5; --surface:#ffffff; --raised:#f4f5f7;
+  --fg:#1a1c20; --muted:#555d6d; --subtle:#868b94; --disabled:#d9dbe0;
+  --stroke:#e4e6ea;
+  --accent:#217cf9;
+  --positive:#079171; --positive-weak:#e9f7f2;
+  --cycle:6s;
+  /* curve vocabulary, from lib/kit.js and SEED's timing-function tokens */
+  --out:cubic-bezier(.23,1,.32,1);        /* EASE_OUT   — entering  */
+  --inout:cubic-bezier(.77,0,.175,1);     /* EASE_IN_OUT— moving    */
+  --enterx:cubic-bezier(.03,.4,.1,1);     /* SEED enter-expressive  */
+  --soft:cubic-bezier(.35,0,.35,1);       /* SEED easing — idle     */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--canvas);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;
+  background:var(--canvas);overflow:hidden;transform-origin:center center;
+  transform:translate(-50%,-50%)}
+
+.title{position:absolute;left:0;right:0;top:84px;text-align:center;
+  font-size:62px;font-weight:600;letter-spacing:-.022em;color:var(--fg);
+  opacity:0;animation:titleIn var(--cycle) linear infinite}
+@keyframes titleIn{
+  0%{opacity:0;transform:translateY(10px);animation-timing-function:var(--out)}
+  7%,96%{opacity:1;transform:none}100%{opacity:1}
+}
+
+/* ── the thread ──────────────────────────────────────────────────────────── */
+.chat{position:absolute;left:calc(50% - 440px);top:198px;width:880px;height:612px;
+  background:var(--surface);border:1px solid var(--stroke);border-radius:22px;
+  box-shadow:0 14px 40px rgba(26,28,32,.08);overflow:hidden;opacity:0;
+  animation:chatIn var(--cycle) linear infinite}
+@keyframes chatIn{
+  0%,5%{opacity:0;transform:translateY(12px) scale(.985);animation-timing-function:var(--out)}
+  13%,96%{opacity:1;transform:none}100%{opacity:1}
+}
+/* A soft top edge rather than a hard one: content passing under it fades out
+   instead of being sliced, so the lift reads as scrolling rather than as
+   clipping. The mask lives on the fixed viewport, never on the moving thread —
+   a mask on the thread would travel with it and fade nothing. */
+.viewport{position:absolute;inset:0;overflow:hidden;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 24px,#000 100%);
+          mask-image:linear-gradient(to bottom,transparent 0,#000 24px,#000 100%)}
+/* The whole thread lifts once, when the last turn needs room — a chat scrolling.
+   This is a MOVE, so it takes the in-out curve, never the entrance curve. */
+.thread{position:absolute;inset:0;padding:34px 36px;
+  animation:scrollUp var(--cycle) linear infinite}
+@keyframes scrollUp{
+  0%,78%{transform:translateY(0);animation-timing-function:var(--inout)}
+  83%,100%{transform:translateY(-36px)}
+}
+.who{font-size:17px;font-weight:500;color:var(--subtle);margin-bottom:7px}
+
+/* Turn 1 — the only thing the person ever sends. */
+.t-you{position:absolute;right:36px;top:34px;text-align:right;opacity:0;
+  animation:youTurn var(--cycle) linear infinite}
+.bub-you{display:inline-block;background:var(--accent);color:#fff;
+  font-size:24px;line-height:1.35;padding:17px 26px;
+  border-radius:22px 22px 6px 22px;max-width:560px;text-align:left}
+@keyframes youTurn{
+  0%,14%{opacity:0;transform:translateY(16px) scale(.94);animation-timing-function:var(--out)}
+  21%,96%{opacity:1;transform:none}100%{opacity:1}
+}
+
+/* The agent's turn: a typing beat, then the plan grows out of that same spot. */
+.t-agent{position:absolute;left:36px;top:146px}
+.typing{position:absolute;left:0;top:26px;display:flex;gap:9px;align-items:center;
+  background:var(--raised);border-radius:20px;padding:16px 20px;opacity:0;
+  animation:typingBox var(--cycle) linear infinite}
+.typing i{width:11px;height:11px;border-radius:999px;background:var(--subtle);display:block}
+@keyframes typingBox{
+  0%,22%{opacity:0;transform:scale(.9);animation-timing-function:var(--out)}
+  26%{opacity:1;transform:none}
+  30%{opacity:1;animation-timing-function:var(--soft)}
+  33%,100%{opacity:0}
+}
+.typing i:nth-child(1){animation:blink var(--cycle) linear infinite}
+.typing i:nth-child(2){animation:blink2 var(--cycle) linear infinite}
+.typing i:nth-child(3){animation:blink3 var(--cycle) linear infinite}
+@keyframes blink{0%,24%{opacity:.35;animation-timing-function:var(--soft)}26.5%{opacity:1}29%,100%{opacity:.35}}
+@keyframes blink2{0%,25%{opacity:.35;animation-timing-function:var(--soft)}27.5%{opacity:1}30%,100%{opacity:.35}}
+@keyframes blink3{0%,26%{opacity:.35;animation-timing-function:var(--soft)}28.5%{opacity:1}31%,100%{opacity:.35}}
+
+/* Anchored to source: the plan scales out of the typing indicator's corner, so
+   the viewer reads it as that message becoming this one. */
+.plan{position:absolute;left:0;top:26px;width:640px;
+  background:var(--raised);border-radius:20px 20px 20px 6px;padding:24px 28px 26px;
+  transform-origin:left top;opacity:0;
+  animation:planIn var(--cycle) linear infinite}
+@keyframes planIn{
+  0%,31%{opacity:0;transform:scale(.86);animation-timing-function:var(--out)}
+  38%,96%{opacity:1;transform:none}100%{opacity:1}
+}
+.plan-h{font-size:18px;letter-spacing:.03em;text-transform:uppercase;
+  color:var(--subtle);margin-bottom:20px}
+.step{height:22px;display:flex;align-items:center;gap:16px;margin-bottom:22px;opacity:0}
+.step:last-child{margin-bottom:0}
+.dot{width:14px;height:14px;border-radius:999px;flex:none;
+  border:2px solid var(--disabled);background:var(--surface)}
+.track{position:relative;height:13px;border-radius:4px;background:var(--surface);overflow:hidden}
+.track i{position:absolute;inset:0;background:var(--accent);transform-origin:left center;
+  transform:scaleX(0)}
+.s1 .track{width:404px}.s2 .track{width:520px}.s3 .track{width:330px}
+.s4 .track{width:466px}.s5 .track{width:276px}
+
+/* Absolute windows per step — a negative animation-delay shifts a step EARLIER,
+   which once ran the whole plan in a single frame. Same rule as the kit's
+   beats: absolute times only. */
+.s1{animation:row1 var(--cycle) linear infinite}
+.s2{animation:row2 var(--cycle) linear infinite}
+.s3{animation:row3 var(--cycle) linear infinite}
+.s4{animation:row4 var(--cycle) linear infinite}
+.s5{animation:row5 var(--cycle) linear infinite}
+@keyframes row1{0%,38.0%{opacity:0;transform:translateX(-6px);animation-timing-function:var(--out)}41.5%,96%{opacity:1;transform:none}100%{opacity:1}}
+@keyframes row2{0%,39.0%{opacity:0;transform:translateX(-6px);animation-timing-function:var(--out)}42.5%,96%{opacity:1;transform:none}100%{opacity:1}}
+@keyframes row3{0%,40.0%{opacity:0;transform:translateX(-6px);animation-timing-function:var(--out)}43.5%,96%{opacity:1;transform:none}100%{opacity:1}}
+@keyframes row4{0%,41.0%{opacity:0;transform:translateX(-6px);animation-timing-function:var(--out)}44.5%,96%{opacity:1;transform:none}100%{opacity:1}}
+@keyframes row5{0%,42.0%{opacity:0;transform:translateX(-6px);animation-timing-function:var(--out)}45.5%,96%{opacity:1;transform:none}100%{opacity:1}}
+
+/* A fill wipe is mechanical progress, so constant speed is the honest choice —
+   this is the one place `linear` is correct, and it is declared, not defaulted. */
+.s1 i{animation:run1 var(--cycle) linear infinite}
+.s2 i{animation:run2 var(--cycle) linear infinite}
+.s3 i{animation:run3 var(--cycle) linear infinite}
+.s4 i{animation:run4 var(--cycle) linear infinite}
+.s5 i{animation:run5 var(--cycle) linear infinite}
+@keyframes run1{0%,47.0%{transform:scaleX(0);background:var(--accent)}52.6%{transform:scaleX(1);background:var(--accent)}53.2%,100%{transform:scaleX(1);background:var(--positive)}}
+@keyframes run2{0%,52.6%{transform:scaleX(0);background:var(--accent)}58.2%{transform:scaleX(1);background:var(--accent)}58.8%,100%{transform:scaleX(1);background:var(--positive)}}
+@keyframes run3{0%,58.2%{transform:scaleX(0);background:var(--accent)}63.8%{transform:scaleX(1);background:var(--accent)}64.4%,100%{transform:scaleX(1);background:var(--positive)}}
+@keyframes run4{0%,63.8%{transform:scaleX(0);background:var(--accent)}69.4%{transform:scaleX(1);background:var(--accent)}70.0%,100%{transform:scaleX(1);background:var(--positive)}}
+@keyframes run5{0%,69.4%{transform:scaleX(0);background:var(--accent)}75.0%{transform:scaleX(1);background:var(--accent)}75.6%,100%{transform:scaleX(1);background:var(--positive)}}
+
+/* Completion is a snap, not a fade — and border-width carries it alongside
+   colour so the state survives greyscale and red-green deficiency. */
+.s1 .dot{animation:dot1 var(--cycle) linear infinite}
+.s2 .dot{animation:dot2 var(--cycle) linear infinite}
+.s3 .dot{animation:dot3 var(--cycle) linear infinite}
+.s4 .dot{animation:dot4 var(--cycle) linear infinite}
+.s5 .dot{animation:dot5 var(--cycle) linear infinite}
+@keyframes dot1{0%,47.0%{border-color:var(--disabled);border-width:2px}47.6%,52.6%{border-color:var(--accent);border-width:2px;animation-timing-function:var(--out)}53.6%,100%{border-color:var(--positive);border-width:7px}}
+@keyframes dot2{0%,52.6%{border-color:var(--disabled);border-width:2px}53.2%,58.2%{border-color:var(--accent);border-width:2px;animation-timing-function:var(--out)}59.2%,100%{border-color:var(--positive);border-width:7px}}
+@keyframes dot3{0%,58.2%{border-color:var(--disabled);border-width:2px}58.8%,63.8%{border-color:var(--accent);border-width:2px;animation-timing-function:var(--out)}64.8%,100%{border-color:var(--positive);border-width:7px}}
+@keyframes dot4{0%,63.8%{border-color:var(--disabled);border-width:2px}64.4%,69.4%{border-color:var(--accent);border-width:2px;animation-timing-function:var(--out)}70.4%,100%{border-color:var(--positive);border-width:7px}}
+@keyframes dot5{0%,69.4%{border-color:var(--disabled);border-width:2px}70.0%,75.0%{border-color:var(--accent);border-width:2px;animation-timing-function:var(--out)}76.0%,100%{border-color:var(--positive);border-width:7px}}
+
+/* Turn 3 — the result, as the agent's next message. Expressive enter, because
+   this is the one arrival the whole clip has been waiting for. */
+.t-done{position:absolute;left:36px;top:508px;opacity:0;
+  animation:doneTurn var(--cycle) linear infinite}
+.bub-done{display:inline-block;background:var(--positive-weak);
+  border:1px solid rgba(7,145,113,.35);border-radius:20px 20px 20px 6px;
+  padding:18px 26px;max-width:600px}
+.bub-done b{display:block;font-size:24px;font-weight:600;color:var(--positive);margin-bottom:5px}
+.bub-done span{display:block;font-size:20px;color:var(--muted)}
+@keyframes doneTurn{
+  0%,79%{opacity:0;transform:translateY(18px) scale(.95);animation-timing-function:var(--enterx)}
+  86%,96%{opacity:1;transform:none}100%{opacity:1}
+}
+
+/* Reduced motion: freeze on the frame where the agent is mid-plan and the user
+   has said nothing since their one turn — the whole claim in one image. */
+@media (prefers-reduced-motion: reduce){
+  .title,.chat,.thread,.t-you,.typing,.typing i,.plan,.step,.track i,.dot,.t-done{
+    animation-play-state:paused !important;animation-delay:-3.7s !important}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="title">Agentic UX</div>
+
+  <div class="chat">
+   <div class="viewport">
+    <div class="thread">
+
+      <div class="t-you">
+        <div class="who">You</div>
+        <div class="bub-you">Get the team to Seoul next Thursday</div>
+      </div>
+
+      <div class="t-agent">
+        <div class="who">Agent</div>
+
+        <div class="typing"><i></i><i></i><i></i></div>
+
+        <div class="plan">
+          <div class="plan-h">Here's my plan</div>
+          <div class="step s1"><span class="dot"></span><span class="track"><i></i></span></div>
+          <div class="step s2"><span class="dot"></span><span class="track"><i></i></span></div>
+          <div class="step s3"><span class="dot"></span><span class="track"><i></i></span></div>
+          <div class="step s4"><span class="dot"></span><span class="track"><i></i></span></div>
+          <div class="step s5"><span class="dot"></span><span class="track"><i></i></span></div>
+        </div>
+      </div>
+
+      <div class="t-done">
+        <div class="bub-done">
+          <b>✓ All booked</b>
+          <span>4 flights · 2 hotels · calendar updated</span>
+        </div>
+      </div>
+
+    </div>
+   </div>
+  </div>
+</div>
+<script>
+const stage = document.querySelector('.stage');
+const fit = () => {
+  const k = Math.min(document.documentElement.clientWidth / 1600,
+                     document.documentElement.clientHeight / 900);
+  stage.style.transform = `translate(-50%,-50%) scale(${k})`;
+};
+new ResizeObserver(fit).observe(document.documentElement);
+fit();
+</script>
+</body>
+</html>

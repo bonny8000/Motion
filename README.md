@@ -73,6 +73,7 @@ skills/concept-motion/
 │   ├── scene-system-showcase.html    seedLight theme + role tokens + intent colour (pass / reject)
 │   ├── scene-ui-walkthrough.html     working scene: capability tour in a legible UI
 │   ├── scene-actor-loop.html         working scene: a loop that closes through a person, zero deps
+│   ├── scene-agentic-chat.html       working scene: conversation register, per-segment easing, zero deps
 │   └── scene-template.html           standalone CSS-clock scaffold, zero deps
 ├── references/
 │   ├── system-foundations.md         principles, profiles, semantic motion tokens

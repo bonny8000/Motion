@@ -118,6 +118,38 @@ system, two agents, a hand-off — the parties must be legible even when the wor
 they pass around stays abstract. A selection box or a cursor is a machine
 affordance and will never read as a human. See `actors-and-loops.md`.
 
+### Register drift
+
+The register is chosen once, early, from the claim. The *content* gets authored
+later, and it quietly votes for a register of its own. When those disagree, the
+scene reads as neither, and it is hard to see because every individual part
+looks fine.
+
+The tell is concrete: **you find yourself writing a sentence into an abstract
+scene.** A rounded rectangle containing "Get the team to Seoul next Thursday" is
+not an abstract object with a label on it — it is a chat bubble, and the viewer
+will read it as one no matter what the surrounding diagram says. Same for a
+status line that reads like a notification, a card that reads like a search
+result, or a mark that reads like a cursor.
+
+Before implementation, check every object you have authored against the chosen
+register and resolve every mismatch one way or the other:
+
+- **the content is right** → change the register, and commit to it fully. If the
+  instruction is a sentence a person typed, build the conversation: the surface,
+  the turns, the waiting, the reply.
+- **the register is right** → change the content. Replace the sentence with the
+  abstract object it stands for, and carry its meaning in a label outside the
+  frame.
+
+Half-measures are the failure. A diagram with one chat bubble in it, or a chat
+with one bar chart bubble, reads as an unfinished draft of both.
+
+A useful side effect of resolving this: the register usually answers layout
+questions you were about to guess at. Once a scene is a conversation, a result
+is obviously the agent's next *turn* in the thread — not a status chip parked
+underneath the diagram — and the thread obviously scrolls to make room for it.
+
 Use stylized UI instead when the claim depends on a familiar interaction state:
 input acknowledged, interim text, correction, validation, error recovery or a
 control becoming available. Replacing those states with generic bars can remove

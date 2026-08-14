@@ -87,6 +87,42 @@ Two rules that matter more than the values:
 For custom curves, use a generator ([easing.dev](https://easing.dev/),
 [easings.co](https://easings.co/)) rather than hand-rolling numbers.
 
+### The CSS-clock `linear` trap
+
+In a CSS-clock scene the boilerplate is:
+
+```css
+animation: bubbleIn var(--cycle) linear infinite;
+```
+
+That `linear` is the timing function for the **whole keyframe set**, and it is
+the word your fingers type while thinking about the timeline. Repeat it on
+twenty elements and every entrance, move and settle in the file runs at constant
+velocity — the exact failure the rule above calls the strongest tell of an
+unfinished animation. Nothing errors, nothing looks broken in isolation, and the
+scene just feels cheap.
+
+`linear` on the animation is correct only when *every* segment of that keyframe
+set is mechanical progress, which in practice means fill wipes and nothing else.
+
+Put the curve **inside the keyframes**, where it can differ per segment.
+`animation-timing-function` declared in a keyframe governs the segment that
+*starts* at that stop:
+
+```css
+@keyframes bubbleIn{
+  0%,14%{opacity:0;transform:translateY(16px) scale(.94);
+         animation-timing-function:cubic-bezier(.23,1,.32,1)}  /* → the arrival */
+  21%,96%{opacity:1;transform:none}
+  100%{opacity:1}
+}
+```
+
+Declare the vocabulary once as custom properties (`--out`, `--inout`, `--enterx`)
+and reach for them by what the element is doing, so a scene ends up with three or
+four curves that each mean something rather than one curve everywhere. A quick
+audit: grep the file for `linear` and make sure every hit is a fill wipe.
+
 ## Physicality
 
 - **Never `scale(0)`.** Nothing in the physical world appears from literally
