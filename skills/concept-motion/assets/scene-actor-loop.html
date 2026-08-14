@@ -115,9 +115,13 @@ svg.wires{position:absolute;inset:0;width:1600px;height:900px;overflow:visible}
 .wire.live.bot{stroke:var(--accent);animation:liveBot var(--cycle) linear infinite}
 @keyframes liveTop{0%,10%{opacity:0}14%{opacity:.5}28%{opacity:.5}32%{opacity:0}100%{opacity:0}}
 @keyframes liveBot{0%,48%{opacity:0}52%{opacity:.6}65%{opacity:.6}69%{opacity:0}100%{opacity:0}}
-.arrow{fill:#33454f}
-.arrow.b{animation:arrowB var(--cycle) linear infinite}
-@keyframes arrowB{0%,48%{fill:#33454f}52%,67%{fill:var(--accent)}72%,100%{fill:#33454f}}
+/* Arrowheads are markers with orient="auto", not hand-placed polygons: the head
+   then rotates to the curve's own tangent at its endpoint. Guessed triangle
+   coordinates cannot stay aligned — the tangent of a cubic here is ~39° off
+   horizontal, and any later nudge to a control point silently breaks them. */
+#aDim path{fill:#33454f}
+#aFg  path{fill:var(--fg)}
+#aAcc path{fill:var(--accent)}
 
 /* ── what actually travels ───────────────────────────────────────────────── */
 .tok{position:absolute;left:0;top:0;width:30px;height:30px;border-radius:7px;
@@ -174,12 +178,28 @@ svg.wires{position:absolute;inset:0;width:1600px;height:900px;overflow:visible}
   <div class="sub">the system proposes — it can't close the loop alone</div>
 
   <svg class="wires" viewBox="0 0 1600 900">
-    <path class="wire"      d="M 580 470 C 720 356 880 356 1020 470"/>
-    <path class="wire live top" d="M 580 470 C 720 356 880 356 1020 470"/>
-    <path class="wire"      d="M 1020 610 C 880 726 720 726 580 610"/>
-    <path class="wire live bot" d="M 1020 610 C 880 726 720 726 580 610"/>
-    <polygon class="arrow"   points="1020,470 1002,452 1008,476"/>
-    <polygon class="arrow b" points="580,610 598,628 592,604"/>
+    <defs>
+      <!-- refX=10 puts the TIP on the path's endpoint, so the head reads as
+           arriving at the node rather than floating short of it. -->
+      <marker id="aDim" viewBox="0 0 10 10" refX="10" refY="5"
+              markerWidth="5.5" markerHeight="5.5" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0.8 L10,5 L0,9.2 Z"/>
+      </marker>
+      <marker id="aFg" viewBox="0 0 10 10" refX="10" refY="5"
+              markerWidth="5.5" markerHeight="5.5" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0.8 L10,5 L0,9.2 Z"/>
+      </marker>
+      <marker id="aAcc" viewBox="0 0 10 10" refX="10" refY="5"
+              markerWidth="5.5" markerHeight="5.5" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0.8 L10,5 L0,9.2 Z"/>
+      </marker>
+    </defs>
+    <!-- Each live overlay carries its own bright head, so the arrowhead
+         brightens on exactly the same keyframes as its wire. -->
+    <path class="wire"          d="M 580 470 C 720 356 880 356 1020 470" marker-end="url(#aDim)"/>
+    <path class="wire live top" d="M 580 470 C 720 356 880 356 1020 470" marker-end="url(#aFg)"/>
+    <path class="wire"          d="M 1020 610 C 880 726 720 726 580 610" marker-end="url(#aDim)"/>
+    <path class="wire live bot" d="M 1020 610 C 880 726 720 726 580 610" marker-end="url(#aAcc)"/>
   </svg>
 
   <div class="node ai">
