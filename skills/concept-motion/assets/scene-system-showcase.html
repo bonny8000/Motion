@@ -11,9 +11,24 @@
  * SYSTEM SHOWCASE
  *
  * Demonstrates role-based visual tokens, a complete theme, a motion profile,
- * semantic status color, and reusable components assembled into one pattern.
+ * semantic intent color, and reusable components assembled into one pattern.
  * The claim is intentionally about the system itself: foundations become
- * components, components become patterns, and the strongest patterns resolve.
+ * components, components become patterns, and review resolves each one.
+ *
+ * This is also the smoke test for the SEED-derived layer — `seedLight` theme
+ * plus the intent roles. Two outcomes are shown, and they are two genuine
+ * CLAIMS rather than two decorations: what passed review (`positive`) and what
+ * was rejected (`critical`). That is the bar `visual-foundations.md` sets for
+ * spending a second colour, and it is the reason this scene is allowed two.
+ *
+ * Outcome is never carried by hue alone. Passing items also go accent-bright,
+ * scale up and hold position; rejected items dim and stay put. Colour
+ * reinforces the read — position, brightness and scale carry it.
+ *
+ * Note the profile: `calm`, not `seed`. SEED's durations top out at 300ms
+ * because they are tuned for motion a user triggers. In a 9.5s narrative a
+ * 150ms beat reads as a flicker. Take its curves; take its durations only for
+ * product-embedded work.
  */
 import { createScene, shapes, beats } from '../lib/kit.js';
 
@@ -29,7 +44,7 @@ const T = {
 };
 
 const scene = createScene({
-  theme: 'studioLight',
+  theme: 'seedLight',
   motion: 'calm',
   card: { w: 1240, h: 610 },
   labelTop: 38,
@@ -49,10 +64,16 @@ const body = shapes.cardGrid(scene, {
   pad: { left: 74, top: 132 },
 });
 
-const KEEP = [0, 5, 7, 10].map((index) => body.items[index]);
-const REST = body.items.filter((item) => !KEEP.includes(item));
+const PASS   = [0, 5, 7, 10].map((i) => body.items[i]);
+const REJECT = [2, 9].map((i) => body.items[i]);
+const REST   = body.items.filter((i) => !PASS.includes(i) && !REJECT.includes(i));
 
-scene.setLabels(['Foundations', 'Components', 'Patterns', 'System']);
+// The conversion fill is what every convert/promote beat animates, so setting
+// its colour per item is how an outcome gets a role without touching a beat.
+PASS.forEach((i) => { i.fill.style.background = 'var(--color-positive)'; });
+REJECT.forEach((i) => { i.fill.style.background = 'var(--color-critical)'; });
+
+scene.setLabels(['Foundations', 'Components', 'In review', 'Resolved']);
 
 beats.reset(scene, { panel, body });
 beats.fillPanel(scene, panel, { at: T.panel, duration: scene.motion.enterPrimary });
@@ -63,6 +84,10 @@ beats.scan(scene, body, {
   count: body.groups.length,
   until: T.curate - .12,
 });
+
+// Everything the scan touched turns accent. Review then separates the three
+// outcomes: rejected items keep a critical mark but recede, unreviewed items
+// lose the accent entirely, and only what passed is promoted.
 beats.unconvert(scene, body, REST, { at: T.curate, duration: scene.motion.exit });
 beats.recede(scene, REST, {
   at: T.curate + .08,
@@ -70,7 +95,13 @@ beats.recede(scene, REST, {
   duration: scene.motion.transform,
   stagger: scene.motion.stagger,
 });
-beats.promote(scene, body, KEEP, {
+beats.recede(scene, REJECT, {
+  at: T.curate + .16,
+  to: .38,
+  duration: scene.motion.transform,
+  stagger: scene.motion.stagger,
+});
+beats.promote(scene, body, PASS, {
   at: T.resolve,
   duration: scene.motion.enterPrimary,
   scale: 1.045,
@@ -79,8 +110,8 @@ beats.promote(scene, body, KEEP, {
 beats.labelCues(scene, [
   ['Foundations', T.panel],
   ['Components', T.field + .6],
-  ['Patterns', T.inspect],
-  ['System', T.resolve],
+  ['In review', T.inspect],
+  ['Resolved', T.resolve],
 ], { end: T.exit + .35 });
 
 beats.collapse(scene, { at: T.exit, duration: 1.25, to: .02 });

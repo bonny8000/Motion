@@ -70,7 +70,7 @@ skills/concept-motion/
 │   ├── scene-phase-spine.html        working scene: work advancing through states
 │   ├── scene-field-collapse.html     working scene: many candidates narrow to a few
 │   ├── scene-race-streaming.html     working scene: A/B comparison, zero-dependency WAAPI
-│   ├── scene-system-showcase.html    studio theme + tokens + component registry showcase
+│   ├── scene-system-showcase.html    seedLight theme + role tokens + intent colour (pass / reject)
 │   ├── scene-ui-walkthrough.html     working scene: capability tour in a legible UI
 │   ├── scene-actor-loop.html         working scene: a loop that closes through a person, zero deps
 │   └── scene-template.html           standalone CSS-clock scaffold, zero deps
