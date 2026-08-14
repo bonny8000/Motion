@@ -311,28 +311,34 @@ export const THEMES = {
      arrowheads and primary type. Against a pale field it is the only real
      contrast in the frame, so spend it on the thing the eye should follow. */
   illustrationLight: {
-    colorCanvas:        '#eef2fb',
-    colorSurface:       '#d4ddf7',
+    colorCanvas:        '#f0f4fd',
+    colorSurface:       '#ccd9f6',
     colorSurfaceRaised: '#ffffff',
-    colorFgPrimary:     '#2f3a4c',
-    colorFgMuted:       '#6b7a99',
-    colorFgSubtle:      '#93a2c0',
+    colorFgPrimary:     '#2f3640',
+    colorFgMuted:       '#7c8aa8',
+    colorFgSubtle:      '#9aa6c0',
     colorFgDisabled:    '#bcc8e4',
-    colorAccent:        '#3b7ae0',
-    colorAccentSoft:    'rgba(59,122,224,.16)',
-    colorStroke:        '#2f3a4c',
-    colorStrokeSubtle:  'rgba(47,58,76,.16)',
-    colorPositive:      '#12a37c',
-    colorPositiveWeak:  '#d6f0e6',
-    colorCritical:      '#f0707f',
-    colorCriticalWeak:  '#fbdfe3',
-    colorWarning:       '#e2a33c',
-    colorWarningWeak:   '#f9ecd6',
-    colorInformative:   '#3b7ae0',
+    colorAccent:        '#1a73e8',
+    colorAccentSoft:    'rgba(26,115,232,.14)',
+    colorStroke:        '#2f3640',
+    colorStrokeSubtle:  'rgba(47,54,64,.16)',
+    /* The palette is three hues and no more: blue, coral, ink. There is no
+       success green here — in this register RESOLUTION IS TONAL WEIGHT, so a
+       finished state becomes ink (the heaviest thing in the frame) rather than
+       introducing a fourth colour. Coral is the attention hue: the thing being
+       aimed at, or the thing that went wrong. Adding a green is the single
+       fastest way to make this style look like a dashboard. */
+    colorPositive:      '#2f3640',
+    colorPositiveWeak:  '#ffffff',
+    colorCritical:      '#fc6376',
+    colorCriticalWeak:  '#ffe1e5',
+    colorWarning:       '#fc6376',
+    colorWarningWeak:   '#ffe1e5',
+    colorInformative:   '#1a73e8',
     colorInformativeWeak:'#dbe6fb',
-    colorMagic:         '#8e7bf0',
-    colorMagicWeak:     '#e5e0fc',
-    colorGutter:        '#93a2c0',
+    colorMagic:         '#1a73e8',
+    colorMagicWeak:     '#dbe6fb',
+    colorGutter:        '#9aa6c0',
     radiusPanel:        '22px',
     radiusBar:          '999px',
     radiusCode:         '999px',

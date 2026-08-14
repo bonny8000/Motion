@@ -291,6 +291,15 @@ Identity is carried by a **saturated dot**, not by tinting the card. Two cards
 of the same tint holding different coloured dots read as two instances of one
 kind of thing, which is exactly what the style is good at saying.
 
+**The palette is three hues, and a fourth ruins it.** Blue for the subject,
+coral for attention — the thing being aimed at, or the thing that went wrong —
+and ink for resolution and primary type. There is deliberately **no success
+green**: in this register a finished state is expressed as **tonal weight**, by
+becoming ink, which is the heaviest element in the frame. Reaching for green
+the moment something succeeds is the single fastest way to turn a drawing back
+into a dashboard, and blue-plus-green in particular reads as generic product
+chrome rather than as illustration.
+
 Connectors are the signature move: a generous curve with a solid triangular
 arrowhead, in the ink colour, crossing open space. Give them room — this style
 needs whitespace to work, and cramping the field is what makes it look cheap.
